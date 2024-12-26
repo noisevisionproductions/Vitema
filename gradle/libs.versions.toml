@@ -4,7 +4,19 @@ androidxLifecycle = "2.8.7"
 androidxActivityCompose = "1.9.3"
 androidxComposeBom = "2024.12.01"
 androidxComposeCompiler = "1.5.1"
+firebaseAuthKtx = "23.1.0"
+firebaseFirestoreKtx = "25.1.1"
+googleServices = "4.4.2"
+kotlinxCoroutinesAndroid = "1.8.1"
+kotlinxCoroutinesPlayServices = "1.8.1"
 material = "1.12.0"
+firebase-bom = "33.7.0"
+coroutines = "1.7.3"
+testng = "6.9.6"
+junit = "4.13.2"
+mockk = "1.13.9"
+truth = "1.1.5"
+turbine = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
@@ -20,7 +32,25 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
+google-firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
+google-firebase-firestore-ktx = { module = "com.google.firebase:firebase-firestore-ktx" }
+google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
+testng = { group = "org.testng", name = "testng", version.ref = "testng" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+google-truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+androidx-core-testing = { group = "androidx.arch.core", name = "core-testing", version = "2.2.0" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 
 [plugins]
 android-application = { id = "com.android.application", version = "8.7.3" }

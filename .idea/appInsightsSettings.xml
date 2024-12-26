@@ -22,10 +22,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.noisevisionsoftware.fitapplication" />
+                  <option name="mobileSdkAppId" value="1:356026851014:android:1d9c57b370a57875ed41c7" />
+                  <option name="projectId" value="fitapplication-3a2ae" />
+                  <option name="projectNumber" value="356026851014" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.noisevisionsoftware.fitapplication.ui.navigation.Screen
 import com.noisevisionsoftware.fitapplication.ui.screens.dashboard.DashboardScreen
+import com.noisevisionsoftware.fitapplication.ui.screens.loginAndRegister.ForgotPassword
 import com.noisevisionsoftware.fitapplication.ui.screens.loginAndRegister.LoginScreen
 import com.noisevisionsoftware.fitapplication.ui.screens.loginAndRegister.RegisterScreen
 
@@ -17,7 +18,7 @@ fun MainScreen() {
     when (currentScreen) {
         is Screen.Login -> {
             LoginScreen(
-                onLoginClick = { email, password ->
+                onLoginClick = { _, _ ->
                     currentScreen = Screen.Dashboard
                 },
                 onRegistrationClick = { currentScreen = Screen.Register },
@@ -27,7 +28,7 @@ fun MainScreen() {
 
         is Screen.Register -> {
             RegisterScreen(
-                onRegisterClick = { nickname, email, password, confirmPassword ->
+                onRegisterClick = { _, _, _, _ ->
                     currentScreen = Screen.Dashboard
                 },
                 onLoginClick = { currentScreen = Screen.Login },
@@ -37,7 +38,9 @@ fun MainScreen() {
         }
 
         is Screen.ForgotPassword -> {
-
+            ForgotPassword(
+                onBackToLogin = { currentScreen = Screen.Login }
+            )
         }
 
         is Screen.Dashboard -> {

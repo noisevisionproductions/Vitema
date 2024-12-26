@@ -6,7 +6,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,8 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -35,7 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.noisevisionsoftware.fitapplication.ui.common.AnimatedErrorDialog
 import com.noisevisionsoftware.fitapplication.ui.common.AnimatedSuccessDialog
@@ -43,14 +40,11 @@ import com.noisevisionsoftware.fitapplication.ui.common.UiEvent
 import kotlinx.coroutines.delay
 
 @Composable
-fun LoginScreen(
-    onLoginClick: (String, String) -> Unit,
-    onRegistrationClick: () -> Unit,
-    onForgotPasswordClick: () -> Unit = {},
+fun ForgotPassword(
+    onBackToLogin: () -> Unit,
     viewModel: AuthViewModel = remember { AuthViewModel() }
 ) {
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
@@ -67,21 +61,10 @@ fun LoginScreen(
 
                 is UiEvent.ShowSuccess -> {
                     successMessage = event.message
-                    delay(1500)
-                    successMessage = null
+                    delay(2000)
+                    onBackToLogin()
                 }
             }
-        }
-    }
-
-    LaunchedEffect(authState) {
-        when (authState) {
-            is AuthViewModel.AuthState.Success -> {
-                delay(1000)
-                onLoginClick(email, password)
-            }
-
-            else -> {}
         }
     }
 
@@ -101,78 +84,47 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "FitApp",
+                text = "Resetowanie hasła",
                 style = MaterialTheme.typography.displaySmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+
             Text(
-                text = "Zaloguj się, aby kontynuować",
+                text = "Wprowadź swój adres email, a my wyślemy Ci link do resetowania hasła",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 32.dp)
+                modifier = Modifier.padding(bottom = 32.dp),
+                textAlign = TextAlign.Center
             )
 
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                colors = CardDefaults.cardColors(
-                    contentColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        ),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
-                        singleLine = true
-                    )
-
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Hasło") },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
-                        singleLine = true
-                    )
-                }
-            }
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Done
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                ),
+                singleLine = true
+            )
 
             Button(
-                onClick = { viewModel.login(email, password) },
+                onClick = { viewModel.resetPassword(email) },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(vertical = 16.dp)
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                enabled = email.isNotBlank() && password.isNotBlank() &&
-                        authState !is AuthViewModel.AuthState.Loading
+                enabled = email.isNotBlank() && authState !is AuthViewModel.AuthState.Loading
             ) {
                 if (authState is AuthViewModel.AuthState.Loading) {
                     CircularProgressIndicator(
@@ -181,42 +133,21 @@ fun LoginScreen(
                     )
                 } else {
                     Text(
-                        text = "Zaloguj się",
+                        text = "Wyślij link",
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
             }
 
             TextButton(
-                onClick = onForgotPasswordClick,
-                modifier = Modifier.padding(vertical = 8.dp)
+                onClick = onBackToLogin,
+                modifier = Modifier.padding(top = 8.dp)
             ) {
                 Text(
-                    text = "Zapomniałeś hasła?",
+                    text = "Powrót do logowania",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = MaterialTheme.colorScheme.primary
                 )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 24.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Nie masz jeszcze konta?",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                TextButton(onClick = onRegistrationClick) {
-                    Text(
-                        text = "Zarejestruj się",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
             }
         }
 
@@ -235,14 +166,5 @@ fun LoginScreen(
                 .align(Alignment.TopCenter)
                 .padding(top = 16.dp)
         )
-
-        if (authState is AuthViewModel.AuthState.Loading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.Center),
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
     }
 }
