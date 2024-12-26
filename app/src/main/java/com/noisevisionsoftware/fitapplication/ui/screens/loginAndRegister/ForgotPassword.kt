@@ -34,6 +34,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.fitapplication.ui.common.AnimatedErrorDialog
 import com.noisevisionsoftware.fitapplication.ui.common.AnimatedSuccessDialog
 import com.noisevisionsoftware.fitapplication.ui.common.UiEvent
@@ -42,29 +43,19 @@ import kotlinx.coroutines.delay
 @Composable
 fun ForgotPassword(
     onBackToLogin: () -> Unit,
-    viewModel: AuthViewModel = remember { AuthViewModel() }
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
     var email by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
     val authState by viewModel.authState.collectAsState()
+    val uiEvent by viewModel.uiEvent.collectAsState()
 
-    LaunchedEffect(true) {
-        viewModel.uiEvent.collect { event ->
-            when (event) {
-                is UiEvent.ShowError -> {
-                    errorMessage = event.message
-                    delay(3000)
-                    errorMessage = null
-                }
-
-                is UiEvent.ShowSuccess -> {
-                    successMessage = event.message
-                    delay(2000)
-                    onBackToLogin()
-                }
-            }
+    LaunchedEffect(uiEvent) {
+        if (uiEvent is UiEvent.ShowSuccess) {
+            delay(2000)
+            onBackToLogin()
         }
     }
 
@@ -152,7 +143,7 @@ fun ForgotPassword(
         }
 
         AnimatedErrorDialog(
-            message = errorMessage,
+            message = (uiEvent as? UiEvent.ShowError)?.message,
             onDismiss = { errorMessage = null },
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -160,7 +151,7 @@ fun ForgotPassword(
         )
 
         AnimatedSuccessDialog(
-            message = successMessage,
+            message = (uiEvent as? UiEvent.ShowSuccess)?.message,
             onDismiss = { successMessage = null },
             modifier = Modifier
                 .align(Alignment.TopCenter)

@@ -5,11 +5,12 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.noisevisionsoftware.fitapplication.domain.model.User
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class AuthRepository {
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
-
+class AuthRepository @Inject constructor(
+    private val auth: FirebaseAuth,
+    private val firestore: FirebaseFirestore
+) {
     suspend fun register(nickname: String, email: String, password: String): Result<User> = try {
         val authResult = auth.createUserWithEmailAndPassword(email, password).await()
 

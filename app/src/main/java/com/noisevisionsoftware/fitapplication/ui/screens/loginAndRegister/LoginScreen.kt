@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.fitapplication.ui.common.AnimatedErrorDialog
 import com.noisevisionsoftware.fitapplication.ui.common.AnimatedSuccessDialog
 import com.noisevisionsoftware.fitapplication.ui.common.UiEvent
@@ -47,7 +48,7 @@ fun LoginScreen(
     onLoginClick: (String, String) -> Unit,
     onRegistrationClick: () -> Unit,
     onForgotPasswordClick: () -> Unit = {},
-    viewModel: AuthViewModel = remember { AuthViewModel() }
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -55,24 +56,7 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf<String?>(null) }
     val authState by viewModel.authState.collectAsState()
-
-    LaunchedEffect(true) {
-        viewModel.uiEvent.collect { event ->
-            when (event) {
-                is UiEvent.ShowError -> {
-                    errorMessage = event.message
-                    delay(3000)
-                    errorMessage = null
-                }
-
-                is UiEvent.ShowSuccess -> {
-                    successMessage = event.message
-                    delay(1500)
-                    successMessage = null
-                }
-            }
-        }
-    }
+    val uiEvent by viewModel.uiEvent.collectAsState()
 
     LaunchedEffect(authState) {
         when (authState) {
@@ -221,7 +205,7 @@ fun LoginScreen(
         }
 
         AnimatedErrorDialog(
-            message = errorMessage,
+            message = (uiEvent as? UiEvent.ShowError)?.message,
             onDismiss = { errorMessage = null },
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -229,20 +213,11 @@ fun LoginScreen(
         )
 
         AnimatedSuccessDialog(
-            message = successMessage,
+            message = (uiEvent as? UiEvent.ShowSuccess)?.message,
             onDismiss = { successMessage = null },
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 16.dp)
         )
-
-        if (authState is AuthViewModel.AuthState.Loading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .size(50.dp)
-                    .align(Alignment.Center),
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
     }
 }

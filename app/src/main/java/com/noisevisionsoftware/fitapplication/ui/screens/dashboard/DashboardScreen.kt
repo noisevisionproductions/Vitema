@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.AccountCircle
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun DashboardScreen(
+    onLogoutClick: () -> Unit = {},
     onMealPlanClick: () -> Unit = {},
     onCaloriesTrackerClick: () -> Unit = {},
     onWaterTrackerClick: () -> Unit = {},
@@ -51,7 +53,7 @@ fun DashboardScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        TopBar()
+        TopBar(onLogoutClick = onLogoutClick)
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -115,6 +117,7 @@ fun DashboardScreen(
 
 @Composable
 fun TopBar(
+    onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -134,6 +137,17 @@ fun TopBar(
                 text = "Co dzisiaj zjemy?",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        IconButton(
+            onClick = onLogoutClick
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Logout,
+                contentDescription = "Wyloguj",
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.primary
             )
         }
 

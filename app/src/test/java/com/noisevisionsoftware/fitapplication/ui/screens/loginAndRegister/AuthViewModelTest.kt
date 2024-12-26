@@ -2,31 +2,46 @@ package com.noisevisionsoftware.fitapplication.ui.screens.loginAndRegister
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.noisevisionsoftware.fitapplication.HiltTestApplication_Application
 import com.noisevisionsoftware.fitapplication.MainDispatcherRule
 import com.noisevisionsoftware.fitapplication.domain.auth.AuthRepository
 import com.noisevisionsoftware.fitapplication.domain.model.User
+import com.noisevisionsoftware.fitapplication.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.fitapplication.ui.common.UiEvent
-import io.mockk.clearAllMocks
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @ExperimentalCoroutinesApi
+@HiltAndroidTest
+@Config(application = HiltTestApplication_Application::class)
+@RunWith(RobolectricTestRunner::class)
 class AuthViewModelTest {
+
+    @get:Rule
+    val hiltRule = HiltAndroidRule(this)
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var viewModel: AuthViewModel
     private lateinit var repository: AuthRepository
+    private lateinit var networkManager: NetworkConnectivityManager
 
     private val email = "test@example.com"
     private val password = "password123"
@@ -41,9 +56,15 @@ class AuthViewModelTest {
 
     @Before
     fun setUp() {
+        hiltRule.inject()
+
         repository = mockk(relaxed = false)
-        viewModel = AuthViewModel(repository)
-        clearAllMocks()
+        networkManager = mockk(relaxed = true)
+
+        coEvery { networkManager.isNetworkConnected } returns flowOf(true)
+        every { networkManager.isCurrentlyConnected() } returns true
+
+        viewModel = AuthViewModel(repository, networkManager)
     }
 
     @Test
