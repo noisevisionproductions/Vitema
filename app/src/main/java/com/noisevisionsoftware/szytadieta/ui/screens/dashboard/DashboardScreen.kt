@@ -18,7 +18,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -49,7 +51,7 @@ import com.noisevisionsoftware.szytadieta.ui.screens.profile.ProfileViewModel
 fun DashboardScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     onLogoutClick: () -> Unit = {},
-    onMealPlanClick: () -> Unit = {},
+    onBodyMeasurementsClick: () -> Unit = {},
     onCaloriesTrackerClick: () -> Unit = {},
     onWaterTrackerClick: () -> Unit = {},
     onRecipesClick: () -> Unit = {},
@@ -100,18 +102,19 @@ fun DashboardScreen(
                        onClick = onWaterTrackerClick
                    )
                }
-               item {
-                   DashboardCard(
-                       title = "Przepisy",
-                       icon = Icons.AutoMirrored.Filled.MenuBook,
-                       backgroundColor = MaterialTheme.colorScheme.primary,
-                       onClick = onRecipesClick
-                   )
-               }*/
+                 */
                 item {
                     DashboardCard(
-                        title = "Postępy",
-                        icon = Icons.AutoMirrored.Filled.ShowChart,
+                        title = "Pomiary",
+                        icon = Icons.Default.Straighten,
+                        backgroundColor = MaterialTheme.colorScheme.primary,
+                        onClick = onBodyMeasurementsClick
+                    )
+                }
+                item {
+                    DashboardCard(
+                        title = "Waga",
+                        icon = Icons.Default.MonitorWeight,
                         backgroundColor = MaterialTheme.colorScheme.primary,
                         onClick = onProgressClick
                     )

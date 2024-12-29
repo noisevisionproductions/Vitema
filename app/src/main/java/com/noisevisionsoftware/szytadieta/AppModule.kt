@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.noisevisionsoftware.szytadieta.domain.auth.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.auth.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
+import com.noisevisionsoftware.szytadieta.domain.repository.BodyMeasurementRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.WeightRepository
 import dagger.Module
 import dagger.Provides
@@ -43,6 +44,14 @@ class AppModule {
     @Singleton
     fun provideWeightRepository(firestore: FirebaseFirestore): WeightRepository {
         return WeightRepository(firestore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBodyMeasurementsRepository(
+        firestore: FirebaseFirestore
+    ): BodyMeasurementRepository {
+        return BodyMeasurementRepository(firestore)
     }
 
     @Provides

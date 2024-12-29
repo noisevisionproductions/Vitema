@@ -4,7 +4,8 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseUser
 import com.noisevisionsoftware.szytadieta.domain.auth.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
-import com.noisevisionsoftware.szytadieta.domain.model.Weight
+import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.MeasurementType
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.WeightRepository
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
@@ -27,7 +28,7 @@ class WeightViewModel @Inject constructor(
     sealed class WeightState {
         data object Initial : WeightState()
         data object Loading : WeightState()
-        data class Success(val weights: List<Weight>) : WeightState()
+        data class Success(val bodyMeasurements: List<BodyMeasurements>) : WeightState()
         data class Error(val exception: AppException) : WeightState()
     }
 
@@ -40,16 +41,18 @@ class WeightViewModel @Inject constructor(
             handleError(AppException.ValidationException("Waga musi być większa niż 0"))
             return
         }
+
         handleOperation {
             val currentUser = getCurrentUserOrThrow()
 
-            val weightEntry = Weight(
+            val bodyMeasurementsEntry = BodyMeasurements(
                 userId = currentUser.uid,
                 weight = weight,
-                note = note
+                note = note,
+                measurementType = MeasurementType.WEIGHT_ONLY
             )
 
-            safeApiCall { weightRepository.addWeight(weightEntry) }
+            safeApiCall { weightRepository.addWeight(bodyMeasurementsEntry) }
                 .onSuccess {
                     showSuccess("Pomyślnie dodano wagę")
                     loadWeights()
@@ -60,7 +63,6 @@ class WeightViewModel @Inject constructor(
                     )
                 }
         }
-
     }
 
     fun deleteWeight(weightId: String) {
@@ -82,7 +84,12 @@ class WeightViewModel @Inject constructor(
         handleOperation {
             val currentUser = getCurrentUserOrThrow()
 
-            safeApiCall { weightRepository.getUserWeights(currentUser.uid) }
+            safeApiCall {
+                weightRepository.getUserWeights(currentUser.uid)
+                    .map { measurements ->
+                        measurements.filter { it.measurementType == MeasurementType.WEIGHT_ONLY }
+                    }
+            }
                 .onSuccess { weights ->
                     _weightState.value = WeightState.Success(weights)
                 }

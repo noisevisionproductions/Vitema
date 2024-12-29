@@ -55,7 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.domain.model.Weight
+import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
 import com.noisevisionsoftware.szytadieta.ui.common.UiEventHandler
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -147,7 +147,7 @@ private fun WeightContent(
         when (state) {
             WeightViewModel.WeightState.Loading -> WeightLoadingIndicator()
             is WeightViewModel.WeightState.Success -> WeightList(
-                weights = state.weights,
+                bodyMeasurements = state.bodyMeasurements,
                 onDeleteClick = onDeleteClick
             )
 
@@ -185,10 +185,10 @@ private fun WeightError(message: String) {
 
 @Composable
 private fun WeightList(
-    weights: List<Weight>,
+    bodyMeasurements: List<BodyMeasurements>,
     onDeleteClick: (String) -> Unit
 ) {
-    if (weights.isEmpty()) {
+    if (bodyMeasurements.isEmpty()) {
         EmptyWeightList()
     } else {
         LazyColumn(
@@ -197,15 +197,15 @@ private fun WeightList(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                WeightStats(weights = weights)
+                WeightStats(bodyMeasurements = bodyMeasurements)
             }
 
             items(
-                items = weights,
+                items = bodyMeasurements,
                 key = { weight -> weight.id }
             ) { weight ->
                 WeightItem(
-                    weight = weight,
+                    bodyMeasurements = weight,
                     onDeleteClick = { onDeleteClick(weight.id) }
                 )
             }
@@ -214,7 +214,7 @@ private fun WeightList(
 }
 
 @Composable
-private fun WeightStats(weights: List<Weight>) {
+private fun WeightStats(bodyMeasurements: List<BodyMeasurements>) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -241,23 +241,23 @@ private fun WeightStats(weights: List<Weight>) {
             ) {
                 WeightStatItem(
                     title = "Ostatni pomiar",
-                    value = weights.firstOrNull()?.let { "${it.weight} kg" } ?: "-"
+                    value = bodyMeasurements.firstOrNull()?.let { "${it.weight} kg" } ?: "-"
                 )
                 WeightStatItem(
                     title = "Średnia waga",
-                    value = weights.takeIf { it.isNotEmpty() }
+                    value = bodyMeasurements.takeIf { it.isNotEmpty() }
                         ?.let { "%.1f kg".format(it.map { w -> w.weight }.average()) }
                         ?: "-"
                 )
                 WeightStatItem(
                     title = "Liczba pomiarów",
-                    value = weights.size.toString()
+                    value = bodyMeasurements.size.toString()
                 )
             }
 
-            if (weights.size >= 2) {
-                val firstWeight = weights.last().weight
-                val lastWeight = weights.first().weight
+            if (bodyMeasurements.size >= 2) {
+                val firstWeight = bodyMeasurements.last().weight
+                val lastWeight = bodyMeasurements.first().weight
                 val difference = lastWeight - firstWeight
                 val differenceText = when {
                     difference > 0 -> "+%.1f kg".format(difference)
@@ -337,7 +337,7 @@ private fun EmptyWeightList() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WeightItem(
-    weight: Weight,
+    bodyMeasurements: BodyMeasurements,
     onDeleteClick: () -> Unit
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -359,19 +359,19 @@ private fun WeightItem(
         ) {
             Column {
                 Text(
-                    text = "${weight.weight} kg",
+                    text = "${bodyMeasurements.weight} kg",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-                        .format(Date(weight.date)),
+                        .format(Date(bodyMeasurements.date)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (weight.note.isNotBlank()) {
+                if (bodyMeasurements.note.isNotBlank()) {
                     Text(
-                        text = weight.note,
+                        text = bodyMeasurements.note,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 4.dp)

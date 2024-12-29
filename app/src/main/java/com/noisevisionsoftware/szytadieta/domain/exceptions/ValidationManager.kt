@@ -1,7 +1,7 @@
-package com.noisevisionsoftware.szytadieta.domain.auth
+package com.noisevisionsoftware.szytadieta.domain.exceptions
 
 import android.icu.util.Calendar
-import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
+import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
 
 object ValidationManager {
 
@@ -83,6 +83,28 @@ object ValidationManager {
             age < 13 -> {
                 Result.failure(AppException.ValidationException("Musisz mieć co najmniej 13 lat"))
             }
+            else -> Result.success(Unit)
+        }
+    }
+
+    fun validateBodyMeasurements(measurements: BodyMeasurements): Result<Unit> {
+        return when {
+            measurements.neck <= 0 ->
+                Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód szyi"))
+            measurements.biceps <= 0 ->
+                Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód bicepsa"))
+            measurements.chest <= 0 ->
+                Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód klatki piersiowej"))
+            measurements.waist <= 0 ->
+                Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód talii"))
+            measurements.hips <= 0 ->
+                Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód bioder"))
+            measurements.thigh <= 0 ->
+                Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód uda"))
+            measurements.calf <= 0 ->
+                Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód łydki"))
+            measurements.weight <= 0 ->
+                Result.failure(AppException.ValidationException("Wprowadź prawidłową wagę"))
             else -> Result.success(Unit)
         }
     }

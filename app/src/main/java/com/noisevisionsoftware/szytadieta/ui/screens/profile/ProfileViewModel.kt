@@ -2,7 +2,7 @@ package com.noisevisionsoftware.szytadieta.ui.screens.profile
 
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.auth.AuthRepository
-import com.noisevisionsoftware.szytadieta.domain.auth.ValidationManager
+import com.noisevisionsoftware.szytadieta.domain.exceptions.ValidationManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.model.Gender
 import com.noisevisionsoftware.szytadieta.domain.model.User

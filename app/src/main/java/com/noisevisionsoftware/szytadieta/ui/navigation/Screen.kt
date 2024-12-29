@@ -6,5 +6,6 @@ sealed class Screen {
     data object ForgotPassword : Screen()
     data object Dashboard : Screen()
     data object Weight : Screen()
+    data object BodyMeasurements : Screen()
     data object CompleteProfile : Screen()
 }

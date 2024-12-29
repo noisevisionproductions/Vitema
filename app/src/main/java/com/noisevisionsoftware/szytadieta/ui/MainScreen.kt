@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.ui.navigation.Screen
+import com.noisevisionsoftware.szytadieta.ui.screens.bodyMeasurements.BodyMeasurementsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.DashboardScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.AuthViewModel
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.ForgotPassword
@@ -57,6 +58,10 @@ fun MainScreen(
             }
 
             Screen.Weight -> {
+                currentScreen = Screen.Dashboard
+            }
+
+            Screen.BodyMeasurements -> {
                 currentScreen = Screen.Dashboard
             }
 
@@ -138,7 +143,7 @@ fun MainScreen(
                     Screen.Dashboard -> {
                         DashboardScreen(
                             onLogoutClick = { authViewModel.logout() },
-                            onMealPlanClick = {},
+                            onBodyMeasurementsClick = { currentScreen = Screen.BodyMeasurements },
                             onCaloriesTrackerClick = {},
                             onWaterTrackerClick = {},
                             onRecipesClick = {},
@@ -149,6 +154,12 @@ fun MainScreen(
 
                     Screen.Weight -> {
                         WeightScreen(
+                            onBackClick = { currentScreen = Screen.Dashboard }
+                        )
+                    }
+
+                    Screen.BodyMeasurements -> {
+                        BodyMeasurementsScreen(
                             onBackClick = { currentScreen = Screen.Dashboard }
                         )
                     }
