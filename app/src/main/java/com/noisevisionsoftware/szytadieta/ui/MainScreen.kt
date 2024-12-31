@@ -21,69 +21,49 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.noisevisionsoftware.szytadieta.domain.model.User
 import com.noisevisionsoftware.szytadieta.ui.navigation.Screen
+import com.noisevisionsoftware.szytadieta.ui.screens.admin.AdminPanelScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.bodyMeasurements.BodyMeasurementsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.DashboardScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.AuthViewModel
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.ForgotPassword
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.LoginScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.RegisterScreen
-import com.noisevisionsoftware.szytadieta.ui.screens.profile.CompleteProfileScreen
-import com.noisevisionsoftware.szytadieta.ui.screens.profile.ProfileViewModel
+import com.noisevisionsoftware.szytadieta.ui.screens.profile.UserProfileScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile.CompleteProfileScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile.CompleteProfileViewModel
+import com.noisevisionsoftware.szytadieta.ui.screens.settings.SettingsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.splash.SplashScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.weight.WeightScreen
 
 @Composable
 fun MainScreen(
     authViewModel: AuthViewModel = hiltViewModel(),
-    profileViewModel: ProfileViewModel = hiltViewModel()
+    completeProfileViewModel: CompleteProfileViewModel = hiltViewModel()
 ) {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Login) }
     val authState by authViewModel.authState.collectAsState()
     val userSession by authViewModel.userSession.collectAsState(initial = null)
-    val profileState by profileViewModel.profileState.collectAsState()
+    val profileState by completeProfileViewModel.profileState.collectAsState()
 
     LaunchedEffect(profileState) {
-        if (profileState is ProfileViewModel.ProfileState.Success && !profileViewModel.profileUpdateMessageShown) {
-            profileViewModel.profileUpdateMessageShown = true
+        if (profileState is CompleteProfileViewModel.CompleteProfileState.Success && !completeProfileViewModel.profileUpdateMessageShown) {
+            completeProfileViewModel.profileUpdateMessageShown = true
             currentScreen = Screen.Dashboard
         }
     }
-
-    BackHandler {
-        when (currentScreen) {
-            Screen.Dashboard -> {}
-            Screen.CompleteProfile -> {
-                currentScreen = Screen.Dashboard
-            }
-
-            Screen.Weight -> {
-                currentScreen = Screen.Dashboard
-            }
-
-            Screen.BodyMeasurements -> {
-                currentScreen = Screen.Dashboard
-            }
-
-            else -> {
-                if (userSession != null || authState is AuthViewModel.AuthState.Success) {
-                    currentScreen = Screen.Dashboard
-                } else if (currentScreen !is Screen.Login) {
-                    currentScreen = Screen.Login
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(currentScreen) {
-        authViewModel.resetUiEvent()
-        profileViewModel.resetUiEvent()
-    }
+    HandleBackButton(
+        currentScreen = currentScreen,
+        userSession = userSession,
+        authState = authState,
+        onScreenChange = { screen -> currentScreen = screen }
+    )
 
     LaunchedEffect(authState, userSession) {
         when {
             userSession != null || authState is AuthViewModel.AuthState.Success -> {
-                profileViewModel.checkProfileCompletion().collect { isCompleted ->
+                completeProfileViewModel.checkProfileCompletion().collect { isCompleted ->
                     currentScreen = if (!isCompleted) {
                         Screen.CompleteProfile
                     } else {
@@ -100,12 +80,32 @@ fun MainScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         when {
-            authState is AuthViewModel.AuthState.Initial -> {
+            authState is AuthViewModel.AuthState.Initial ||
+                    authState is AuthViewModel.AuthState.InitialLoading -> {
                 SplashScreen()
             }
 
             else -> {
                 when (currentScreen) {
+                    Screen.AdminPanel -> {
+                        AdminPanelScreen(
+                            onBackClick = { currentScreen = Screen.Dashboard }
+                        )
+                    }
+
+                    Screen.Profile -> {
+                        UserProfileScreen(
+                            onBackClick = { currentScreen = Screen.Dashboard }
+                        )
+                    }
+
+                    Screen.Settings -> {
+                        SettingsScreen(
+                            onBackClick = { currentScreen = Screen.Dashboard },
+                            onLogout = { currentScreen = Screen.Login }
+                        )
+                    }
+
                     Screen.Login -> {
                         LoginScreen(
                             onLoginClick = { email, password ->
@@ -136,7 +136,7 @@ fun MainScreen(
                     Screen.CompleteProfile -> {
                         CompleteProfileScreen(
                             onSkip = { currentScreen = Screen.Dashboard },
-                            isLoading = profileState is ProfileViewModel.ProfileState.Loading
+                            isLoading = profileState is CompleteProfileViewModel.CompleteProfileState.Loading
                         )
                     }
 
@@ -144,11 +144,10 @@ fun MainScreen(
                         DashboardScreen(
                             onLogoutClick = { authViewModel.logout() },
                             onBodyMeasurementsClick = { currentScreen = Screen.BodyMeasurements },
-                            onCaloriesTrackerClick = {},
-                            onWaterTrackerClick = {},
-                            onRecipesClick = {},
+                            onAdminPanelClick = { currentScreen = Screen.AdminPanel },
                             onProgressClick = { currentScreen = Screen.Weight },
-                            onSettingsClick = {}
+                            onSettingsClick = { currentScreen = Screen.Settings },
+                            onProfileClick = { currentScreen = Screen.Profile }
                         )
                     }
 
@@ -167,20 +166,50 @@ fun MainScreen(
             }
         }
 
-        AnimatedVisibility(
-            visible = authState is AuthViewModel.AuthState.Loading ||
-                    profileState is ProfileViewModel.ProfileState.Loading,
-            enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+        LoadingOverlay(isVisible = profileState is CompleteProfileViewModel.CompleteProfileState.Loading)
+    }
+}
+
+@Composable
+private fun HandleBackButton(
+    currentScreen: Screen,
+    userSession: User?,
+    authState: AuthViewModel.AuthState,
+    onScreenChange: (Screen) -> Unit
+) {
+    BackHandler {
+        when (currentScreen) {
+            Screen.Dashboard -> {}
+
+            Screen.CompleteProfile, Screen.Weight, Screen.BodyMeasurements, Screen.AdminPanel, Screen.Profile, Screen.Settings -> {
+                onScreenChange(Screen.Dashboard)
             }
+
+            else -> {
+                if (userSession != null || authState is AuthViewModel.AuthState.Success) {
+                    onScreenChange(Screen.Dashboard)
+                } else if (currentScreen !is Screen.Login) {
+                    onScreenChange(Screen.Login)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingOverlay(isVisible: Boolean) {
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
+        exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
     }
 }

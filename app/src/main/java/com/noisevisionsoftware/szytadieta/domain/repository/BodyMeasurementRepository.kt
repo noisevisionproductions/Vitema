@@ -43,7 +43,7 @@ class BodyMeasurementRepository @Inject constructor(
             .await()
 
         Result.success(snapshot.documents.mapNotNull {
-            it.toObject(BodyMeasurements::class.java)
+            it.toObject(BodyMeasurements::class.java)/**/
         })
     } catch (e: Exception) {
         Result.failure(e)

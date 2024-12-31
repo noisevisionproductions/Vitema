@@ -11,7 +11,7 @@ import javax.inject.Singleton
 class WeightRepository @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
-    private val weightsCollection = "weights"
+    private val weightsCollection = "bodyMeasurements"
 
     suspend fun addWeight(bodyMeasurements: BodyMeasurements): Result<Unit> = try {
         firestore.collection(weightsCollection)

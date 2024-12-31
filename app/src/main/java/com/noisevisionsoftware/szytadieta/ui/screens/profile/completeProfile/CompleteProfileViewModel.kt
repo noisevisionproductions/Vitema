@@ -1,7 +1,8 @@
-package com.noisevisionsoftware.szytadieta.ui.screens.profile
+package com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile
 
 import androidx.lifecycle.viewModelScope
-import com.noisevisionsoftware.szytadieta.domain.auth.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
+import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.exceptions.ValidationManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.model.Gender
@@ -17,19 +18,21 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor(
+class CompleteProfileViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    networkManager: NetworkConnectivityManager
-) : BaseViewModel(networkManager) {
+    networkManager: NetworkConnectivityManager,
+    alertManager: AlertManager
+) : BaseViewModel(networkManager, alertManager) {
 
-    private val _profileState = MutableStateFlow<ProfileState>(ProfileState.Initial)
-    val profileState = _profileState.asStateFlow()
+    private val _completeProfileState =
+        MutableStateFlow<CompleteProfileState>(CompleteProfileState.Initial)
+    val profileState = _completeProfileState.asStateFlow()
 
-    sealed class ProfileState {
-        data object Initial : ProfileState()
-        data object Loading : ProfileState()
-        data class Success(val user: User) : ProfileState()
-        data class Error(val message: String) : ProfileState()
+    sealed class CompleteProfileState {
+        data object Initial : CompleteProfileState()
+        data object Loading : CompleteProfileState()
+        data class Success(val user: User) : CompleteProfileState()
+        data class Error(val message: String) : CompleteProfileState()
     }
 
     private var tempBirthDate: Long? = null
@@ -63,7 +66,7 @@ class ProfileViewModel @Inject constructor(
             try {
                 tempBirthDate?.let { birthDate ->
                     ValidationManager.validateBirthDate(birthDate).getOrThrow()
-                    _profileState.value = ProfileState.Loading
+                    _completeProfileState.value = CompleteProfileState.Loading
 
                     updateUserField { currentUser ->
                         currentUser.copy(
@@ -87,7 +90,8 @@ class ProfileViewModel @Inject constructor(
                         val updatedUser = updateUser(user)
                         safeApiCall { authRepository.updateUserData(updatedUser) }
                             .onSuccess {
-                                _profileState.value = ProfileState.Success(updatedUser)
+                                _completeProfileState.value =
+                                    CompleteProfileState.Success(updatedUser)
                                 showSuccess("Profil został zaktualizowany")
                                 tempBirthDate = null
                                 tempGender = null
@@ -105,7 +109,7 @@ class ProfileViewModel @Inject constructor(
             is AppException -> throwable
             else -> AppException.UnknownException()
         }
-        _profileState.value = ProfileState.Error(appException.message)
+        _completeProfileState.value = CompleteProfileState.Error(appException.message)
         showError(appException.message)
     }
 }

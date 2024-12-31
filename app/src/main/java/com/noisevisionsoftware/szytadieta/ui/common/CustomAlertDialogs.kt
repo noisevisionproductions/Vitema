@@ -1,12 +1,11 @@
 package com.noisevisionsoftware.szytadieta.ui.common
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,7 +26,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,8 +33,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.noisevisionsoftware.szytadieta.domain.alert.Alert
+import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun ErrorDialog(
@@ -86,27 +85,6 @@ fun ErrorDialog(
                     modifier = Modifier.size(20.dp)
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun AnimatedErrorDialog(
-    message: String?,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    AnimatedVisibility(
-        visible = message != null,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically()
-    ) {
-        message?.let {
-            ErrorDialog(
-                message = it,
-                onDismiss = onDismiss,
-                modifier = modifier
-            )
         }
     }
 }
@@ -164,97 +142,61 @@ fun SuccessDialog(
 }
 
 @Composable
-fun AnimatedSuccessDialog(
-    message: String?,
-    onDismiss: () -> Unit,
+fun AlertHandler(
+    alertManager: AlertManager,
     modifier: Modifier = Modifier
 ) {
-    AnimatedVisibility(
-        visible = message != null,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically()
-    ) {
-        message?.let {
-            SuccessDialog(
-                message = it,
-                onDismiss = onDismiss,
-                modifier = modifier
-            )
-        }
-    }
-}
-
-@Composable
-fun UiEventHandler(
-    uiEvent: StateFlow<UiEvent?>,
-    modifier: Modifier = Modifier,
-    autoHideDelay: Long = 3000L,
-    onSuccess: (suspend (String) -> Unit)? = null,
-    onError: (suspend (String) -> Unit)? = null,
-) {
-    var localEvent by remember { mutableStateOf<UiEvent?>(null) }
-    val currentEvent by uiEvent.collectAsState()
-    var lastEventKey by remember { mutableIntStateOf(0) }
+    val currentAlert by alertManager.currentAlert.collectAsState()
+    var visibleAlert by remember { mutableStateOf<Alert?>(null) }
+    var isVisible by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         onDispose {
-            localEvent = null
-            lastEventKey = 0
+            alertManager.clearAlert()
         }
     }
 
-    LaunchedEffect(currentEvent, lastEventKey) {
-        localEvent = currentEvent
-        when (currentEvent) {
-            is UiEvent.ShowError -> {
-                onError?.invoke((currentEvent as UiEvent.ShowError).message)
-            }
+    val handleDismiss = {
+        isVisible = false
+    }
 
-            is UiEvent.ShowSuccess -> {
-                onSuccess?.invoke((currentEvent as UiEvent.ShowSuccess).message)
-            }
-
-            null -> {}
-        }
-
-        if (currentEvent != null) {
-            delay(autoHideDelay)
-            if (localEvent == currentEvent) {
-                localEvent = null
+    LaunchedEffect(currentAlert) {
+        if (currentAlert != null) {
+            visibleAlert = currentAlert
+            isVisible = true
+            delay(currentAlert!!.duration)
+            if (visibleAlert == currentAlert) {
+                handleDismiss()
             }
         }
     }
 
-    LaunchedEffect(currentEvent) {
-        if (currentEvent != null) {
-            lastEventKey++
+    LaunchedEffect(isVisible) {
+        if (!isVisible && visibleAlert != null) {
+            delay(300)
+            alertManager.clearAlert()
+            visibleAlert = null
         }
     }
 
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.TopCenter
+    AnimatedVisibility(
+        visible = isVisible && visibleAlert != null,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { -it }),
+        exit = fadeOut() + slideOutVertically(targetOffsetY = { -it }),
+        modifier = modifier
     ) {
-        AnimatedErrorDialog(
-            message = when (localEvent) {
-                is UiEvent.ShowError -> (localEvent as UiEvent.ShowError).message
-                else -> null
-            },
-            onDismiss = {
-                localEvent = null
-            },
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
+        when (val alert = visibleAlert) {
+            is Alert.Error -> ErrorDialog(
+                message = alert.message,
+                onDismiss = handleDismiss
+            )
 
-        AnimatedSuccessDialog(
-            message = when (localEvent) {
-                is UiEvent.ShowSuccess -> (localEvent as UiEvent.ShowSuccess).message
-                else -> null
-            },
-            onDismiss = {
-                localEvent = null
-            },
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
+            is Alert.Success -> SuccessDialog(
+                message = alert.message,
+                onDismiss = handleDismiss
+            )
+
+            null -> Unit
+        }
     }
 }

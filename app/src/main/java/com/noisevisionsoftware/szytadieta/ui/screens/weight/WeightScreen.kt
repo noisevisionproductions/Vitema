@@ -23,10 +23,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Scale
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Card
@@ -42,8 +44,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -56,11 +56,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
-import com.noisevisionsoftware.szytadieta.ui.common.UiEventHandler
+import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeightScreen(
     viewModel: WeightViewModel = hiltViewModel(),
@@ -70,7 +71,34 @@ fun WeightScreen(
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { WeightTopBar(onBackClick = onBackClick) },
+        topBar = {
+            CustomTopAppBar(
+                title = "Historia wagi",
+                onBackClick = onBackClick,
+                actions = {
+                    // Możesz dodać przycisk do wyświetlania wykresu wagi
+                    IconButton(
+                        onClick = { /* Akcja wyświetlania wykresu */ }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ShowChart,
+                            contentDescription = "Wykres wagi",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    // Możesz dodać przycisk do filtrowania historii
+                    IconButton(
+                        onClick = { /* Akcja filtrowania */ }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "Filtruj historię",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             AddWeightFAB(onClick = { showAddDialog = true })
         }
@@ -94,32 +122,8 @@ fun WeightScreen(
                     }
                 )
             }
-
-            UiEventHandler(
-                uiEvent = viewModel.uiEvent,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun WeightTopBar(onBackClick: () -> Unit) {
-    TopAppBar(
-        title = { Text("Historia wagi") },
-        navigationIcon = {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Wróć"
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    )
 }
 
 @Composable

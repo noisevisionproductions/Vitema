@@ -16,8 +16,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Straighten
@@ -33,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,20 +45,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.ui.common.UiEventHandler
-import com.noisevisionsoftware.szytadieta.ui.screens.profile.ProfileViewModel
+import com.noisevisionsoftware.szytadieta.domain.model.UserRole
 
 @Composable
 fun DashboardScreen(
-    profileViewModel: ProfileViewModel = hiltViewModel(),
+    viewModel: DashboardViewModel = hiltViewModel(),
+    onAdminPanelClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onBodyMeasurementsClick: () -> Unit = {},
-    onCaloriesTrackerClick: () -> Unit = {},
-    onWaterTrackerClick: () -> Unit = {},
-    onRecipesClick: () -> Unit = {},
     onProgressClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {}
+    onSettingsClick: () -> Unit = {},
 ) {
+    val userRole by viewModel.userRole.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -68,7 +69,12 @@ fun DashboardScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            TopBar(onLogoutClick = onLogoutClick)
+            TopBar(
+                onLogoutClick = onLogoutClick,
+                onAdminPanelClick = onAdminPanelClick,
+                onProfileClick = onProfileClick,
+                userRole = userRole
+            )
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -78,31 +84,6 @@ fun DashboardScreen(
                     .fillMaxWidth()
                     .padding(top = 16.dp)
             ) {
-                /*   item {
-                   DashboardCard(
-                       title = "Plan posiłków",
-                       icon = Icons.Default.RestaurantMenu,
-                       backgroundColor = MaterialTheme.colorScheme.primary,
-                       onClick = onMealPlanClick
-                   )
-               }
-               item {
-                   DashboardCard(
-                       title = "Licznik kalorii",
-                       icon = Icons.Default.MonitorWeight,
-                       backgroundColor = MaterialTheme.colorScheme.secondary,
-                       onClick = onCaloriesTrackerClick
-                   )
-               }
-               item {
-                   DashboardCard(
-                       title = "Nawodnienie",
-                       icon = Icons.Default.WaterDrop,
-                       backgroundColor = MaterialTheme.colorScheme.tertiary,
-                       onClick = onWaterTrackerClick
-                   )
-               }
-                 */
                 item {
                     DashboardCard(
                         title = "Pomiary",
@@ -129,16 +110,15 @@ fun DashboardScreen(
                 }
             }
         }
-        UiEventHandler(
-            uiEvent = profileViewModel.uiEvent,
-            modifier = Modifier.align(Alignment.TopCenter),
-        )
     }
 }
 
 @Composable
 fun TopBar(
     onLogoutClick: () -> Unit,
+    onAdminPanelClick: () -> Unit,
+    onProfileClick: () -> Unit,
+    userRole: UserRole?,
     modifier: Modifier = Modifier
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -168,6 +148,17 @@ fun TopBar(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+
+            if (userRole == UserRole.ADMIN) {
+                IconButton(onClick = { onAdminPanelClick() }) {
+                    Icon(
+                        imageVector = Icons.Default.AdminPanelSettings,
+                        contentDescription = "Panel admina",
+                        modifier = Modifier.size(40.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             IconButton(onClick = { showLogoutDialog = true }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Logout,
@@ -177,7 +168,7 @@ fun TopBar(
                 )
             }
 
-            IconButton(onClick = { }) {
+            IconButton(onClick = { onProfileClick() }) {
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
                     contentDescription = "Profil",

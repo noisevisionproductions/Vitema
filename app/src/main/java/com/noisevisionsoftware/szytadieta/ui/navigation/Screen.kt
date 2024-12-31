@@ -8,4 +8,7 @@ sealed class Screen {
     data object Weight : Screen()
     data object BodyMeasurements : Screen()
     data object CompleteProfile : Screen()
+    data object AdminPanel : Screen()
+    data object Profile : Screen()
+    data object Settings : Screen()
 }

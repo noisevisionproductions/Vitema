@@ -5,7 +5,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthEmailException
 
-object ErrorMapper {
+object FirebaseErrorMapper {
     fun mapFirebaseAuthError(e: Exception): AppException {
         return when (e) {
             is FirebaseAuthInvalidCredentialsException -> {
@@ -44,6 +44,15 @@ object ErrorMapper {
                     e.message?.contains("CONFIGURATION_NOT_FOUND") == true ->
                         AppException.AuthException("Błąd konfiguracji. Spróbuj ponownie później")
 
+                    e.message?.contains("blocked all requests") == true ||
+                            e.message?.contains("RecaptchaAction") == true ->
+                        AppException.AuthException("Zbyt wiele prób logowania. Spróbuj ponownie za kilka minut")
+
+                    e.message?.contains("email address is already in use") == true ||
+                            (e.message?.contains("RecaptchaAction") == true &&
+                                    e.message?.contains("already in use") == true) ->
+                        AppException.AuthException(mapErrorCode("ERROR_EMAIL_ALREADY_IN_USE"))
+
                     else -> AppException.UnknownException()
                 }
             }
@@ -75,6 +84,8 @@ object ErrorMapper {
             "ERROR_INVALID_USER_TOKEN" -> "Nieprawidłowy token użytkownika"
             "ERROR_OPERATION_NOT_ALLOWED" -> "Operacja niedozwolona"
             "ERROR_WEAK_PASSWORD" -> "Hasło musi zawierać minimum 8 znaków, wielką literę, cyfrę i znak specjalny"
+            "ERROR_TOO_MANY_ATTEMPTS" -> "Zbyt wiele prób logowania. Spróbuj ponownie za kilka minut"
+
             else -> "Wystąpił nieoczekiwany błąd"
         }
     }

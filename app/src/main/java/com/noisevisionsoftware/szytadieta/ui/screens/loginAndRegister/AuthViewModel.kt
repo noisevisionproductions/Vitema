@@ -1,11 +1,12 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister
 
 import androidx.lifecycle.viewModelScope
-import com.noisevisionsoftware.szytadieta.domain.auth.AuthRepository
-import com.noisevisionsoftware.szytadieta.domain.auth.SessionManager
+import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
+import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.ValidationManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
-import com.noisevisionsoftware.szytadieta.domain.exceptions.ErrorMapper
+import com.noisevisionsoftware.szytadieta.domain.exceptions.FirebaseErrorMapper
 import com.noisevisionsoftware.szytadieta.domain.model.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
@@ -20,8 +21,9 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val sessionManager: SessionManager,
-    networkManager: NetworkConnectivityManager
-) : BaseViewModel(networkManager) {
+    networkManager: NetworkConnectivityManager,
+    alertManager: AlertManager
+) : BaseViewModel(networkManager, alertManager) {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initial)
     val authState = _authState.asStateFlow()
@@ -30,6 +32,7 @@ class AuthViewModel @Inject constructor(
 
     sealed class AuthState {
         data object Initial : AuthState()
+        data object InitialLoading : AuthState()
         data object Loading : AuthState()
         data class Success(val user: User) : AuthState()
         data class Error(val message: String) : AuthState()
@@ -42,6 +45,7 @@ class AuthViewModel @Inject constructor(
 
     private fun checkAuthState() {
         viewModelScope.launch {
+            _authState.value = AuthState.InitialLoading
             delay(1500)
             safeApiCall { authRepository.getCurrentUserData() }
                 .onSuccess { user ->
@@ -163,7 +167,7 @@ class AuthViewModel @Inject constructor(
     private fun handleError(throwable: Throwable) {
         val appException = when (throwable) {
             is AppException -> throwable
-            is Exception -> ErrorMapper.mapFirebaseAuthError(throwable)
+            is Exception -> FirebaseErrorMapper.mapFirebaseAuthError(throwable)
             else -> AppException.UnknownException()
         }
         _authState.value = AuthState.Error(appException.message)

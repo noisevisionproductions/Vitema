@@ -3,9 +3,12 @@ package com.noisevisionsoftware.szytadieta
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.noisevisionsoftware.szytadieta.domain.auth.AuthRepository
-import com.noisevisionsoftware.szytadieta.domain.auth.SessionManager
+import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
+import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
+import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
+import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.BodyMeasurementRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.WeightRepository
 import dagger.Module
@@ -56,6 +59,14 @@ class AppModule {
 
     @Provides
     @Singleton
+    fun provideAdminRepository(
+        firestore: FirebaseFirestore
+    ): AdminRepository {
+        return AdminRepository(firestore)
+    }
+
+    @Provides
+    @Singleton
     fun provideNetworkConnectivityManager(
         @ApplicationContext context: Context
     ): NetworkConnectivityManager {
@@ -68,5 +79,19 @@ class AppModule {
         @ApplicationContext context: Context
     ): SessionManager {
         return SessionManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSettingsManager(
+        @ApplicationContext context: Context
+    ): SettingsManager {
+        return SettingsManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAlertManager(): AlertManager {
+        return AlertManager()
     }
 }

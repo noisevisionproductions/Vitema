@@ -1,15 +1,19 @@
 package com.noisevisionsoftware.szytadieta.ui.base
 
-import app.cash.turbine.test
 import com.noisevisionsoftware.szytadieta.MainDispatcherRule
+import com.noisevisionsoftware.szytadieta.domain.alert.Alert
+import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
-import com.noisevisionsoftware.szytadieta.ui.common.UiEvent
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -23,65 +27,126 @@ class BaseViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val networkManager: NetworkConnectivityManager = mockk()
+    private val alertManager: AlertManager = mockk()
     private val networkStatusFlow = MutableStateFlow(true)
 
     init {
         every { networkManager.isNetworkConnected } returns networkStatusFlow
+        coEvery { alertManager.showAlert(any()) } just Runs
     }
 
     private class TestViewModel(
-        networkManager: NetworkConnectivityManager
-    ) : BaseViewModel(networkManager) {
-        fun emitError(message: String) = showError(message)
-        fun emitSuccess(message: String) = showSuccess(message)
-        suspend fun testApiCall() = safeApiCall { Result.success(true) }
-    }
+        networkManager: NetworkConnectivityManager,
+        alertManager: AlertManager
+    ) : BaseViewModel(networkManager, alertManager)
 
     @Test
-    fun `when showing error with network available, should emit error event`() = runTest {
-        val viewModel = TestViewModel(networkManager)
+    fun showErrorWithNetworkAvailableShouldShowErrorAlert() = runTest {
+        val viewModel = TestViewModel(networkManager, alertManager)
         val errorMessage = "Test error"
 
-        viewModel.uiEvent.test {
-            viewModel.emitError(errorMessage)
+        viewModel.showError(errorMessage)
+        advanceUntilIdle()
 
-            assertEquals(null, awaitItem())
-            val event = awaitItem()
-            assertTrue(event is UiEvent.ShowError)
-            assertEquals(errorMessage, (event as UiEvent.ShowError).message)
+        coVerify {
+            alertManager.showAlert(withArg { alert ->
+                assertTrue(alert is Alert.Error)
+                assertEquals(errorMessage, alert.message)
+            })
         }
     }
 
     @Test
-    fun `when showing success with network available, should emit success event`() = runTest {
-        val viewModel = TestViewModel(networkManager)
+    fun showErrorWithoutNetworkShouldShowNetworkError() = runTest {
+        val viewModel = TestViewModel(networkManager, alertManager)
+        networkStatusFlow.value = false
+        advanceUntilIdle()
+
+        viewModel.showError("Test error")
+        advanceUntilIdle()
+
+        coVerify {
+            alertManager.showAlert(withArg { alert ->
+                assertTrue(alert is Alert.Error)
+                assertEquals("Brak połączenia z internetem", alert.message)
+            })
+        }
+    }
+
+    @Test
+    fun showSuccessWithNetworkAvailableShouldShowSuccessAlert() = runTest {
+        val viewModel = TestViewModel(networkManager, alertManager)
         val successMessage = "Test success"
 
-        viewModel.uiEvent.test {
-            viewModel.emitSuccess(successMessage)
+        viewModel.showSuccess(successMessage)
+        advanceUntilIdle()
 
-            assertEquals(null, awaitItem())
-            val event = awaitItem()
-            assertTrue(event is UiEvent.ShowSuccess)
-            assertEquals(successMessage, (event as UiEvent.ShowSuccess).message)
+        coVerify {
+            alertManager.showAlert(withArg { alert ->
+                assertTrue(alert is Alert.Success)
+                assertEquals(successMessage, alert.message)
+            })
         }
     }
 
     @Test
-    fun `safeApiCall should return failure when network is unavailable`() = runTest {
-        val viewModel = TestViewModel(networkManager)
-
+    fun showSuccessWithoutNetworkShouldShowNetworkError() = runTest {
+        val viewModel = TestViewModel(networkManager, alertManager)
         networkStatusFlow.value = false
-        advanceTimeBy(100)
+        advanceUntilIdle()
 
-        val result = viewModel.testApiCall()
+        viewModel.showSuccess("Test success")
+        advanceUntilIdle()
+
+        coVerify {
+            alertManager.showAlert(withArg { alert ->
+                assertTrue(alert is Alert.Error)
+                assertEquals("Brak połączenia z internetem", alert.message)
+            })
+        }
+    }
+
+    @Test
+    fun safeApiCallShouldReturnFailureWhenNetworkIsUnavailable() = runTest {
+        val viewModel = TestViewModel(networkManager, alertManager)
+        networkStatusFlow.value = false
+        advanceUntilIdle()
+
+        val result = viewModel.safeApiCall { Result.success(true) }
 
         assertTrue(result.isFailure)
         val exception = result.exceptionOrNull()
-        assertTrue(
-            "Expected NetworkException but was ${exception?.javaClass}",
-            exception is AppException.NetworkException
-        )
-        assertEquals("Brak połączenia z internetem", exception?.message)
+        assertTrue(exception is AppException.NetworkException)
+        if (exception != null) {
+            assertEquals("Brak połączenia z internetem", exception.message)
+        }
+    }
+
+    @Test
+    fun safeApiCallShouldReturnSuccessWhenNetworkIsAvailable() = runTest {
+        val viewModel = TestViewModel(networkManager, alertManager)
+        networkStatusFlow.value = true
+        advanceUntilIdle()
+
+        val result = viewModel.safeApiCall { Result.success(true) }
+
+        assertTrue(result.isSuccess)
+        assertEquals(true, result.getOrNull())
+    }
+
+    @Test
+    fun shouldShowNetworkErrorWhenNetworkBecomesUnavailable() = runTest {
+        TestViewModel(networkManager, alertManager)
+        advanceUntilIdle()
+
+        networkStatusFlow.value = false
+        advanceUntilIdle()
+
+        coVerify {
+            alertManager.showAlert(withArg { alert ->
+                assertTrue(alert is Alert.Error)
+                assertEquals("Brak połączenia z internetem", alert.message)
+            })
+        }
     }
 }

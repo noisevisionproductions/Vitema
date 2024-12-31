@@ -38,6 +38,15 @@ object ValidationManager {
         }
     }
 
+    fun validatePasswordConfirmation(password: String, confirmPassword: String): Result<Unit> {
+        return when {
+            password != confirmPassword ->
+                Result.failure(AppException.ValidationException("Hasła nie są identyczne"))
+
+            else -> Result.success(Unit)
+        }
+    }
+
     fun validateNickname(nickname: String): Result<Unit> {
         return when {
             nickname.isBlank() ->
@@ -56,15 +65,6 @@ object ValidationManager {
         }
     }
 
-    fun validatePasswordConfirmation(password: String, confirmPassword: String): Result<Unit> {
-        return when {
-            password != confirmPassword ->
-                Result.failure(AppException.ValidationException("Hasła nie są identyczne"))
-
-            else -> Result.success(Unit)
-        }
-    }
-
     fun validateBirthDate(birthDate: Long): Result<Unit> {
         val calendar = Calendar.getInstance()
         val birthCalendar = Calendar.getInstance().apply {
@@ -77,12 +77,15 @@ object ValidationManager {
             birthDate > System.currentTimeMillis() -> {
                 Result.failure(AppException.ValidationException("Data urodzenia nie może być w przyszłości"))
             }
+
             age > 100 -> {
                 Result.failure(AppException.ValidationException("Nieprawidłowa data urodzenia"))
             }
+
             age < 13 -> {
                 Result.failure(AppException.ValidationException("Musisz mieć co najmniej 13 lat"))
             }
+
             else -> Result.success(Unit)
         }
     }
@@ -91,20 +94,28 @@ object ValidationManager {
         return when {
             measurements.neck <= 0 ->
                 Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód szyi"))
+
             measurements.biceps <= 0 ->
                 Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód bicepsa"))
+
             measurements.chest <= 0 ->
                 Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód klatki piersiowej"))
+
             measurements.waist <= 0 ->
                 Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód talii"))
+
             measurements.hips <= 0 ->
                 Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód bioder"))
+
             measurements.thigh <= 0 ->
                 Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód uda"))
+
             measurements.calf <= 0 ->
                 Result.failure(AppException.ValidationException("Wprowadź prawidłowy obwód łydki"))
+
             measurements.weight <= 0 ->
                 Result.failure(AppException.ValidationException("Wprowadź prawidłową wagę"))
+
             else -> Result.success(Unit)
         }
     }

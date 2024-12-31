@@ -58,6 +58,7 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            isReturnDefaultValues = true
         }
     }
 }
@@ -101,13 +102,15 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Testing
-    testImplementation(libs.testng)
-    testImplementation(libs.robolectric)
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.core.testing)
     testImplementation(libs.google.truth)
     testImplementation(libs.turbine)
     testImplementation(libs.hilt.android.testing)
+    testImplementation(libs.shadows.framework)
+    testImplementation(libs.core.ktx)
+    testImplementation(libs.androidx.junit.ktx)
 }

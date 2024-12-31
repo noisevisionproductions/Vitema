@@ -7,8 +7,10 @@ androidxComposeBom = "2024.12.01"
 androidxComposeCompiler = "1.5.8"
 
 # Kotlin and KSP
+coreKtx = "1.6.1"
 datastorePreferences = "1.1.1"
 integrity = "1.4.0"
+junitKtx = "1.2.1"
 kotlin = "1.9.22"
 kotlinxCoroutinesTestVersion = "1.10.1"
 ksp = "1.9.22-1.0.17"
@@ -36,6 +38,7 @@ kotlinxCoroutinesCore = { version.ref = "coroutines" }
 
 # Testing
 robolectric = "4.10.3"
+shadowsFramework = "4.11.1"
 testng = "7.10.2"
 junit = "4.13.2"
 mockk = "1.13.14"
@@ -50,6 +53,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastorePreferences" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junitKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "androidxLifecycle" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidxActivityCompose" }
 
@@ -63,6 +67,7 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
+core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtx" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version = "23.1.0" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version = "25.1.1" }
@@ -78,6 +83,7 @@ kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-cor
 kotlinx-coroutines-test-v1101 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTestVersion" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+shadows-framework = { module = "org.robolectric:shadows-framework", version.ref = "shadowsFramework" }
 testng = { group = "org.testng", name = "testng", version.ref = "testng" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }

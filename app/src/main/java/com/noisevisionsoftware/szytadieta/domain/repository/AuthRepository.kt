@@ -1,5 +1,6 @@
-package com.noisevisionsoftware.szytadieta.domain.auth
+package com.noisevisionsoftware.szytadieta.domain.repository
 
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -84,6 +85,24 @@ class AuthRepository @Inject constructor(
         Result.failure(e)
     }
 
+    suspend fun updatePassword(oldPassword: String, newPassword: String): Result<Unit> {
+        return try {
+            val currentUser = auth.currentUser
+                ?: return Result.failure(Exception("Użytkownik nie jest zalogowany"))
+
+            val email = currentUser.email ?: return Result.failure(Exception("Brak adresu email"))
+
+            val credential = EmailAuthProvider.getCredential(email, oldPassword)
+            currentUser.reauthenticate(credential).await()
+
+            currentUser.updatePassword(newPassword).await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
     fun logout(): Result<Unit> = try {
@@ -91,5 +110,37 @@ class AuthRepository @Inject constructor(
         Result.success(Unit)
     } catch (e: Exception) {
         Result.failure(e)
+    }
+
+    suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            val currentUser =
+                auth.currentUser
+                    ?: return Result.failure(Exception("Użytkownik nie jest zalogowany"))
+
+            firestore.collection("users")
+                .document(currentUser.uid)
+                .delete()
+                .await()
+
+            val batch = firestore.batch()
+
+            firestore.collection("bodyMeasurements")
+                .whereEqualTo("userId", currentUser.uid)
+                .get()
+                .await()
+                .documents
+                .forEach { doc ->
+                    batch.delete(doc.reference)
+                }
+
+            batch.commit().await()
+
+            currentUser.delete().await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

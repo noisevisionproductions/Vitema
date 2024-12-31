@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.ui.screens.profile
+package com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile
 
 import android.icu.util.Calendar
 import androidx.compose.foundation.BorderStroke
@@ -40,11 +40,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.model.Gender
-import com.noisevisionsoftware.szytadieta.ui.common.UiEventHandler
 
 @Composable
 fun CompleteProfileScreen(
-    profileViewModel: ProfileViewModel = hiltViewModel(),
+    completeProfileViewModel: CompleteProfileViewModel = hiltViewModel(),
     onSkip: () -> Unit,
     isLoading: Boolean = false
 ) {
@@ -67,17 +66,12 @@ fun CompleteProfileScreen(
             onSave = {
                 selectedDate?.let { date ->
                     selectedGender?.let { gender ->
-                        profileViewModel.setTempBirthDate(date)
-                        profileViewModel.setTempGender(gender)
-                        profileViewModel.saveProfile()
+                        completeProfileViewModel.setTempBirthDate(date)
+                        completeProfileViewModel.setTempGender(gender)
+                        completeProfileViewModel.saveProfile()
                     }
                 }
             }
-        )
-
-        UiEventHandler(
-            uiEvent = profileViewModel.uiEvent,
-            modifier = Modifier.align(Alignment.TopCenter),
         )
     }
 

@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.domain.auth
+package com.noisevisionsoftware.szytadieta.domain.localPreferences
 
 import android.content.Context
 import androidx.datastore.core.DataStore

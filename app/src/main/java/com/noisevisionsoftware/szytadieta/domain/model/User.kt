@@ -9,7 +9,8 @@ data class User(
     val nickname: String = "",
     val gender: Gender? = null,
     val birthDate: Long? = null,
-    val profileCompleted: Boolean = false
+    val profileCompleted: Boolean = false,
+    val role: UserRole = UserRole.USER
 ) {
     fun getAge(): Int? {
         return birthDate?.let {

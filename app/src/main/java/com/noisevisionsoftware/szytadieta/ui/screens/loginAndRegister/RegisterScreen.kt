@@ -41,7 +41,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.ui.common.UiEventHandler
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -75,7 +74,7 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Dołącz do FitApp",
+                text = "Dołącz do Szytej Diety",
                 style = MaterialTheme.typography.displaySmall,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -256,9 +255,5 @@ fun RegisterScreen(
                 }
             }
         }
-        UiEventHandler(
-            uiEvent = viewModel.uiEvent,
-            modifier = Modifier.align(Alignment.TopCenter),
-        )
     }
 }
