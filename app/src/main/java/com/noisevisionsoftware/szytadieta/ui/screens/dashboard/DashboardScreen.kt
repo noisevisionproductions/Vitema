@@ -16,9 +16,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material3.BasicAlertDialog
@@ -57,6 +59,7 @@ fun DashboardScreen(
     onBodyMeasurementsClick: () -> Unit = {},
     onProgressClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    onMealPlanClick: () -> Unit = {}
 ) {
     val userState by viewModel.userRole.collectAsState()
 
@@ -99,6 +102,22 @@ fun DashboardScreen(
                         icon = Icons.Default.MonitorWeight,
                         backgroundColor = MaterialTheme.colorScheme.primary,
                         onClick = onProgressClick
+                    )
+                }
+                item {
+                    DashboardCard(
+                        title = "Plan posiłków",
+                        icon = Icons.Default.Restaurant,
+                        backgroundColor = MaterialTheme.colorScheme.primary,
+                        onClick = onMealPlanClick
+                    )
+                }
+                item {
+                    DashboardCard(
+                        title = "Lista zakupów",
+                        icon = Icons.AutoMirrored.Filled.Note,
+                        backgroundColor = MaterialTheme.colorScheme.tertiary,
+                        onClick = {}
                     )
                 }
                 item {

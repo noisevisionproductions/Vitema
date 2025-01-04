@@ -4,4 +4,5 @@ sealed class AdminScreen {
     data object Dashboard: AdminScreen()
     data object UserManagement : AdminScreen()
     data object Statistics: AdminScreen()
+    data object FileUpload: AdminScreen()
 }

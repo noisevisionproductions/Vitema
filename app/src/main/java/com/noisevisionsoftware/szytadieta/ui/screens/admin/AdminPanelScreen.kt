@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.Card
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
+import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.FileUploadScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.userManagement.UserManagementScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.model.AdminMenuItem
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.navigation.AdminScreen
@@ -57,7 +59,7 @@ fun AdminPanelScreen(
     BackHandler {
         if (currentScreen != AdminScreen.Dashboard) {
             currentScreen = AdminScreen.Dashboard
-        } else{
+        } else {
             onBackClick()
         }
     }
@@ -77,6 +79,7 @@ fun AdminPanelScreen(
                     AdminScreen.Dashboard -> "Panel administratora"
                     AdminScreen.UserManagement -> "Zarządzanie użytkownikami"
                     AdminScreen.Statistics -> "Statystyki"
+                    AdminScreen.FileUpload -> "Dodaj diety"
                 },
                 onBackClick = {
                     if (currentScreen == AdminScreen.Dashboard) {
@@ -89,7 +92,7 @@ fun AdminPanelScreen(
                 showFilterIcon = currentScreen == AdminScreen.UserManagement,
                 showRefreshIcon = currentScreen == AdminScreen.Statistics,
                 onSearchClick = { showSearchBar = true },
-                onRefreshClick = {statisticsViewModel.loadStatistics()}
+                onRefreshClick = { statisticsViewModel.loadStatistics() }
             )
         }
     ) { padding ->
@@ -108,7 +111,9 @@ fun AdminPanelScreen(
                     onSearchBarVisibilityChange = { showSearchBar = it }
                 )
 
-                AdminScreen.Statistics ->  StatisticsScreen()
+                AdminScreen.Statistics -> StatisticsScreen()
+
+                AdminScreen.FileUpload -> FileUploadScreen()
             }
         }
     }
@@ -131,6 +136,12 @@ private fun AdminDashboard(
                 description = "Zobacz statystyki aplikacji",
                 icon = Icons.Default.BarChart,
                 screen = AdminScreen.Statistics
+            ),
+            AdminMenuItem(
+                title = "Dodaj dietę",
+                description = "Wrzuć plik z dietą",
+                icon = Icons.Default.CloudUpload,
+                screen = AdminScreen.FileUpload
             )
         )
     }

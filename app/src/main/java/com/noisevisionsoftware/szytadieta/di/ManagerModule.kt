@@ -1,4 +1,5 @@
 package com.noisevisionsoftware.szytadieta.di
+
 import android.content.Context
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager

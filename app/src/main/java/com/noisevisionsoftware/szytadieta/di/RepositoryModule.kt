@@ -1,16 +1,24 @@
 package com.noisevisionsoftware.szytadieta.di
-import android.os.Build
-import androidx.annotation.RequiresApi
+
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.BodyMeasurementRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.DietRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.FileRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.StatisticsRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.WeightRepository
+import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelParserService
+import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelValidationService
+import com.noisevisionsoftware.szytadieta.domain.service.dietService.DietService
+import com.noisevisionsoftware.szytadieta.domain.service.dietService.FileMetadataService
+import com.noisevisionsoftware.szytadieta.domain.service.dietService.StorageService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -48,5 +56,34 @@ object RepositoryModule {
         firestore: FirebaseFirestore
     ): StatisticsRepository {
         return StatisticsRepository(firestore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFileRepository(
+        storageService: StorageService,
+        fileMetadataService: FileMetadataService,
+        dietService: DietService,
+        excelValidationService: ExcelValidationService,
+        excelParserService: ExcelParserService,
+        @ApplicationContext appContext: Context
+    ): FileRepository {
+        return FileRepository(
+            storageService,
+            fileMetadataService,
+            dietService,
+            excelValidationService,
+            excelParserService,
+            appContext
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideDietRepository(
+        dietService: DietService,
+        authRepository: AuthRepository
+    ): DietRepository {
+        return DietRepository(dietService, authRepository)
     }
 }

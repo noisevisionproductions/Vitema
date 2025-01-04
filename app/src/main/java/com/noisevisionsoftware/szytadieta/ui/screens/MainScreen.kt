@@ -22,6 +22,7 @@ import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.AuthViewMo
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.ForgotPassword
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.LoginScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.RegisterScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.MealPlanScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.UserProfileScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile.CompleteProfileScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile.CompleteProfileViewModel
@@ -146,7 +147,8 @@ fun MainScreen(
                             onAdminPanelClick = { currentScreen = Screen.AdminPanel },
                             onProgressClick = { currentScreen = Screen.Weight },
                             onSettingsClick = { currentScreen = Screen.Settings },
-                            onProfileClick = { currentScreen = Screen.Profile }
+                            onProfileClick = { currentScreen = Screen.Profile },
+                            onMealPlanClick = { currentScreen = Screen.MealPlan }
                         )
                     }
 
@@ -158,6 +160,12 @@ fun MainScreen(
 
                     Screen.BodyMeasurements -> {
                         BodyMeasurementsScreen(
+                            onBackClick = { currentScreen = Screen.Dashboard }
+                        )
+                    }
+
+                    Screen.MealPlan -> {
+                        MealPlanScreen(
                             onBackClick = { currentScreen = Screen.Dashboard }
                         )
                     }
@@ -182,6 +190,7 @@ private fun HandleBackButton(
             Screen.Weight,
             Screen.BodyMeasurements,
             Screen.Profile,
+            Screen.MealPlan,
             Screen.Settings -> {
                 onScreenChange(Screen.Dashboard)
             }

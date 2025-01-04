@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.noisevisionsoftware.szytadieta"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -47,7 +47,19 @@ android {
     }
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += listOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/INDEX.LIST",
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/license.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/notice.txt",
+                "META-INF/ASL2.0",
+                "META-INF/*.kotlin_module"
+            )
         }
     }
     tasks.withType<Test> {
@@ -72,6 +84,9 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.gson)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
@@ -103,6 +118,15 @@ dependencies {
 
     // Charts - Vico
     implementation(libs.mpandroidchart)
+
+    // Apache POI
+    implementation(libs.poi)
+    implementation(libs.poi.ooxml)
+    implementation(libs.log4j.api)
+    implementation(libs.log4j.core)
+    implementation(libs.log4j.slf4j2.impl)
+    implementation(libs.slf4j.api)
+    implementation(libs.slf4j.simple)
 
     // Testing
     testImplementation(libs.junit)
