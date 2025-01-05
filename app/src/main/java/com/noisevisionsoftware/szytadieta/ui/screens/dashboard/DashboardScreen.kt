@@ -1,32 +1,30 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.dashboard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AdminPanelSettings
-import androidx.compose.material.icons.filled.MonitorWeight
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,102 +37,136 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserRole
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
+import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.MealPlanCard
+import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.MeasurementsCard
+import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.UserProfileCard
+import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.WeightCard
+import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.shoppingListCard.DashboardShoppingListViewModel
+import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.shoppingListCard.ShoppingListCard
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
+    shoppingListViewModel: DashboardShoppingListViewModel = hiltViewModel(),
     onAdminPanelClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onBodyMeasurementsClick: () -> Unit = {},
     onProgressClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
-    onMealPlanClick: () -> Unit = {}
+    onMealPlanClick: () -> Unit = {},
+    onShoppingListClick: () -> Unit = {}
 ) {
-    val userState by viewModel.userRole.collectAsState()
+    val userRole by viewModel.userRole.collectAsState()
+    val userData by viewModel.userData.collectAsState()
+    val latestWeight by viewModel.latestWeight.collectAsState()
+    val latestMeasurements by viewModel.latestMeasurements.collectAsState()
+    val todayMeals by viewModel.todayMeals.collectAsState()
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            scope.launch {
+                coroutineScope {
+                    launch { viewModel.refreshDashboardData() }
+                    launch { shoppingListViewModel.refreshShoppingList() }
+                }
+            }
+        }
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .pullRefresh(pullRefreshState)
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            TopBar(
-                onLogoutClick = onLogoutClick,
-                onAdminPanelClick = onAdminPanelClick,
-                onProfileClick = onProfileClick,
-                userState = userState
-            )
+            item {
+                TopBar(
+                    onLogoutClick = onLogoutClick,
+                    onAdminPanelClick = onAdminPanelClick,
+                    onProfileClick = onProfileClick,
+                    userState = userRole
+                )
+            }
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-            ) {
-                item {
-                    DashboardCard(
-                        title = "Pomiary",
-                        icon = Icons.Default.Straighten,
-                        backgroundColor = MaterialTheme.colorScheme.primary,
-                        onClick = onBodyMeasurementsClick
-                    )
-                }
-                item {
-                    DashboardCard(
-                        title = "Waga",
-                        icon = Icons.Default.MonitorWeight,
-                        backgroundColor = MaterialTheme.colorScheme.primary,
-                        onClick = onProgressClick
-                    )
-                }
-                item {
-                    DashboardCard(
-                        title = "Plan posiłków",
-                        icon = Icons.Default.Restaurant,
-                        backgroundColor = MaterialTheme.colorScheme.primary,
+            item {
+                UserProfileCard(
+                    userData = userData,
+                    onClick = onProfileClick
+                )
+            }
+
+            item {
+                WeightCard(
+                    latestWeight = latestWeight,
+                    onClick = onProgressClick
+                )
+            }
+            item {
+                MeasurementsCard(
+                    latestMeasurements = latestMeasurements,
+                    onClick = onBodyMeasurementsClick
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    MealPlanCard(
+                        modifier = Modifier.weight(1f),
+                        todayMeals = todayMeals,
                         onClick = onMealPlanClick
                     )
-                }
-                item {
-                    DashboardCard(
-                        title = "Lista zakupów",
-                        icon = Icons.AutoMirrored.Filled.Note,
-                        backgroundColor = MaterialTheme.colorScheme.tertiary,
-                        onClick = {}
-                    )
-                }
-                item {
-                    DashboardCard(
-                        title = "Ustawienia",
-                        icon = Icons.Default.Settings,
-                        backgroundColor = MaterialTheme.colorScheme.tertiary,
-                        onClick = onSettingsClick
+                    ShoppingListCard(
+                        modifier = Modifier.weight(1f),
+                        onClick = onShoppingListClick
                     )
                 }
             }
+
+            /*  item {
+            SettingsCard(onClick = onSettingsClick)
+        }*/
         }
+
+        PullRefreshIndicator(
+            refreshing = isRefreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter),
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
 @Composable
-fun TopBar(
+private fun TopBar(
     onLogoutClick: () -> Unit,
     onAdminPanelClick: () -> Unit,
     onProfileClick: () -> Unit,
@@ -143,57 +175,59 @@ fun TopBar(
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
 
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = "Witaj!",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Text(
-                text = "Co dzisiaj zjemy?",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
-            if (userState is ViewModelState.Success && userState.data == UserRole.ADMIN) {
-                IconButton(onClick = { onAdminPanelClick() }) {
-                    Icon(
-                        imageVector = Icons.Default.AdminPanelSettings,
-                        contentDescription = "Panel admina",
-                        modifier = Modifier.size(40.dp),
-                        tint = MaterialTheme.colorScheme.primary
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Szyta Dieta",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
-            }
-            IconButton(onClick = { showLogoutDialog = true }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = "Wyloguj",
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.primary
+
+                Text(
+                    text = "Twój osobisty plan żywieniowy",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            IconButton(onClick = { onProfileClick() }) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AnimatedVisibility(
+                    visible = userState is ViewModelState.Success && userState.data == UserRole.ADMIN,
+                    enter = fadeIn() + expandHorizontally(),
+                    exit = fadeOut() + shrinkHorizontally()
+                ) {
+                    TopBarIconButton(
+                        icon = Icons.Default.AdminPanelSettings,
+                        contentDescription = "Panel admina",
+                        onClick = onAdminPanelClick
+                    )
+                }
+
+                TopBarIconButton(
+                    icon = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = "Wyloguj",
+                    onClick = { showLogoutDialog = true }
+                )
+
+                TopBarIconButton(
+                    icon = Icons.Default.AccountCircle,
                     contentDescription = "Profil",
-                    modifier = Modifier.size(40.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    onClick = onProfileClick
                 )
             }
         }
@@ -205,55 +239,36 @@ fun TopBar(
                 showLogoutDialog = false
                 onLogoutClick()
             },
-            onDismiss = {
-                showLogoutDialog = false
-            }
+            onDismiss = { showLogoutDialog = false }
         )
     }
 }
 
 @Composable
-fun DashboardCard(
-    title: String,
+private fun TopBarIconButton(
     icon: ImageVector,
-    backgroundColor: Color,
+    contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    val isHovered by remember { mutableStateOf(false) }
+
+    IconButton(
+        onClick = onClick,
         modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor.copy(alpha = 0.8f)
-        ),
-        shape = RoundedCornerShape(16.dp)
+            .pointerHoverIcon(PointerIcon.Hand)
     ) {
-        Column(
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(48.dp)
-                    .padding(bottom = 8.dp),
-                tint = MaterialTheme.colorScheme.onPrimary
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimary,
-                textAlign = TextAlign.Center
-            )
-        }
+                .size(40.dp)
+                .scale(if (isHovered) 1.1f else 1f),
+            tint = MaterialTheme.colorScheme.primary
+        )
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

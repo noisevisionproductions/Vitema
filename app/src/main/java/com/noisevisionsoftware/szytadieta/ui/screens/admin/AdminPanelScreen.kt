@@ -40,17 +40,21 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.FileUploadScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.FileUploadViewModel
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.userManagement.UserManagementScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.model.AdminMenuItem
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.navigation.AdminScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.statistics.StatisticsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.statistics.StatisticsViewModel
+import com.noisevisionsoftware.szytadieta.ui.screens.admin.userManagement.UserManagementViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminPanelScreen(
     adminViewModel: AdminPanelViewModel = hiltViewModel(),
     statisticsViewModel: StatisticsViewModel = hiltViewModel(),
+    fileUploadViewModel: FileUploadViewModel = hiltViewModel(),
+    userManagementViewModel: UserManagementViewModel = hiltViewModel(),
     onBackClick: () -> Unit
 ) {
     var currentScreen by remember { mutableStateOf<AdminScreen>(AdminScreen.Dashboard) }
@@ -72,6 +76,15 @@ fun AdminPanelScreen(
             }
     }
 
+    val handleRefresh = {
+        when (currentScreen) {
+            AdminScreen.Statistics -> statisticsViewModel.loadStatistics()
+            AdminScreen.FileUpload -> fileUploadViewModel.loadUploadScreen()
+            AdminScreen.UserManagement -> userManagementViewModel.loadUsers()
+            else -> {}
+        }
+    }
+
     Scaffold(
         topBar = {
             CustomTopAppBar(
@@ -90,9 +103,9 @@ fun AdminPanelScreen(
                 },
                 showSearchIcon = currentScreen == AdminScreen.UserManagement,
                 showFilterIcon = currentScreen == AdminScreen.UserManagement,
-                showRefreshIcon = currentScreen == AdminScreen.Statistics,
+                showRefreshIcon = currentScreen != AdminScreen.Dashboard,
                 onSearchClick = { showSearchBar = true },
-                onRefreshClick = { statisticsViewModel.loadStatistics() }
+                onRefreshClick = handleRefresh
             )
         }
     ) { padding ->

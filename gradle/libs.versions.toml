@@ -50,6 +50,7 @@ kotlinxCoroutinesTest = { version.ref = "coroutines" }
 kotlinxCoroutinesCore = { version.ref = "coroutines" }
 
 # Testing
+materialVersion = "1.7.6"
 mpandroidchart = "v3.1.0"
 poi = "5.3.0"
 poiOoxml = "5.3.0"
@@ -77,6 +78,7 @@ woodstoxCore = "7.0.0"
 woodstoxCoreAsl = "4.4.1"
 xercesimpl = "2.12.2"
 xmlbeans = "5.2.1"
+navigationSafeArgsGenerator = "2.8.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidxCore" }
@@ -97,6 +99,7 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
+androidx-material = { module = "androidx.compose.material:material", version.ref = "materialVersion" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtx" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version = "23.1.0" }
@@ -138,6 +141,7 @@ turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine
 woodstox-core = { module = "com.fasterxml.woodstox:woodstox-core", version.ref = "woodstoxCore" }
 woodstox-core-asl = { module = "org.codehaus.woodstox:woodstox-core-asl", version.ref = "woodstoxCoreAsl" }
 xercesimpl = { module = "xerces:xercesImpl", version.ref = "xercesimpl" }
+androidx-navigation-safe-args-generator = { group = "androidx.navigation", name = "navigation-safe-args-generator", version.ref = "navigationSafeArgsGenerator" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

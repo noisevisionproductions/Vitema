@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.SearchableContent
+import com.noisevisionsoftware.szytadieta.ui.screens.admin.userManagement.components.UserList
 
 @Composable
 fun UserManagementScreen(

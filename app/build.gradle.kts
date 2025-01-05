@@ -103,6 +103,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.preferences.core)
 
+    implementation(libs.androidx.material)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -120,8 +121,8 @@ dependencies {
     implementation(libs.mpandroidchart)
 
     // Apache POI
-    implementation(libs.poi)
-    implementation(libs.poi.ooxml)
+    implementation(libs.poi.v523)
+    implementation(libs.poi.ooxml.v523)
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
     implementation(libs.log4j.slf4j2.impl)

@@ -7,6 +7,8 @@ data class Diet(
     val userId: String = "",
     val fileUrl: String = "",
     val uploadedAt: Long = System.currentTimeMillis(),
+    val startDate: Long = System.currentTimeMillis(),
+    val endDate: Long = System.currentTimeMillis(),
     val weeklyPlan: List<DayPlan> = emptyList(),
     val shoppingList: ShoppingList? = null
 )

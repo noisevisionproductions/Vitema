@@ -57,7 +57,7 @@ class UserManagementViewModel @Inject constructor(
         }
     }
 
-    private fun loadUsers() {
+    fun loadUsers() {
         handleOperation(_userState) {
             val users = adminRepository.getAllUsers().getOrThrow()
             SearchableData.create(

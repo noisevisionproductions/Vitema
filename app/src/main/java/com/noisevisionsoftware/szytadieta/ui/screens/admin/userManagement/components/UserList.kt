@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.ui.screens.admin.userManagement
+package com.noisevisionsoftware.szytadieta.ui.screens.admin.userManagement.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

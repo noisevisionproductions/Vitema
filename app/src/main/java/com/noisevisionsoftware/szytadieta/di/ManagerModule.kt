@@ -2,6 +2,7 @@ package com.noisevisionsoftware.szytadieta.di
 
 import android.content.Context
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
+import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
@@ -32,6 +33,12 @@ object ManagerModule {
     fun provideSettingsManager(
         @ApplicationContext context: Context
     ): SettingsManager = SettingsManager(context)
+
+    @Provides
+    @Singleton
+    fun providePreferencesManager(
+        @ApplicationContext context: Context
+    ): PreferencesManager = PreferencesManager(context)
 
     @Provides
     @Singleton

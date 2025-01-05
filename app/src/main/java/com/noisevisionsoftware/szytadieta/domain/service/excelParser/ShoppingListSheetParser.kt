@@ -1,5 +1,6 @@
 package com.noisevisionsoftware.szytadieta.domain.service.excelParser
 
+import android.util.Log
 import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.ShoppingCategory
 import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.ShoppingList
 import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.ShoppingProduct
@@ -10,59 +11,115 @@ import javax.inject.Inject
 
 class ShoppingListSheetParser @Inject constructor() {
 
+    companion object {
+        private const val CATEGORY_COLUMN = 0
+        private const val PRODUCT_COLUMN = 1
+        private const val QUANTITY_COLUMN = 2
+    }
+
     fun parseShoppingList(sheet: Sheet): ShoppingList {
         val categoryMap = mutableMapOf<String, MutableList<ShoppingProduct>>()
+        var currentCategory = ""
 
         for (rowIndex in 1..sheet.lastRowNum) {
             val row = sheet.getRow(rowIndex) ?: continue
 
-            val category = getCellValue(row.getCell(0))
-            val productName = getCellValue(row.getCell(1))
-            val quantity = parseQuantity(row.getCell(2))
-            val unit = getCellValue(row.getCell(3))
+            val categoryCell = getCellValue(row.getCell(CATEGORY_COLUMN))
+            val productName = getCellValue(row.getCell(PRODUCT_COLUMN))
+            val quantityString = getCellValue(row.getCell(QUANTITY_COLUMN))
 
-            if (category.isNotBlank() && productName.isNotBlank()) {
+            if (categoryCell.isNotBlank()) {
+                currentCategory = categoryCell
+            }
+
+            if (productName.isNotBlank()) {
+                val (quantity, unit) = if (quantityString.isBlank()) {
+                    Log.w(
+                        "ShoppingListParser",
+                        "Brak ilości dla produktu: $productName w kategorii: $currentCategory"
+                    )
+                    Pair(0.0, "")
+                } else {
+                    parseQuantityAndUnit(quantityString)
+                }
+
                 val product = ShoppingProduct(
                     name = productName,
                     weeklyQuantity = quantity,
                     unit = unit
                 )
-                categoryMap.getOrPut(category) { mutableListOf() }.add(product)
+                categoryMap.getOrPut(currentCategory) { mutableListOf() }.add(product)
             }
         }
 
-        val categories = categoryMap.map { (name, products) ->
-            ShoppingCategory(name, products)
-        }
-
-        return ShoppingList(categories)
+        return ShoppingList(
+            categoryMap.map { (name, products) ->
+                ShoppingCategory(name, products.sortedBy { it.name })
+            }.sortedBy { it.name }
+        )
     }
 
-    private fun parseQuantity(cell: Cell?): Double {
-        return when {
-            cell == null -> 0.0
-            cell.cellType == CellType.NUMERIC -> cell.numericCellValue
-            cell.cellType == CellType.STRING -> cell.stringCellValue.toDoubleOrNull() ?: 0.0
-            cell.cellType == CellType.FORMULA -> when (cell.cachedFormulaResultType) {
-                CellType.NUMERIC -> cell.numericCellValue
-                CellType.STRING -> cell.stringCellValue.toDoubleOrNull() ?: 0.0
-                else -> 0.0
+    private fun parseQuantityAndUnit(value: String): Pair<Double, String> {
+        val pattern = """([\d,.]+)\s*([a-zA-Złśżźćńąę]+|sztuki?|opakowania?)?""".toRegex()
+
+        val match = pattern.find(value.trim())
+        if (match != null) {
+            val quantityStr = match.groupValues[1].replace(",", ".")
+            val quantity = formatQuantity(quantityStr.toDoubleOrNull() ?: 0.0)
+            val unit = match.groupValues[2].trim()
+
+            val normalizedUnit = when {
+                unit.startsWith("sztuk") || unit.startsWith("szt") -> "sztuk"
+                unit.startsWith("opak") -> "opakowania"
+                unit.startsWith("kilo") || unit == "kg" -> "kg"
+                unit.startsWith("gram") || unit == "g" -> "g"
+                unit.startsWith("litr") || unit == "l" -> "l"
+                unit.startsWith("mili") || unit == "ml" -> "ml"
+                else -> {
+                    Log.w("ShoppingListParser", "Nieznana jednostka miary: $unit")
+                    unit
+                }
             }
-            else -> 0.0
+
+            return Pair(quantity, normalizedUnit)
         }
+
+        return Pair(0.0, "")
+    }
+
+    private fun formatQuantity(value: Double): Double {
+        if (value % 1 == 0.0) {
+            return value.toInt().toDouble()
+        }
+        return value
     }
 
     private fun getCellValue(cell: Cell?): String {
         if (cell == null) return ""
 
         return when (cell.cellType) {
-            CellType.NUMERIC -> cell.numericCellValue.toString()
+            CellType.NUMERIC -> {
+                val value = cell.numericCellValue
+                if (value % 1 == 0.0) {
+                    value.toInt().toString()
+                } else {
+                    value.toString()
+                }
+            }
             CellType.STRING -> cell.stringCellValue
             CellType.FORMULA -> when (cell.cachedFormulaResultType) {
-                CellType.NUMERIC -> cell.numericCellValue.toString()
+                CellType.NUMERIC -> {
+                    val value = cell.numericCellValue
+                    if (value % 1 == 0.0) {
+                        value.toInt().toString()
+                    } else {
+                        value.toString()
+                    }
+                }
                 CellType.STRING -> cell.stringCellValue
                 else -> ""
             }
+
             else -> cell.toString()
         }.trim()
     }

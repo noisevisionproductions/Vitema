@@ -4,6 +4,7 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -142,5 +143,12 @@ class AuthRepository @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    suspend fun <T> withAuthenticatedUser(action: suspend (String) -> T): T {
+        val currentUser = getCurrentUser()
+            ?: throw AppException.AuthException("Użytkownik nie jest zalogowany")
+
+        return action(currentUser.uid)
     }
 }

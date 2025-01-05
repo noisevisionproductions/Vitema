@@ -6,10 +6,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.BodyMeasurementRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.DietRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.FileRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.StatisticsRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.WeightRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.ShoppingListRepository
 import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelParserService
 import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelValidationService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.DietService
@@ -85,5 +86,15 @@ object RepositoryModule {
         authRepository: AuthRepository
     ): DietRepository {
         return DietRepository(dietService, authRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideShoppingListRepository(
+        firebaseFirestore: FirebaseFirestore
+    ): ShoppingListRepository {
+        return ShoppingListRepository(
+            firestore = firebaseFirestore
+        )
     }
 }

@@ -10,11 +10,15 @@ val DarkGreen = Color(0xFF2E7D32)    // Ciemniejszy zielony z logo
 val Orange = Color(0xFFFF5722)       // Pomarańczowy z jabłka
 val White = Color(0xFFFFFFFF)        // Biały z widelca/łyżki
 
+// Kolory bursztynowe jako akcenty
+val Amber80 = Color(0xFF8C6D1F)
+val Amber40 = Color(0xFFD5BF30)
+
 // Odcienie zielonego
 val Green90 = Color(0xFF1B5E20)
-val Green70 = Color(0xFF388E3C)
-val Green30 = Color(0xFF9CCC65)
-val Green20 = Color(0xFFC5E1A5)
+val Green70 = Color(0xFF43A047)      // Bardziej nasycony
+val Green30 = Color(0xFF81C784)      // Bardziej żywy
+val Green20 = Color(0xFFA5D6A7)
 val Green10 = Color(0xFFE8F5E9)
 
 // Neutralne kolory
@@ -31,9 +35,9 @@ val DarkColorScheme = darkColorScheme(
     primaryContainer = DarkGreen,
     onPrimaryContainer = Green20,
 
-    secondary = Orange,
+    secondary = Amber80,
     onSecondary = White,
-    secondaryContainer = Color(0xFFFF8A65),
+    secondaryContainer = Amber40,
     onSecondaryContainer = Grey90,
 
     tertiary = Green70,
@@ -41,7 +45,7 @@ val DarkColorScheme = darkColorScheme(
     tertiaryContainer = Green30,
     onTertiaryContainer = Grey90,
 
-    background = Grey90,
+    background = Color.Transparent,
     onBackground = White,
 
     surface = Grey80,
@@ -70,10 +74,10 @@ val LightColorScheme = lightColorScheme(
     primaryContainer = BrightGreen,
     onPrimaryContainer = Green90,
 
-    secondary = Orange,
+    secondary = Amber80,
     onSecondary = White,
-    secondaryContainer = Color(0xFFFFCCBC),
-    onSecondaryContainer = Color(0xFFE64A19),
+    secondaryContainer = Amber40,
+    onSecondaryContainer = Grey90,
 
     tertiary = Green70,
     onTertiary = White,

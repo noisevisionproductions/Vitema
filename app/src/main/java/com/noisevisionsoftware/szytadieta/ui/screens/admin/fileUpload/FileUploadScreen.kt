@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UploadArea
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UploadControls
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UploadProgressUI
+import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UserSelectionSections
 
 private val SUPPORTED_MIME_TYPES = arrayOf(
     "application/vnd.ms-excel",                     // .xls
@@ -35,8 +38,11 @@ fun FileUploadScreen(
     viewModel: FileUploadViewModel = hiltViewModel()
 ) {
     val uploadState by viewModel.uploadState.collectAsState()
+    val userState by viewModel.userState.collectAsState()
+    val selectedUsers by viewModel.selectedUsers.collectAsState()
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
     var selectedFileName by remember { mutableStateOf<String?>(null) }
+    var showUserSearch by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -54,10 +60,6 @@ fun FileUploadScreen(
         }
     }
 
-    val handleFileSelection = {
-        filePickerLauncher.launch(SUPPORTED_MIME_TYPES)
-    }
-
     val handleUpload = {
         if (selectedFileUri != null && selectedFileName != null) {
             viewModel.uploadFile(selectedFileUri!!, selectedFileName!!)
@@ -69,14 +71,24 @@ fun FileUploadScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        UserSelectionSections(
+            userState = userState,
+            showUserSearch = showUserSearch,
+            selectedUsers = selectedUsers,
+            onSearchVisibilityChange = { showUserSearch = it },
+            onSearch = viewModel::searchUser,
+            onUserSelect = viewModel::toggleUserSelection
+        )
+
         UploadArea(
             selectedFileUri = selectedFileUri,
             selectedFileName = selectedFileName,
-            onFileSelect = handleFileSelection
+            onFileSelect = { filePickerLauncher.launch(SUPPORTED_MIME_TYPES) }
         )
 
         UploadControls(

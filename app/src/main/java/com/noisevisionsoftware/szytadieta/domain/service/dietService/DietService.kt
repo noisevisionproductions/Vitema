@@ -15,19 +15,24 @@ class DietService @Inject constructor(
             .await()
     }
 
-    suspend fun getDiet(dietId: String): Result<Diet> = runCatching {
-        val snapshot = firestore.collection("diets")
-            .document(dietId)
-            .get()
-            .await()
-
-        snapshot.toObject(Diet::class.java)
-            ?: throw Exception("Nie znaleziono diety")
-    }
-
     suspend fun getUserDiets(userId: String): Result<List<Diet>> = runCatching {
         val snapshot = firestore.collection("diets")
             .whereEqualTo("userId", userId)
+            .get()
+            .await()
+
+        snapshot.documents.mapNotNull { it.toObject(Diet::class.java) }
+    }
+
+    suspend fun getUserDietsForPeriod(
+        userId: String,
+        startDate: Long,
+        endDate: Long
+    ): Result<List<Diet>> = runCatching {
+        val snapshot = firestore.collection("diets")
+            .whereEqualTo("userId", userId)
+            .whereGreaterThanOrEqualTo("startDate", startDate)
+            .whereLessThanOrEqualTo("endDate", endDate)
             .get()
             .await()
 
