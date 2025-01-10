@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,9 +29,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
+import com.noisevisionsoftware.szytadieta.ui.common.ConfirmAlertDialog
 import com.noisevisionsoftware.szytadieta.ui.common.CustomProgressIndicator
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
@@ -108,7 +106,8 @@ private fun ProfileScreenPage(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -182,7 +181,8 @@ private fun ProfileScreenPage(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
@@ -227,7 +227,7 @@ private fun ProfileScreenPage(
         }
 
         Button(
-            onClick = {},
+            onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.EditProfile) },
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
@@ -241,12 +241,16 @@ private fun ProfileScreenPage(
     }
 
     if (showLogoutDialog) {
-        LogoutConfirmationDialog(
+        ConfirmAlertDialog(
             onConfirm = {
                 showLogoutDialog = false
                 onLogoutClick()
             },
-            onDismiss = { showLogoutDialog = false }
+            onDismiss = { showLogoutDialog = false },
+            title = "Wylogowywanie",
+            message = "Czy na pewno chcesz się wylogować?",
+            confirmActionText = "Wyloguj",
+            dismissActionText = "Anuluj"
         )
     }
 }
@@ -260,7 +264,8 @@ private fun ProfileSection(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -308,70 +313,6 @@ private fun ProfileItem(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun LogoutConfirmationDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    BasicAlertDialog(
-        onDismissRequest = onDismiss,
-    ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = "Wylogowywanie",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "Czy na pewno chcesz się wylogować?",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    ) {
-                        Text("Anuluj")
-                    }
-
-                    TextButton(
-                        onClick = onConfirm,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text("Wyloguj")
-                    }
-                }
-            }
         }
     }
 }

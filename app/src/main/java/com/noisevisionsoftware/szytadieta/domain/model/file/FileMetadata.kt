@@ -1,5 +1,6 @@
 package com.noisevisionsoftware.szytadieta.domain.model.file
 
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import java.util.UUID
 
 data class FileMetadata (
@@ -8,6 +9,6 @@ data class FileMetadata (
     val fileName: String,
     val fileUrl: String,
     val fileType: FileType,
-    val uploadedAt: Long = System.currentTimeMillis(),
+    val uploadedAt: Long = DateUtils.getCurrentLocalDate(),
     val status: FileStatus = FileStatus.PENDING
 )

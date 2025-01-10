@@ -82,10 +82,10 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideDietRepository(
-        dietService: DietService,
+        firestore: FirebaseFirestore,
         authRepository: AuthRepository
     ): DietRepository {
-        return DietRepository(dietService, authRepository)
+        return DietRepository(firestore, authRepository)
     }
 
     @Provides

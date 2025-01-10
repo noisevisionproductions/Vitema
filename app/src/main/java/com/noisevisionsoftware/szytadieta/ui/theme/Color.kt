@@ -7,7 +7,6 @@ import androidx.compose.ui.graphics.Color
 // Główne kolory zainspirowane logo
 val BrightGreen = Color(0xFF7CB342)
 val DarkGreen = Color(0xFF2E7D32)
-val Orange = Color(0xFFFF5722)
 val White = Color(0xFFFFFFFF)
 
 val Amber80 = Color(0xFF8C6D1F)
@@ -17,7 +16,6 @@ val Green90 = Color(0xFF1B5E20)
 val Green70 = Color(0xFF43A047)
 val Green30 = Color(0xFF81C784)
 val Green20 = Color(0xFFA5D6A7)
-val Green10 = Color(0xFFE8F5E9)
 
 val Grey90 = Color(0xFF202020)
 val Grey80 = Color(0xFF404040)
@@ -69,25 +67,25 @@ val LightColorScheme = lightColorScheme(
     primary = DarkGreen,
     onPrimary = White,
     primaryContainer = BrightGreen,
-    onPrimaryContainer = Green90,
+    onPrimaryContainer = Grey90,
 
-    secondary = Amber80,
-    onSecondary = White,
-    secondaryContainer = Amber40,
-    onSecondaryContainer = Grey90,
+    secondary = Amber40,
+    onSecondary = Grey90,
+    secondaryContainer = Amber80,
+    onSecondaryContainer = White,
 
     tertiary = Green70,
     onTertiary = White,
-    tertiaryContainer = Green10,
+    tertiaryContainer = Green20,
     onTertiaryContainer = Green90,
 
-    background = Grey10,
+    background = Color.Transparent,
     onBackground = Grey90,
 
-    surface = White,
+    surface = Grey10,
     onSurface = Grey90,
     surfaceVariant = Grey20,
-    onSurfaceVariant = Grey70,
+    onSurfaceVariant = Grey80,
 
     outline = Grey40,
     outlineVariant = Grey20,
@@ -97,7 +95,7 @@ val LightColorScheme = lightColorScheme(
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
 
-    inversePrimary = BrightGreen,
+    inversePrimary = Green70,
     inverseSurface = Grey80,
     inverseOnSurface = Grey20,
 

@@ -9,11 +9,11 @@ data class User(
     val nickname: String = "",
     val gender: Gender? = null,
     val birthDate: Long? = null,
-    val storedAge: Int? = 0,
+    val storedAge: Int = 0,
     val profileCompleted: Boolean = false,
     val role: UserRole = UserRole.USER
 ) {
-    fun calculateAge(): Int? {
+    fun calculateAge(): Int {
         return birthDate?.let {
             val today = Calendar.getInstance()
             val birthCalendar = Calendar.getInstance().apply {
@@ -25,6 +25,6 @@ data class User(
                 age--
             }
             age
-        }
+        } ?: 0
     }
 }

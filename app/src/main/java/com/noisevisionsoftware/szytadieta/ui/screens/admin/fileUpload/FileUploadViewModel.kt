@@ -16,6 +16,7 @@ import com.noisevisionsoftware.szytadieta.domain.state.file.UploadResultStatus
 import com.noisevisionsoftware.szytadieta.domain.state.file.UploadStage
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,9 +42,33 @@ class FileUploadViewModel @Inject constructor(
     private val _selectedUsers = MutableStateFlow<Set<String>>(emptySet())
     val selectedUsers = _selectedUsers.asStateFlow()
 
+    private val _selectedStartDate = MutableStateFlow<Long?>(null)
+    val selectedStartDate = _selectedStartDate.asStateFlow()
+
     private val uploadResults = mutableListOf<UploadResult>()
 
     init {
+        loadUsers()
+    }
+
+    private fun loadUsers() {
+        handleOperation(_userState) {
+            val users = adminRepository.getAllUsers().getOrThrow()
+            SearchableData.create(
+                items = users,
+                searchPredicate = { user, query ->
+                    user.email.contains(query, ignoreCase = true) ||
+                            user.nickname.contains(query, ignoreCase = true)
+                }
+            )
+        }
+    }
+
+    fun loadUploadScreen() {
+        _uploadState.value = FileUploadState.Initial
+        _selectedUsers.value = emptySet()
+        _selectedStartDate.value = null
+        uploadResults.clear()
         loadUsers()
     }
 
@@ -65,44 +90,64 @@ class FileUploadViewModel @Inject constructor(
         }
     }
 
+    fun setSelectedStartDate(date: Long) {
+        _selectedStartDate.value = date
+    }
 
     fun uploadFile(uri: Uri, fileName: String) {
-        if (selectedUsers.value.isEmpty()) {
-            showError("Wybierz przynajmniej jednego użytkownika")
-            return
-        }
+        when {
+            selectedUsers.value.isEmpty() -> {
+                showError("Wybierz przynajmniej jednego użytkownika")
+                return
+            }
 
-        viewModelScope.launch {
-            try {
-                uploadResults.clear()
-                _uploadState.value = FileUploadState.Loading(
-                    message = "Rozpoczynanie przesyłania",
-                    progress = 0,
-                    stage = UploadStage.UPLOADING,
-                    previousStages = emptyList()
-                )
+            selectedStartDate.value == null -> {
+                showError("Wybierz tydzień dla diety")
+                return
+            }
 
-                selectedUsers.value.forEach { userId ->
-                    fileRepository.uploadFile(uri, userId, fileName)
-                        .collect { progress ->
-                            when (progress) {
-                                is UploadProgress.Progress -> {
-                                    handleProgressUpdate(progress)
-                                }
+            else -> {
+                viewModelScope.launch {
+                    try {
+                        uploadResults.clear()
+                        _uploadState.value = FileUploadState.Loading(
+                            message = "Rozpoczynanie przesyłania",
+                            progress = 0,
+                            stage = UploadStage.UPLOADING,
+                            previousStages = emptyList()
+                        )
 
-                                is UploadProgress.Success -> {
-                                    handleUploadSuccess()
-                                }
+                        selectedUsers.value.forEach { userId ->
+                            val startDate = selectedStartDate.value!!
+                            val endDate = DateUtils.addDaysToDate(startDate,6)
 
-                                is UploadProgress.Error -> {
-                                    handleUploadError(progress.message)
+                            fileRepository.uploadFile(
+                                uri = uri,
+                                userId = userId,
+                                fileName = fileName,
+                                startDate = startDate,
+                                endDate = endDate
+                            ).collect { progress ->
+                                when (progress) {
+                                    is UploadProgress.Progress -> {
+                                        handleProgressUpdate(progress)
+                                    }
+
+                                    is UploadProgress.Success -> {
+                                        handleUploadSuccess()
+                                    }
+
+                                    is UploadProgress.Error -> {
+                                        handleUploadError(progress.message)
+                                    }
                                 }
                             }
                         }
+                    } catch (e: Exception) {
+                        val errorMessage = e.message ?: "Wystąpił błąd podczas przesyłania pliku"
+                        handleUploadError(errorMessage)
+                    }
                 }
-            } catch (e: Exception) {
-                val errorMessage = e.message ?: "Wystąpił błąd podczas przesyłania pliku"
-                handleUploadError(errorMessage)
             }
         }
     }
@@ -187,26 +232,6 @@ class FileUploadViewModel @Inject constructor(
                 message = message
             )
         )
-    }
-
-    private fun loadUsers() {
-        handleOperation(_userState) {
-            val users = adminRepository.getAllUsers().getOrThrow()
-            SearchableData.create(
-                items = users,
-                searchPredicate = { user, query ->
-                    user.email.contains(query, ignoreCase = true) ||
-                            user.nickname.contains(query, ignoreCase = true)
-                }
-            )
-        }
-    }
-
-    fun loadUploadScreen() {
-        _uploadState.value = FileUploadState.Initial
-        _selectedUsers.value = emptySet()
-        uploadResults.clear()
-        loadUsers()
     }
 
     override fun onUserLoggedOut() {

@@ -15,7 +15,6 @@ import com.noisevisionsoftware.szytadieta.ui.base.AppEvent
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -33,6 +32,9 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState<User>>(AuthState.Initial)
     val authState = _authState.asStateFlow()
 
+    private val _profileCompleted = MutableStateFlow<Boolean?>(null)
+    val profileCompleted = _profileCompleted.asStateFlow()
+
     val userSession = sessionManager.userSessionFlow
 
     init {
@@ -42,11 +44,11 @@ class AuthViewModel @Inject constructor(
     private fun checkAuthState() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            delay(1500)
             safeApiCall { authRepository.getCurrentUserData() }
                 .onSuccess { user ->
                     user?.let {
                         sessionManager.saveUserSession(it)
+                        checkProfileCompletion(it)
                         _authState.value = AuthState.Success(it)
                     } ?: run {
                         _authState.value = AuthState.Error("Użytkownik nie jest zalogowany")
@@ -61,15 +63,14 @@ class AuthViewModel @Inject constructor(
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
-                _authState.value = AuthState.Loading
                 ValidationManager.validateEmail(email).getOrThrow()
                 ValidationManager.validatePassword(password).getOrThrow()
+                _authState.value = AuthState.Loading
 
                 val result = authRepository.login(email, password)
                 result.onSuccess { user ->
-                    sessionManager.saveUserSession(user)
+                    handleSuccessfulAuth(user)
                     showSuccess("Zalogowano pomyślnie")
-                    _authState.value = AuthState.Success(user)
                 }.onFailure { throwable ->
                     handleAuthError(throwable)
                 }
@@ -82,23 +83,24 @@ class AuthViewModel @Inject constructor(
     fun register(nickname: String, email: String, password: String, confirmPassword: String) {
         viewModelScope.launch {
             try {
-                _authState.value = AuthState.Loading
                 ValidationManager.validateNickname(nickname).getOrThrow()
                 ValidationManager.validateEmail(email).getOrThrow()
                 ValidationManager.validatePassword(password).getOrThrow()
                 ValidationManager.validatePasswordConfirmation(password, confirmPassword)
                     .getOrThrow()
 
+                _authState.value = AuthState.Loading
+
                 val result = authRepository.register(nickname, email, password)
                 result.onSuccess { user ->
-                    sessionManager.saveUserSession(user)
+                    handleSuccessfulAuth(user)
                     showSuccess("Konto zostało utworzone")
-                    _authState.value = AuthState.Success(user)
                 }.onFailure { throwable ->
                     handleAuthError(throwable)
                 }
             } catch (e: Exception) {
                 handleAuthError(e)
+
             }
         }
     }
@@ -153,11 +155,54 @@ class AuthViewModel @Inject constructor(
 
     private fun handleAuthError(throwable: Throwable) {
         val appException = when (throwable) {
+            is AppException.ValidationException -> {
+                showError(throwable.message)
+                return
+            }
+
+            is AppException.AuthException -> {
+                showError(throwable.message)
+                _authState.value = AuthState.Initial
+                return
+            }
+
             is AppException -> throwable
             is Exception -> FirebaseErrorMapper.mapFirebaseAuthError(throwable)
             else -> AppException.UnknownException()
         }
-        _authState.value = AuthState.Error(appException.message)
+        if (appException is AppException.NetworkException || appException is AppException.UnknownException) {
+            _authState.value = AuthState.Error(appException.message)
+        } else {
+            // Dla błędów auth zostajemy na ekranie
+            _authState.value = AuthState.Initial
+        }
         showError(appException.message)
+    }
+
+    private fun checkProfileCompletion(user: User) {
+        viewModelScope.launch {
+            _profileCompleted.value = user.let {
+                it.birthDate != null &&
+                        it.gender != null &&
+                        it.storedAge > 0
+            }
+        }
+    }
+
+    private suspend fun handleSuccessfulAuth(user: User) {
+        sessionManager.saveUserSession(user)
+        checkProfileCompletion(user)
+        _authState.value = AuthState.Success(user)
+    }
+
+    override fun onRefreshData() {
+        viewModelScope.launch {
+            authRepository.getCurrentUserData()
+                .onSuccess { user ->
+                    user?.let {
+                        checkProfileCompletion(it)
+                    }
+                }
+        }
     }
 }

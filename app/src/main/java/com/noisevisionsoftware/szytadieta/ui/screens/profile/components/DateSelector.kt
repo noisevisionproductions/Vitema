@@ -18,7 +18,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
 
 @Composable
 fun DateSelector(
@@ -76,7 +76,7 @@ fun ProfileDatePicker(
     onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate ?: System.currentTimeMillis()
+        initialSelectedDateMillis = initialDate ?: DateUtils.getCurrentLocalDate()
     )
 
     DatePickerDialog(

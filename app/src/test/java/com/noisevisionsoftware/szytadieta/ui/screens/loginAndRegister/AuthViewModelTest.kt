@@ -2,7 +2,6 @@ package com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
-import com.noisevisionsoftware.szytadieta.HiltTestApplication_Application
 import com.noisevisionsoftware.szytadieta.MainDispatcherRule
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
@@ -11,6 +10,7 @@ import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
+import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.coEvery
@@ -30,7 +30,6 @@ import org.robolectric.annotation.Config
 
 @ExperimentalCoroutinesApi
 @HiltAndroidTest
-@Config(application = HiltTestApplication_Application::class)
 @RunWith(RobolectricTestRunner::class)
 class AuthViewModelTest {
 
@@ -45,6 +44,7 @@ class AuthViewModelTest {
     private lateinit var sessionManager: SessionManager
     private lateinit var networkManager: NetworkConnectivityManager
     private lateinit var alertManager: AlertManager
+    private lateinit var eventBus: EventBus
 
     private val email = "test@example.com"
     private val password = "password123"
@@ -65,6 +65,7 @@ class AuthViewModelTest {
         sessionManager = mockk(relaxed = false)
         networkManager = mockk(relaxed = true)
         alertManager = mockk(relaxed = true)
+        eventBus = mockk(relaxed = true)
 
         coEvery { networkManager.isNetworkConnected } returns flowOf(true)
         every { networkManager.isCurrentlyConnected() } returns true
@@ -75,7 +76,7 @@ class AuthViewModelTest {
 
         coEvery { authRepository.getCurrentUserData() } returns Result.success(null)
 
-        viewModel = AuthViewModel(authRepository, sessionManager, networkManager, alertManager)
+        viewModel = AuthViewModel(authRepository, sessionManager, networkManager, alertManager, eventBus)
     }
 
     @Test

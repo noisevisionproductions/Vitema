@@ -41,14 +41,14 @@ class BodyMeasurementRepositoryTest {
         id = "test_id",
         userId = "user_id",
         date = System.currentTimeMillis(),
-        neck = 35.0,
-        biceps = 32.0,
-        chest = 95.0,
-        waist = 80.0,
-        hips = 90.0,
-        thigh = 55.0,
-        calf = 35.0,
-        weight = 75.0,
+        neck = 35,
+        biceps = 32,
+        chest = 95,
+        waist = 80,
+        hips = 90,
+        thigh = 55,
+        calf = 35,
+        weight = 75,
         weekNumber = 1
     )
 

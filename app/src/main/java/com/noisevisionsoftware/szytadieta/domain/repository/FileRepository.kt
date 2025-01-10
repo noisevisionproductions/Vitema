@@ -4,11 +4,11 @@ import android.content.Context
 import android.net.Uri
 import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.Diet
 import com.noisevisionsoftware.szytadieta.domain.model.file.FileStatus
-import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelParserService
-import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelValidationService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.DietService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.FileMetadataService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.StorageService
+import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelParserService
+import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelValidationService
 import com.noisevisionsoftware.szytadieta.domain.state.file.UploadProgress
 import com.noisevisionsoftware.szytadieta.domain.state.file.UploadStage
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -28,7 +28,9 @@ class FileRepository @Inject constructor(
     fun uploadFile(
         uri: Uri,
         userId: String,
-        fileName: String
+        fileName: String,
+        startDate: Long,
+        endDate:Long
     ): Flow<UploadProgress> = callbackFlow {
         try {
             val fileExtension = fileName.substringAfterLast(".", "")
@@ -42,7 +44,15 @@ class FileRepository @Inject constructor(
 
             val fileMetadata = fileMetadataService.createAndSaveMetadata(userId, fileName, downloadUrl)
 
-            parseAndSaveDiet(uri, userId, downloadUrl, fileExtension) { stage, progress ->
+            parseAndSaveDiet(
+                uri = uri,
+                userId = userId,
+                downloadUrl = downloadUrl,
+                fileExtension = fileExtension,
+                startDate = startDate,
+                endDate = endDate
+            ) {
+                stage, progress ->
                 trySend(UploadProgress.Progress(progress, stage))
             }
 
@@ -67,17 +77,22 @@ class FileRepository @Inject constructor(
     private suspend fun parseAndSaveDiet(
         uri: Uri,
         userId: String,
-        fileUrl: String,
+        downloadUrl: String,
         fileExtension: String,
+        startDate: Long,
+        endDate: Long,
         onProgress: (UploadStage, Int) -> Unit
     ): Diet {
         context.contentResolver.openInputStream(uri)?.use { parsingStream ->
             val diet = excelParserService.parseDietFile(
                 inputStream = parsingStream,
                 userId = userId,
-                fileUrl = fileUrl,
+                fileUrl = downloadUrl,
                 fileExtension = fileExtension
-            ).getOrThrow()
+            ).getOrThrow().copy(
+                startDate = startDate,
+                endDate = endDate
+            )
 
             onProgress(UploadStage.PARSING, 85)
             onProgress(UploadStage.SAVING, 90)
@@ -86,6 +101,4 @@ class FileRepository @Inject constructor(
             return diet
         } ?: throw IOException("Nie można otworzyć pliku do parsowania")
     }
-
-
 }

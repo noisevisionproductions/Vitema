@@ -20,16 +20,16 @@ import dagger.hilt.testing.TestInstallIn
 import io.mockk.mockk
 import javax.inject.Singleton
 
-@Module
+/*@Module
 @TestInstallIn(
     components = [SingletonComponent::class],
     replaces = [FirebaseModule::class,
         RepositoryModule::class,
         ManagerModule::class]
-)
+)*/
 class TestAppModule {
 
-    @Provides
+  /*  @Provides
     @Singleton
     fun provideFirebaseAuth(): FirebaseAuth = mockk(relaxed = true)
 
@@ -67,5 +67,5 @@ class TestAppModule {
 
     @Provides
     @Singleton
-    fun provideAlertManager(): AlertManager = mockk(relaxed = true)
+    fun provideAlertManager(): AlertManager = mockk(relaxed = true)*/
 }

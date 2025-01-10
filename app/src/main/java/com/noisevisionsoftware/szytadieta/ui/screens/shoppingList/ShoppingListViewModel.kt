@@ -1,6 +1,5 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.shoppingList
 
-import android.icu.util.Calendar
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
@@ -12,14 +11,15 @@ import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.Shopp
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
+import com.noisevisionsoftware.szytadieta.utils.getWeekStartDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
 import javax.inject.Inject
+import kotlin.math.abs
 
 @HiltViewModel
 class ShoppingListViewModel @Inject constructor(
@@ -50,6 +50,7 @@ class ShoppingListViewModel @Inject constructor(
     init {
         loadAvailableWeeks()
         loadCheckedProducts()
+        observeDietChanges()
     }
 
     fun loadAvailableWeeks() {
@@ -57,15 +58,24 @@ class ShoppingListViewModel @Inject constructor(
             try {
                 authRepository.withAuthenticatedUser { userId ->
                     val weeks = shoppingListRepository.getAvailableWeeks(userId).getOrThrow()
-
                     _availableWeeks.value = weeks
+
                     if (weeks.isNotEmpty()) {
-                        selectWeek(weeks.first())
+                        val currentWeekStart = getWeekStartDate(DateUtils.getCurrentLocalDate())
+                        val closestWeek = weeks.minByOrNull {
+                            abs(it - currentWeekStart)
+                        } ?: weeks.first()
+
+                        selectWeek(closestWeek)
+                    } else {
+                        _shoppingListState.value = ViewModelState.Success(
+                            ShoppingList(categories = emptyList())
+                        )
                     }
                 }
             } catch (e: Exception) {
                 Log.e("ShoppingListViewModel", "Error loading available weeks", e)
-                throw e
+                _shoppingListState.value = ViewModelState.Error("Nie znaleziono listy zakupów")
             }
         }
     }
@@ -85,7 +95,8 @@ class ShoppingListViewModel @Inject constructor(
         }
     }
 
-    fun selectWeek(weekStartDate: Long) {
+    fun selectWeek(selectedDate: Long) {
+        val weekStartDate = getWeekStartDate(selectedDate)
         _selectedWeek.value = weekStartDate
         loadShoppingListForWeek(weekStartDate)
     }
@@ -93,32 +104,23 @@ class ShoppingListViewModel @Inject constructor(
     private fun loadShoppingListForWeek(weekStartDate: Long) {
         handleOperation(_shoppingListState) {
             authRepository.withAuthenticatedUser { userId ->
-                val shoppingList =
-                    shoppingListRepository.getShoppingListForWeek(userId, weekStartDate)
-                        .getOrThrow()
+                try {
+                    val shoppingList =
+                        shoppingListRepository.getShoppingListForWeek(userId, weekStartDate)
+                            .getOrThrow()
 
-                shoppingList.copy(
-                    categories = shoppingList.categories.map { category ->
-                        category.copy(
-                            products = category.products.filter { it.name.isNotBlank() }
-                        )
-                    }.filter { it.products.isNotEmpty() }
-                )
+                    shoppingList.copy(
+                        categories = shoppingList.categories.map { category ->
+                            category.copy(
+                                products = category.products.filter { it.name.isNotBlank() }
+                            )
+                        }.filter { it.products.isNotEmpty() }
+                    )
+                } catch (e: Exception) {
+                    ShoppingList(categories = emptyList())
+                }
             }
         }
-    }
-
-    fun getFormattedWeekDate(timestamp: Long): String {
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = timestamp
-        }
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-        val startDate = dateFormat.format(calendar.time)
-
-        calendar.add(Calendar.DAY_OF_YEAR, 6)
-        val endDate = dateFormat.format(calendar.time)
-
-        return "$startDate - $endDate"
     }
 
     fun selectedCategory(category: String?) {
@@ -145,6 +147,38 @@ class ShoppingListViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("ShoppingListViewModel", "Error toggling product", e)
                 throw e
+            }
+        }
+    }
+
+    fun navigateToClosestAvailableWeek() {
+        viewModelScope.launch {
+            try {
+                availableWeeks.value.firstOrNull()?.let { closestDate ->
+                    selectWeek(closestDate)
+                }
+            } catch (e: Exception) {
+                Log.e("Shopping List", "Error navigating to closest available week", e)
+                throw e
+            }
+        }
+    }
+
+    private fun observeDietChanges() {
+        viewModelScope.launch {
+            try {
+                authRepository.withAuthenticatedUser { userId ->
+                    shoppingListRepository.observerDietChanges(userId).collect { hasActiveDiet ->
+                        if (!hasActiveDiet) {
+                            preferencesManager.clearCheckedProducts(userId)
+                            _checkedProducts.value = emptySet()
+                            _shoppingListState.value =
+                                ViewModelState.Success(ShoppingList(categories = emptyList()))
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ShoppingListViewModel", "Error observing diet changes", e)
             }
         }
     }

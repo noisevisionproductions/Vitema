@@ -3,7 +3,6 @@ package com.noisevisionsoftware.szytadieta.domain.repository
 import android.icu.util.Calendar
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.toObject
 import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
 import com.noisevisionsoftware.szytadieta.domain.model.MeasurementType
 import kotlinx.coroutines.tasks.await

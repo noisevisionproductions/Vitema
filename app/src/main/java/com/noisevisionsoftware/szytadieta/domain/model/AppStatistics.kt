@@ -1,6 +1,7 @@
 package com.noisevisionsoftware.szytadieta.domain.model
 
 import com.noisevisionsoftware.szytadieta.domain.model.user.Gender
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
 
 data class AppStatistics(
     val totalUsers: Int = 0,
@@ -12,5 +13,5 @@ data class AppStatistics(
     val usersByGender: Map<Gender, Int> = emptyMap(),
     val measurementsByMont: Map<String, Int> = emptyMap(),
     val averageUserAge: Double? = null,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = DateUtils.getCurrentLocalDate()
 )

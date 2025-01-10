@@ -2,6 +2,7 @@ package com.noisevisionsoftware.szytadieta.domain.exceptions
 
 import android.icu.util.Calendar
 import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
 
 object ValidationManager {
 
@@ -74,7 +75,7 @@ object ValidationManager {
         val age = calendar.get(Calendar.YEAR) - birthCalendar.get(Calendar.YEAR)
 
         return when {
-            birthDate > System.currentTimeMillis() -> {
+            birthDate > DateUtils.getCurrentLocalDate() -> {
                 Result.failure(AppException.ValidationException("Data urodzenia nie może być w przyszłości"))
             }
 

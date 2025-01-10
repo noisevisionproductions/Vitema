@@ -24,75 +24,103 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.noisevisionsoftware.szytadieta.ui.common.CustomDatePickerDialog
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
+import com.noisevisionsoftware.szytadieta.utils.getFormattedWeekDate
 import java.util.Calendar
 
 @Composable
-fun WeekSelector(
+fun DaySelectorForMealPlan(
     currentDate: Long,
     onDateSelected: (Long) -> Unit,
+    availableWeeks: List<Long>? = null,
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     val currentCalendar = Calendar.getInstance().apply { timeInMillis = currentDate }
-    val weekNumber = currentCalendar.get(Calendar.WEEK_OF_YEAR)
-    val year = currentCalendar.get(Calendar.YEAR)
+    val hasActiveDiet = availableWeeks?.any { startDate ->
+        val endDate = DateUtils.addDaysToDate(startDate, 6)
+        currentDate in startDate..endDate
+    } ?: false
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = {
-                currentCalendar.add(Calendar.WEEK_OF_YEAR, -1)
-                onDateSelected(currentCalendar.timeInMillis)
-            }) {
+            IconButton(
+                onClick = {
+                    currentCalendar.add(Calendar.DAY_OF_YEAR, -1)
+                    onDateSelected(currentCalendar.timeInMillis)
+                }
+            ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Poprzedni tydzień",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = if (hasActiveDiet)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { showDatePicker = true }
+                modifier = Modifier
+                    .clickable { showDatePicker = true }
+                    .padding(vertical = 12.dp)
+                    .fillMaxWidth(0.7f)
             ) {
                 Icon(
                     imageVector = Icons.Default.CalendarToday,
                     contentDescription = "Kalendarz",
                     modifier = Modifier.size(24.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = if (hasActiveDiet)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Tydzień $weekNumber, $year",
+                    text = getFormattedWeekDate(currentDate),
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = if (hasActiveDiet)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
             }
 
-            IconButton(onClick = {
-                currentCalendar.add(Calendar.WEEK_OF_YEAR, 1)
-                onDateSelected(currentCalendar.timeInMillis)
-            }) {
+            IconButton(
+                onClick = {
+                    currentCalendar.add(Calendar.DAY_OF_YEAR, 1)
+                    onDateSelected(currentCalendar.timeInMillis)
+                }
+            ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = "Następny tydzień",
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = if (hasActiveDiet)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
         if (showDatePicker) {
-            DatePickerDialog(
+            CustomDatePickerDialog(
+                highlightedDates = availableWeeks,
+                currentDate = currentDate,
                 onDateSelected = { date ->
                     onDateSelected(date)
                     showDatePicker = false

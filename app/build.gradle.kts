@@ -1,9 +1,29 @@
+import java.io.FileInputStream
+import java.util.Properties
+
+data class Version(
+    val major: Int,
+    val minor: Int,
+    val patch: Int,
+    val build: Int = 0
+) {
+    fun toVersionName(): String = "$major.$minor.$patch"
+    fun toVersionCode(): Int = major * 10000 + minor * 100 + patch
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
+}
+
+val keystorePropertiesFile: File = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -11,11 +31,17 @@ android {
     compileSdk = 35
 
     defaultConfig {
+        version = Version(
+            major = 1,
+            minor = 0,
+            patch = 2
+        )
+
         applicationId = "com.noisevisionsoftware.szytadieta"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (version as Version).toVersionCode()
+        versionName = (version as Version).toVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -23,13 +49,27 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            isDebuggable = true
         }
     }
     compileOptions {
@@ -87,6 +127,8 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.storage.ktx)
     implementation(libs.gson)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
@@ -102,6 +144,9 @@ dependencies {
     // Preferences
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.preferences.core)
+
+    // Documents reader
+    implementation(libs.compose.markdown)
 
     implementation(libs.androidx.material)
     implementation(libs.androidx.core.ktx)

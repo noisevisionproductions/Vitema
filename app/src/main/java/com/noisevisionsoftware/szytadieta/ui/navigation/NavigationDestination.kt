@@ -11,11 +11,17 @@ sealed class NavigationDestination {
         data object Settings : AuthenticatedDestination()
         data object AdminPanel : AuthenticatedDestination()
         data object CompleteProfile : AuthenticatedDestination()
+        data object Subscription : AuthenticatedDestination()
+        data object EditProfile : AuthenticatedDestination()
+        data object PrivacyPolicy : AuthenticatedDestination()
+        data object Regulations : AuthenticatedDestination()
     }
 
     sealed class UnauthenticatedDestination : NavigationDestination() {
         data object Login : UnauthenticatedDestination()
         data object Register : UnauthenticatedDestination()
         data object ForgotPassword : UnauthenticatedDestination()
+        data object PrivacyPolicy : UnauthenticatedDestination()
+        data object Regulations : UnauthenticatedDestination()
     }
 }

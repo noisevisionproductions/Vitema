@@ -57,7 +57,8 @@ fun ShoppingListCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -131,7 +132,7 @@ fun ShoppingListCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Zobacz pełną listę",
+                    text = "Kliknij, aby dowiedzieć się więcej",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.secondary
                 )

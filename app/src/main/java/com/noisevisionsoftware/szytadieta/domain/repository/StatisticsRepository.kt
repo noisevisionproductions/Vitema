@@ -5,6 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.noisevisionsoftware.szytadieta.domain.model.AppStatistics
 import com.noisevisionsoftware.szytadieta.domain.model.user.Gender
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import kotlinx.coroutines.tasks.await
 import java.util.Locale
 import javax.inject.Inject
@@ -111,7 +112,7 @@ class StatisticsRepository @Inject constructor(
 
         val oneHourInMillis = 60L * 60 * 1000
 
-        if (System.currentTimeMillis() - statistics.lastUpdated > oneHourInMillis) {
+        if (DateUtils.getCurrentLocalDate() - statistics.lastUpdated > oneHourInMillis) {
             generateStatistics()
                 .onSuccess { cacheStatistics(it) }
         } else {

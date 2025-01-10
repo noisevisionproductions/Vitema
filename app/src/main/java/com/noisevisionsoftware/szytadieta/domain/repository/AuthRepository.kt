@@ -12,6 +12,7 @@ import com.noisevisionsoftware.szytadieta.domain.model.MeasurementSourceType
 import com.noisevisionsoftware.szytadieta.domain.model.MeasurementType
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.pending.PendingUser
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -32,7 +33,7 @@ class AuthRepository @Inject constructor(
                 id = firebaseUser.uid,
                 email = email,
                 nickname = nickname,
-                createdAt = System.currentTimeMillis()
+                createdAt = DateUtils.getCurrentLocalDate()
             )
 
             if (pendingUserSnapshot.exists()) {

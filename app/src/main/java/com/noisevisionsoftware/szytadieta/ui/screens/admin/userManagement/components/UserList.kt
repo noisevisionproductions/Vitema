@@ -140,7 +140,7 @@ private fun UserCard(
                     UserInfoRow(
                         icon = Icons.Default.Cake,
                         label = "Wiek:",
-                        value = "${user.storedAge ?: 0}"
+                        value = "${user.storedAge}"
                     )
                     UserInfoRow(
                         icon = Icons.Default.Person,

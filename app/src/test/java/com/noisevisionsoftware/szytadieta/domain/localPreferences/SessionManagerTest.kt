@@ -57,7 +57,7 @@ class SessionManagerTest {
             scope = testCoroutineScope,
             produceFile = { testContext.preferencesDataStoreFile("test_session") }
         )
-        sessionManager = SessionManager(testContext)
+        /*sessionManager = SessionManager(testContext)*/
     }
 
     @After

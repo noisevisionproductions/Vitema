@@ -16,7 +16,8 @@ class MainViewModel @Inject constructor(
     private val eventBus: EventBus
 ) : ViewModel() {
 
-    private val _currentScreen = MutableStateFlow<NavigationDestination>(NavigationDestination.UnauthenticatedDestination.Login)
+    private val _currentScreen =
+        MutableStateFlow<NavigationDestination>(NavigationDestination.UnauthenticatedDestination.Login)
     val currentScreen = _currentScreen.asStateFlow()
 
     fun refreshAllScreens() {

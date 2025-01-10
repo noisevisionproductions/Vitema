@@ -36,15 +36,6 @@ class UserProfileViewModel @Inject constructor(
         }
     }
 
-    fun updateUserProfile(updateUser: User) {
-        handleOperation(_profileState) {
-            authRepository.updateUserData(updateUser)
-                .getOrThrow()
-            showSuccess("Profil został zakutalizowany")
-            updateUser
-        }
-    }
-
     override fun onUserLoggedOut() {
         _profileState.value = ViewModelState.Initial
     }

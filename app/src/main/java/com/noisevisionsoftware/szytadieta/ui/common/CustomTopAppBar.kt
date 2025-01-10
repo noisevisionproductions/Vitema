@@ -96,6 +96,8 @@ fun CustomTopAppBar(
             additionalActions?.invoke(this)
         },
         colors = colors,
-        modifier = modifier.topShadow()
+        modifier = modifier.topShadow(
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+        )
     )
 }

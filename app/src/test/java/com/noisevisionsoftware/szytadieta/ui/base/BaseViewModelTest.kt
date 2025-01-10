@@ -28,6 +28,7 @@ class BaseViewModelTest {
 
     private val networkManager: NetworkConnectivityManager = mockk()
     private val alertManager: AlertManager = mockk()
+    private val eventBus: EventBus = mockk()
     private val networkStatusFlow = MutableStateFlow(true)
 
     init {
@@ -37,12 +38,13 @@ class BaseViewModelTest {
 
     private class TestViewModel(
         networkManager: NetworkConnectivityManager,
-        alertManager: AlertManager
-    ) : BaseViewModel(networkManager, alertManager)
+        alertManager: AlertManager,
+        eventBus: EventBus
+    ) : BaseViewModel(networkManager, alertManager, eventBus)
 
     @Test
     fun showErrorWithNetworkAvailableShouldShowErrorAlert() = runTest {
-        val viewModel = TestViewModel(networkManager, alertManager)
+        val viewModel = TestViewModel(networkManager, alertManager, eventBus)
         val errorMessage = "Test error"
 
         viewModel.showError(errorMessage)
@@ -58,7 +60,7 @@ class BaseViewModelTest {
 
     @Test
     fun showErrorWithoutNetworkShouldShowNetworkError() = runTest {
-        val viewModel = TestViewModel(networkManager, alertManager)
+        val viewModel = TestViewModel(networkManager, alertManager, eventBus)
         networkStatusFlow.value = false
         advanceUntilIdle()
 
@@ -75,7 +77,7 @@ class BaseViewModelTest {
 
     @Test
     fun showSuccessWithNetworkAvailableShouldShowSuccessAlert() = runTest {
-        val viewModel = TestViewModel(networkManager, alertManager)
+        val viewModel = TestViewModel(networkManager, alertManager, eventBus)
         val successMessage = "Test success"
 
         viewModel.showSuccess(successMessage)
@@ -91,7 +93,7 @@ class BaseViewModelTest {
 
     @Test
     fun showSuccessWithoutNetworkShouldShowNetworkError() = runTest {
-        val viewModel = TestViewModel(networkManager, alertManager)
+        val viewModel = TestViewModel(networkManager, alertManager, eventBus)
         networkStatusFlow.value = false
         advanceUntilIdle()
 
@@ -108,7 +110,7 @@ class BaseViewModelTest {
 
     @Test
     fun safeApiCallShouldReturnFailureWhenNetworkIsUnavailable() = runTest {
-        val viewModel = TestViewModel(networkManager, alertManager)
+        val viewModel = TestViewModel(networkManager, alertManager, eventBus)
         networkStatusFlow.value = false
         advanceUntilIdle()
 
@@ -124,7 +126,7 @@ class BaseViewModelTest {
 
     @Test
     fun safeApiCallShouldReturnSuccessWhenNetworkIsAvailable() = runTest {
-        val viewModel = TestViewModel(networkManager, alertManager)
+        val viewModel = TestViewModel(networkManager, alertManager, eventBus)
         networkStatusFlow.value = true
         advanceUntilIdle()
 
@@ -136,7 +138,7 @@ class BaseViewModelTest {
 
     @Test
     fun shouldShowNetworkErrorWhenNetworkBecomesUnavailable() = runTest {
-        TestViewModel(networkManager, alertManager)
+        TestViewModel(networkManager, alertManager, eventBus)
         advanceUntilIdle()
 
         networkStatusFlow.value = false

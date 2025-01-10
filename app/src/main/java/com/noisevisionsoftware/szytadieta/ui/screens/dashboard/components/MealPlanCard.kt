@@ -46,7 +46,8 @@ fun MealPlanCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiaryContainer
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
@@ -256,7 +257,7 @@ private fun EmptyMealsContent() {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Brak zaplanowanych posiłków",
+            text = "Brak posiłków na dzisiaj",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onTertiaryContainer
         )
@@ -266,7 +267,7 @@ private fun EmptyMealsContent() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Kliknij, aby wypróbować nasze diety",
+                text = "Kliknij, aby dowiedzieć się więcej",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
             )

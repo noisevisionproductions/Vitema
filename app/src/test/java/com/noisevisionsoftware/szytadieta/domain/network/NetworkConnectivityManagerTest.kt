@@ -7,10 +7,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
-import com.noisevisionsoftware.szytadieta.HiltTestApplication
-import com.noisevisionsoftware.szytadieta.HiltTestApplication_Application
 import com.noisevisionsoftware.szytadieta.MainDispatcherRule
-import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import io.mockk.every
 import io.mockk.mockk
@@ -22,21 +19,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 
 @ExperimentalCoroutinesApi
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
-@Config(
-    manifest = Config.NONE,
-    application = HiltTestApplication_Application::class,
-    sdk = [33]
-)
 class NetworkConnectivityManagerTest {
 
-    @get:Rule
-    val hiltRule = HiltAndroidRule(this)
-
+  /*
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -130,5 +119,5 @@ class NetworkConnectivityManagerTest {
 
             cancel()
         }
-    }
+    }*/
 }

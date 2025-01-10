@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -32,7 +33,8 @@ fun SettingsSwitchItem(
     ) {
         Row(
             modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
@@ -72,7 +74,8 @@ fun SettingsClickableItem(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,

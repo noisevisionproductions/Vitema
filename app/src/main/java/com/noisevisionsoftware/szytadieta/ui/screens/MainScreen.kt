@@ -32,6 +32,8 @@ import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.AdminPanelScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.bodyMeasurements.BodyMeasurementsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.DashboardScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.documents.PrivacyPolicyScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.documents.RegulationsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.AuthViewModel
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.ForgotPassword
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.LoginScreen
@@ -39,25 +41,24 @@ import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.RegisterSc
 import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.MealPlanScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.UserProfileScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile.CompleteProfileScreen
-import com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile.CompleteProfileViewModel
+import com.noisevisionsoftware.szytadieta.ui.screens.profile.profileEdit.ProfileEditScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.settings.SettingsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.ShoppingListScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.splash.SplashScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.subscription.SubscriptionPlanScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.weight.WeightScreen
 import kotlinx.coroutines.delay
 
 @Composable
 fun MainScreen(
     mainViewModel: MainViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel = hiltViewModel(),
-    completeProfileViewModel: CompleteProfileViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val authState by authViewModel.authState.collectAsState()
     val userSession by authViewModel.userSession.collectAsState(initial = null)
+    val profileCompleted by authViewModel.profileCompleted.collectAsState()
     var isInitialLoading by remember { mutableStateOf(true) }
     val currentScreen by mainViewModel.currentScreen.collectAsState()
-    val isProfileCompleted by completeProfileViewModel.checkProfileCompletion()
-        .collectAsState(initial = true)
 
     LaunchedEffect(Unit) {
         delay(1500)
@@ -79,24 +80,24 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(authState, userSession) {
+    LaunchedEffect(authState, profileCompleted, isInitialLoading) {
         when {
-            userSession != null || authState is AuthState.Success -> {
-                if (!isProfileCompleted) {
-                    mainViewModel.updateScreen(NavigationDestination.AuthenticatedDestination.CompleteProfile)
-                } else {
-                    mainViewModel.updateScreen(NavigationDestination.AuthenticatedDestination.Dashboard)
-                }
+            authState is AuthState.Success && profileCompleted == false -> {
+                mainViewModel.updateScreen(NavigationDestination.AuthenticatedDestination.CompleteProfile)
             }
 
-            authState is AuthState.Logout -> {
+            authState is AuthState.Success && profileCompleted == true -> {
+                mainViewModel.updateScreen(NavigationDestination.AuthenticatedDestination.Dashboard)
+            }
+
+            authState is AuthState.Error || authState is AuthState.Logout -> {
                 mainViewModel.updateScreen(NavigationDestination.UnauthenticatedDestination.Login)
             }
         }
     }
 
     when {
-        isInitialLoading && authState is AuthState.Loading -> SplashScreen()
+        isInitialLoading -> SplashScreen()
 
         currentScreen is NavigationDestination.UnauthenticatedDestination -> {
             UnauthenticatedContent(
@@ -120,41 +121,6 @@ fun MainScreen(
         authState = authState,
         onNavigate = mainViewModel::updateScreen
     )
-}
-
-@Composable
-private fun HandleBackButton(
-    currentScreen: NavigationDestination,
-    userSession: User?,
-    authState: AuthState<User>,
-    onNavigate: (NavigationDestination) -> Unit = {}
-) {
-    BackHandler {
-        when (currentScreen) {
-            NavigationDestination.AuthenticatedDestination.Dashboard -> {}
-
-            NavigationDestination.AuthenticatedDestination.Settings -> {
-                onNavigate(NavigationDestination.AuthenticatedDestination.Profile)
-            }
-
-            NavigationDestination.AuthenticatedDestination.CompleteProfile,
-            NavigationDestination.AuthenticatedDestination.Weight,
-            NavigationDestination.AuthenticatedDestination.BodyMeasurements,
-            NavigationDestination.AuthenticatedDestination.Profile,
-            NavigationDestination.AuthenticatedDestination.MealPlan,
-            NavigationDestination.AuthenticatedDestination.ShoppingList -> {
-                onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
-            }
-
-            else -> {
-                if (userSession != null || authState is AuthState.Success) {
-                    onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
-                } else if (currentScreen !is NavigationDestination.UnauthenticatedDestination.Login) {
-                    onNavigate(NavigationDestination.UnauthenticatedDestination.Login)
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -225,6 +191,24 @@ private fun AuthenticatedContent(
 
                     NavigationDestination.AuthenticatedDestination.Weight ->
                         WeightScreen(onNavigate = onNavigate)
+
+                    NavigationDestination.AuthenticatedDestination.Subscription ->
+                        SubscriptionPlanScreen(onNavigate = onNavigate)
+
+                    NavigationDestination.AuthenticatedDestination.EditProfile ->
+                        ProfileEditScreen(onNavigate = onNavigate)
+
+                    NavigationDestination.AuthenticatedDestination.PrivacyPolicy ->
+                        PrivacyPolicyScreen(
+                            onNavigate = onNavigate,
+                            isAuthenticated = true
+                        )
+
+                    NavigationDestination.AuthenticatedDestination.Regulations ->
+                        RegulationsScreen(
+                            onNavigate = onNavigate,
+                            isAuthenticated = true
+                        )
                 }
             }
         }
@@ -245,6 +229,18 @@ private fun UnauthenticatedContent(
 
         NavigationDestination.UnauthenticatedDestination.ForgotPassword ->
             ForgotPassword(onNavigate = onNavigate)
+
+        NavigationDestination.UnauthenticatedDestination.PrivacyPolicy ->
+            PrivacyPolicyScreen(
+                onNavigate = onNavigate,
+                isAuthenticated = false
+            )
+
+        NavigationDestination.UnauthenticatedDestination.Regulations ->
+            RegulationsScreen(
+                onNavigate = onNavigate,
+                isAuthenticated = false
+            )
     }
 }
 
@@ -268,6 +264,65 @@ private fun AppBottomNavigation(
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
+        }
+    }
+}
+
+@Composable
+private fun HandleBackButton(
+    currentScreen: NavigationDestination,
+    userSession: User?,
+    authState: AuthState<User>,
+    onNavigate: (NavigationDestination) -> Unit = {}
+) {
+    BackHandler {
+        when (currentScreen) {
+            NavigationDestination.AuthenticatedDestination.Dashboard -> {}
+
+            NavigationDestination.AuthenticatedDestination.Settings -> {
+                onNavigate(NavigationDestination.AuthenticatedDestination.Profile)
+            }
+
+            NavigationDestination.AuthenticatedDestination.EditProfile -> {
+                onNavigate(NavigationDestination.AuthenticatedDestination.Profile)
+            }
+
+            NavigationDestination.AuthenticatedDestination.PrivacyPolicy -> {
+                if (userSession != null || authState is AuthState.Success) {
+                    onNavigate(NavigationDestination.AuthenticatedDestination.Settings)
+                }
+            }
+
+            NavigationDestination.UnauthenticatedDestination.PrivacyPolicy -> {
+                onNavigate(NavigationDestination.UnauthenticatedDestination.Register)
+            }
+
+            NavigationDestination.AuthenticatedDestination.Regulations -> {
+                if (userSession != null || authState is AuthState.Success) {
+                    onNavigate(NavigationDestination.AuthenticatedDestination.Settings)
+                }
+            }
+
+            NavigationDestination.UnauthenticatedDestination.Regulations -> {
+                onNavigate(NavigationDestination.UnauthenticatedDestination.Register)
+            }
+
+            NavigationDestination.AuthenticatedDestination.CompleteProfile,
+            NavigationDestination.AuthenticatedDestination.Weight,
+            NavigationDestination.AuthenticatedDestination.BodyMeasurements,
+            NavigationDestination.AuthenticatedDestination.Profile,
+            NavigationDestination.AuthenticatedDestination.MealPlan,
+            NavigationDestination.AuthenticatedDestination.ShoppingList -> {
+                onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
+            }
+
+            else -> {
+                if (userSession != null || authState is AuthState.Success) {
+                    onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
+                } else if (currentScreen !is NavigationDestination.UnauthenticatedDestination.Login) {
+                    onNavigate(NavigationDestination.UnauthenticatedDestination.Login)
+                }
+            }
         }
     }
 }

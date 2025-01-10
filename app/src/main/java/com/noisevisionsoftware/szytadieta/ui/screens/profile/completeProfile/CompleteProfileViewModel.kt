@@ -8,6 +8,7 @@ import com.noisevisionsoftware.szytadieta.domain.model.user.Gender
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.ui.base.AppEvent
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,11 +41,13 @@ class CompleteProfileViewModel @Inject constructor(
     private var tempBirthDate: Long? = null
     private var tempGender: Gender? = null
 
-    fun checkProfileCompletion(): Flow<Boolean> = flow {
+    private fun checkProfileCompletion(): Flow<Boolean> = flow {
         authRepository.getCurrentUserData()
             .onSuccess { user ->
                 val isCompleted = user?.let {
-                    it.profileCompleted && it.birthDate != null && it.gender != null
+                    it.birthDate != null &&
+                            it.gender != null &&
+                            it.storedAge > 0
                 } ?: false
                 emit(isCompleted)
             }
@@ -69,10 +72,14 @@ class CompleteProfileViewModel @Inject constructor(
                     _completeProfileState.value = CompleteProfileState.Loading
 
                     updateUserField { currentUser ->
-                        currentUser.copy(
+                        val updatedUser = currentUser.copy(
                             birthDate = birthDate,
                             gender = tempGender,
                             profileCompleted = true
+                        )
+
+                        updatedUser.copy(
+                            storedAge = updatedUser.calculateAge()
                         )
                     }
                 }
@@ -92,6 +99,7 @@ class CompleteProfileViewModel @Inject constructor(
                             .onSuccess {
                                 _completeProfileState.value =
                                     CompleteProfileState.Success(updatedUser)
+                                eventBus.emit(AppEvent.RefreshData)
                                 showSuccess("Profil został zaktualizowany")
                                 tempBirthDate = null
                                 tempGender = null

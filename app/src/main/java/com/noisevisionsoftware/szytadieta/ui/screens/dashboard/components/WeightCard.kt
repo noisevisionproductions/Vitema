@@ -53,7 +53,8 @@ fun WeightCard(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -265,7 +266,7 @@ private fun EmptyStateView() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Kliknij aby dodać pierwszy pomiar",
+                text = "Kliknij, aby dodać pierwszy pomiar",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
             )

@@ -13,6 +13,7 @@ import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
+import com.noisevisionsoftware.szytadieta.utils.AppVersionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +25,7 @@ class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val settingsManager: SettingsManager,
     private val sessionManager: SessionManager,
+    private val appVersionUtils: AppVersionUtils,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -37,25 +39,41 @@ class SettingsViewModel @Inject constructor(
         MutableStateFlow<ViewModelState<PasswordUpdateData>>(ViewModelState.Initial)
     val passwordUpdateState = _passwordUpdateState.asStateFlow()
 
+    data class SettingsData(
+        val isDarkMode: Boolean = false,
+        val isAccountDeleted: Boolean = false,
+        val appVersion: String = ""
+    )
+
+    data class PasswordUpdateData(
+        val field: PasswordField? = null
+    )
+
     init {
-        observeDarkMode()
+        observeAppSettings()
     }
 
-    private fun observeDarkMode() {
+    private fun observeAppSettings() {
         viewModelScope.launch {
             settingsManager.isDarkMode.collect { isDarkMode ->
                 _settingsState.value = ViewModelState.Success(
-                    SettingsData(isDarkMode = isDarkMode)
+                    SettingsData(
+                        isDarkMode = isDarkMode,
+                        appVersion = appVersionUtils.getAppVersion()
+                    )
                 )
             }
         }
     }
 
-    fun updateDarkMode(enabled: Boolean) {
+    fun updateSettings(enabled: Boolean) {
         handleOperation(_settingsState) {
             settingsManager.setDarkMode(enabled)
             showSuccess("Motyw został zmieniony")
-            SettingsData(isDarkMode = enabled)
+            SettingsData(
+                isDarkMode = enabled,
+                appVersion = appVersionUtils.getAppVersion()
+            )
         }
     }
 
@@ -68,7 +86,10 @@ class SettingsViewModel @Inject constructor(
             settingsManager.clearSettings()
             showSuccess("Konto zostało usunięte")
 
-            SettingsData(isAccountDeleted = true)
+            SettingsData(
+                isAccountDeleted = true,
+                appVersion = appVersionUtils.getAppVersion()
+            )
         }
     }
 
@@ -101,15 +122,6 @@ class SettingsViewModel @Inject constructor(
     fun resetPasswordUpdateState() {
         _passwordUpdateState.value = ViewModelState.Initial
     }
-
-    data class SettingsData(
-        val isDarkMode: Boolean = false,
-        val isAccountDeleted: Boolean = false
-    )
-
-    data class PasswordUpdateData(
-        val field: PasswordField? = null
-    )
 
     override fun onUserLoggedOut() {
         _settingsState.value = ViewModelState.Initial

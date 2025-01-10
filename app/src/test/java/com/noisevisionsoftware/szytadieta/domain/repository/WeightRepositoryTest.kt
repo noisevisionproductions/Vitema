@@ -38,7 +38,7 @@ class WeightRepositoryTest {
         id = "test_id",
         userId = "user_id",
         date = System.currentTimeMillis(),
-        weight = 75.0,
+        weight = 75,
         measurementType = MeasurementType.WEIGHT_ONLY
     )
 

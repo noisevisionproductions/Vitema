@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
@@ -91,9 +92,11 @@ fun SettingsScreen(
                 is ViewModelState.Success -> {
                     SettingsContent(
                         settingsData = state.data,
-                        onDarkModeChange = viewModel::updateDarkMode,
+                        onDarkModeChange = viewModel::updateSettings,
                         onChangePasswordClick = { showChangePasswordDialog = true },
-                        onDeleteAccountClick = { showDeleteAccountDialog = true }
+                        onDeleteAccountClick = { showDeleteAccountDialog = true },
+                        onPrivacyPolicyClick = { onNavigate(NavigationDestination.AuthenticatedDestination.PrivacyPolicy) },
+                        onRegulationsClick = { onNavigate(NavigationDestination.AuthenticatedDestination.Regulations) },
                     )
                 }
 
@@ -127,7 +130,9 @@ private fun SettingsContent(
     settingsData: SettingsViewModel.SettingsData,
     onDarkModeChange: (Boolean) -> Unit,
     onChangePasswordClick: () -> Unit,
-    onDeleteAccountClick: () -> Unit
+    onDeleteAccountClick: () -> Unit,
+    onPrivacyPolicyClick: () -> Unit,
+    onRegulationsClick: () -> Unit
 ) {
     SettingsSection(title = "Wygląd") {
         SettingsSwitchItem(
@@ -161,21 +166,21 @@ private fun SettingsContent(
             title = "Regulamin",
             description = "Zapoznaj się z regulaminem aplikacji",
             icon = Icons.Default.Description,
-            onClick = {}
+            onClick = onRegulationsClick
         )
 
         SettingsClickableItem(
             title = "Polityka prywatności",
             description = "Informacje o przetwarzaniu danych",
             icon = Icons.Default.Security,
-            onClick = {}
+            onClick = onPrivacyPolicyClick
         )
 
-        Text(
-            text = "Wersja 1.0.0",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(16.dp)
+        SettingsClickableItem(
+            title = "Wersja aplikacji",
+            description = settingsData.appVersion,
+            icon = Icons.Default.Info,
+            onClick = {}
         )
     }
 }
@@ -200,7 +205,8 @@ private fun SettingsSection(
                 .padding(horizontal = 16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             content()
         }

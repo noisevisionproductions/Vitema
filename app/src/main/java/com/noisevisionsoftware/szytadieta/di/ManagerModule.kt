@@ -45,4 +45,10 @@ object ManagerModule {
     @Provides
     @Singleton
     fun provideAlertManager(): AlertManager = AlertManager()
+
+    @Provides
+    @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context{
+        return context
+    }
 }

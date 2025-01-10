@@ -1,11 +1,12 @@
 package com.noisevisionsoftware.szytadieta.domain.model
 
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import java.util.UUID
 
 data class BodyMeasurements(
     val id: String = UUID.randomUUID().toString(),
     val userId: String = "",
-    val date: Long = System.currentTimeMillis(),
+    val date: Long = DateUtils.getCurrentLocalDate(),
     val height: Int = 0,
     val weight: Int = 0,
     val neck: Int = 0,

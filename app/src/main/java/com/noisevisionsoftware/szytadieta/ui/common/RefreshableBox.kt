@@ -86,7 +86,7 @@ fun RefreshableBox(
                         progress = { progress },
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.primaryContainer,
-                        trackColor = ProgressIndicatorDefaults.circularTrackColor,
+                        trackColor = ProgressIndicatorDefaults.circularIndeterminateTrackColor,
                     )
                 }
             }

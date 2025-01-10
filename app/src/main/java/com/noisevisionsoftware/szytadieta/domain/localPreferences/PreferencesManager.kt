@@ -25,16 +25,34 @@ class PreferencesManager @Inject constructor(
     }
 
     suspend fun saveCheckedProducts(userId: String, checkedProducts: Set<String>) {
-        val key = stringPreferencesKey("${CHECKED_PRODUCTS_KEY_PREFIX}$userId")
+        val key = getCheckedProductsKey(userId)
         dataStore.edit { preferences ->
             preferences[key] = checkedProducts.joinToString(SEPARATOR)
         }
     }
 
     fun getCheckedProducts(userId: String): Flow<Set<String>> {
-        val key = stringPreferencesKey("${CHECKED_PRODUCTS_KEY_PREFIX}$userId")
+        val key = getCheckedProductsKey(userId)
         return dataStore.data.map { preferences ->
             preferences[key]?.split(SEPARATOR)?.filter { it.isNotEmpty() }?.toSet() ?: emptySet()
         }
+    }
+
+    suspend fun clearCheckedProducts(userId: String) {
+        val key = getCheckedProductsKey(userId)
+        dataStore.edit { preferences ->
+            preferences.remove(key)
+        }
+    }
+
+    suspend fun clearAllUserData(userId: String) {
+        val key = getCheckedProductsKey(userId)
+        dataStore.edit { preferences ->
+            preferences.remove(key)
+        }
+    }
+
+    private fun getCheckedProductsKey(userId: String): Preferences.Key<String> {
+        return stringPreferencesKey("${CHECKED_PRODUCTS_KEY_PREFIX}$userId")
     }
 }

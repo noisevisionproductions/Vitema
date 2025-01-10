@@ -83,6 +83,7 @@ fun DashboardScreen(
                     userState = userRole
                 )
             }
+
             item {
                 MealPlanCard(
                     todayMeals = todayMeals,

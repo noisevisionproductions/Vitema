@@ -62,13 +62,17 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val authState by viewModel.authState.collectAsState()
+    val profileCompleted by viewModel.profileCompleted.collectAsState()
 
-    LaunchedEffect(authState) {
-        when(authState) {
-            is AuthState.Success -> {
+    LaunchedEffect(authState, profileCompleted) {
+        when {
+            authState is AuthState.Success && profileCompleted == false -> {
+                onNavigate(NavigationDestination.AuthenticatedDestination.CompleteProfile)
+            }
+
+            authState is AuthState.Success && profileCompleted == true -> {
                 onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
             }
-            else -> Unit
         }
     }
 
@@ -213,11 +217,11 @@ fun RegisterScreen(
             }
 
             AcceptTerms(
-                onRegulationsClick = {},
-                onPrivacyPolicyClick = {}
+                onRegulationsClick = {onNavigate(NavigationDestination.UnauthenticatedDestination.Regulations)},
+                onPrivacyPolicyClick = { onNavigate(NavigationDestination.UnauthenticatedDestination.PrivacyPolicy) }
             )
 
-            AlreadyHaveAccount(onLoginClick = {onNavigate(NavigationDestination.UnauthenticatedDestination.Login)})
+            AlreadyHaveAccount(onLoginClick = { onNavigate(NavigationDestination.UnauthenticatedDestination.Login) })
         }
     }
 }

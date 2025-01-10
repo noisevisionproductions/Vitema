@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -21,9 +20,9 @@ import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
 import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.CategorySelector
-import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.NoShoppingListAvailable
+import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.NoShoppingListMessage
 import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.ProductList
-import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.WeekSelector
+import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.ShoppingListPeriodSelector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,27 +51,37 @@ fun ShoppingListScreen(
             }
         )
 
-        when (shoppingListState) {
-            is ViewModelState.Initial,
-            is ViewModelState.Loading -> LoadingOverlay()
+        if (availableWeeks.isNotEmpty() && shoppingListState !is ViewModelState.Loading) {
+            ShoppingListPeriodSelector(
+                availableWeeks = availableWeeks,
+                selectedWeek = selectedWeek,
+                onWeekSelected = { newDate -> viewModel.selectWeek(newDate) }
+            )
+        }
 
+        when (shoppingListState) {
+            is ViewModelState.Initial -> LoadingOverlay()
+            is ViewModelState.Loading -> LoadingOverlay()
             is ViewModelState.Error -> CustomErrorMessage(
                 message = (shoppingListState as ViewModelState.Error).message
             )
 
             is ViewModelState.Success -> {
-                if (availableWeeks.isEmpty()) {
-                    NoShoppingListAvailable()
+                val shoppingList = (shoppingListState as ViewModelState.Success<ShoppingList>).data
+                if (shoppingList.categories.isEmpty()) {
+                    NoShoppingListMessage(
+                        hasAnyShoppingLists = availableWeeks.isNotEmpty(),
+                        onNavigateToAvailableWeek = if (availableWeeks.isNotEmpty()) {
+                            { viewModel.navigateToClosestAvailableWeek() }
+                        } else null,
+                        onNavigate = onNavigate
+                    )
                 } else {
                     ShoppingListContent(
-                        shoppingList = (shoppingListState as ViewModelState.Success<ShoppingList>).data,
+                        shoppingList = shoppingList,
                         selectedCategory = selectedCategory,
-                        availableWeeks = availableWeeks,
-                        selectedWeek = selectedWeek,
-                        onWeekSelected = { viewModel.selectWeek(it) },
-                        onCategorySelected = { viewModel.selectedCategory(it) },
-                        getFormattedWeekDate = { viewModel.getFormattedWeekDate(it) },
                         checkedProducts = checkedProducts,
+                        onCategorySelected = { viewModel.selectedCategory(it) },
                         onProductCheckedChange = { productName, _ ->
                             viewModel.toggleProductCheck(productName)
                         }
@@ -87,25 +96,14 @@ fun ShoppingListScreen(
 private fun ShoppingListContent(
     shoppingList: ShoppingList,
     selectedCategory: String?,
-    availableWeeks: List<Long>,
-    selectedWeek: Long?,
-    onWeekSelected: (Long) -> Unit,
-    onCategorySelected: (String?) -> Unit,
-    getFormattedWeekDate: (Long) -> String,
     checkedProducts: Set<String>,
+    onCategorySelected: (String?) -> Unit,
     onProductCheckedChange: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        WeekSelector(
-            availableWeeks = availableWeeks,
-            selectedWeek = selectedWeek,
-            onWeekSelected = onWeekSelected,
-            getFormattedWeekDate = getFormattedWeekDate,
-            modifier = Modifier.padding(vertical = 16.dp)
-        )
 
         CategorySelector(
             categories = shoppingList.categories.map { it.name },

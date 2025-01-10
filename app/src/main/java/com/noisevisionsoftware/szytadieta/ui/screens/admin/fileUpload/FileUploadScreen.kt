@@ -1,6 +1,7 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload
 
 import android.net.Uri
+import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -21,10 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.noisevisionsoftware.szytadieta.ui.common.ConfirmAlertDialog
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UploadArea
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UploadControls
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UploadProgressUI
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UserSelectionSections
+import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.WeekSelectorForDietUpload
 
 private val SUPPORTED_MIME_TYPES = arrayOf(
     "application/vnd.ms-excel",                     // .xls
@@ -40,9 +43,11 @@ fun FileUploadScreen(
     val uploadState by viewModel.uploadState.collectAsState()
     val userState by viewModel.userState.collectAsState()
     val selectedUsers by viewModel.selectedUsers.collectAsState()
+    val selectedStartDate by viewModel.selectedStartDate.collectAsState()
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
     var selectedFileName by remember { mutableStateOf<String?>(null) }
     var showUserSearch by remember { mutableStateOf(false) }
+    var showConfirmationDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -53,7 +58,7 @@ fun FileUploadScreen(
             selectedFileName =
                 context.contentResolver.query(it, null, null, null, null)?.use { cursor ->
                     val nameIndex =
-                        cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                     cursor.moveToFirst()
                     cursor.getString(nameIndex)
                 }
@@ -85,26 +90,44 @@ fun FileUploadScreen(
             onUserSelect = viewModel::toggleUserSelection
         )
 
+        WeekSelectorForDietUpload(
+            selectedDate = selectedStartDate,
+            onDateSelected = viewModel::setSelectedStartDate
+        )
+
         UploadArea(
             selectedFileUri = selectedFileUri,
             selectedFileName = selectedFileName,
             onFileSelect = { filePickerLauncher.launch(SUPPORTED_MIME_TYPES) }
         )
-
         UploadControls(
             uploadState = uploadState,
-            onUploadClick = handleUpload,
+            onUploadClick = { showConfirmationDialog = true },
             onRetryClick = handleUpload,
             onNewFileClick = {
                 selectedFileUri = null
                 selectedFileName = null
             },
-            isUploadEnabled = selectedFileUri != null
+            isUploadEnabled = selectedFileUri != null && selectedUsers.isNotEmpty() && selectedStartDate != null
         )
 
         UploadProgressUI(
             uploadState = uploadState,
             modifier = Modifier.fillMaxWidth()
+        )
+    }
+
+    if (showConfirmationDialog) {
+        ConfirmAlertDialog(
+            onConfirm = {
+                showConfirmationDialog = false
+                handleUpload()
+            },
+            onDismiss = {showConfirmationDialog = false},
+            title = "Potwierdź przydzielanie diety",
+            message = "Czy na pewno chcesz udostępnić tą dietę dla tych użytkowników:",
+            confirmActionText = "Udostępnij",
+            dismissActionText = "Anuluj"
         )
     }
 }

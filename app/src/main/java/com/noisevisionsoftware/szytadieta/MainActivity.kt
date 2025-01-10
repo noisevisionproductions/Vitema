@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,9 +38,7 @@ class MainActivity : ComponentActivity() {
             ) {
 
                 Box(modifier = Modifier.fillMaxSize()) {
-                    PatternBackground(
-                        patternColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    )
+                    PatternBackground()
 
                     Box(modifier = Modifier.fillMaxSize()) {
                         MainScreen()
