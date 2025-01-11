@@ -21,6 +21,7 @@
     "express": "^4.21.2",
     "firebase-admin": "^13.0.2",
     "firebase-functions": "^6.2.0",
+    "functions": "file:",
     "googleapis": "^144.0.0",
     "uuid": "^9.0.1"
   },
