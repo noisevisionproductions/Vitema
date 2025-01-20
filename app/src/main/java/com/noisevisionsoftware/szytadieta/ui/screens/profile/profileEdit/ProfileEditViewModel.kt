@@ -6,6 +6,7 @@ import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
+import com.noisevisionsoftware.szytadieta.ui.base.AppEvent
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,6 +42,9 @@ class ProfileEditViewModel @Inject constructor(
             authRepository.updateUserData(updatedUser)
                 .getOrThrow()
             showSuccess("Profil został zaktualizowany")
+
+            eventBus.emit(AppEvent.RefreshData)
+
             updatedUser
         }
     }

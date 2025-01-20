@@ -3,6 +3,7 @@ package com.noisevisionsoftware.szytadieta.di
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.noisevisionsoftware.szytadieta.data.FCMTokenRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.BodyMeasurementRepository
@@ -30,8 +31,12 @@ object RepositoryModule {
     @Singleton
     fun provideAuthRepository(
         auth: FirebaseAuth,
-        firestore: FirebaseFirestore
-    ): AuthRepository = AuthRepository(auth, firestore)
+        firestore: FirebaseFirestore,
+        fcmTokenRepository: FCMTokenRepository
+    ): AuthRepository = AuthRepository(
+        auth, firestore,
+        fcmTokenRepository = fcmTokenRepository
+    )
 
     @Provides
     @Singleton

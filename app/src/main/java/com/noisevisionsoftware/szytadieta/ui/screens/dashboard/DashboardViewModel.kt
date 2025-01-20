@@ -64,6 +64,8 @@ class DashboardViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing = _isRefreshing.asStateFlow()
 
+    private var _scrollPosition: Int? = null
+    val scrollPosition: Int? get() = _scrollPosition
 
     init {
         loadUserRole()
@@ -194,6 +196,15 @@ class DashboardViewModel @Inject constructor(
         _latestMeasurements.value = ViewModelState.Initial
         _measurementsHistory.value = ViewModelState.Initial
         _todayMeals.value = ViewModelState.Initial
+    }
+
+    fun saveScrollPosition(position: Int) {
+        _scrollPosition = position
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        _scrollPosition = null
     }
 
     override fun onRefreshData() {

@@ -10,6 +10,7 @@ import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationManager
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
@@ -26,6 +27,7 @@ class SettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val sessionManager: SessionManager,
     private val appVersionUtils: AppVersionUtils,
+    private val notificationManager: NotificationManager,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -42,7 +44,8 @@ class SettingsViewModel @Inject constructor(
     data class SettingsData(
         val isDarkMode: Boolean = false,
         val isAccountDeleted: Boolean = false,
-        val appVersion: String = ""
+        val appVersion: String = "",
+        val areNotificationsEnabled: Boolean = false
     )
 
     data class PasswordUpdateData(
@@ -59,7 +62,8 @@ class SettingsViewModel @Inject constructor(
                 _settingsState.value = ViewModelState.Success(
                     SettingsData(
                         isDarkMode = isDarkMode,
-                        appVersion = appVersionUtils.getAppVersion()
+                        appVersion = appVersionUtils.getAppVersion(),
+                        areNotificationsEnabled = notificationManager.areNotificationsEnabled()
                     )
                 )
             }
@@ -82,6 +86,7 @@ class SettingsViewModel @Inject constructor(
             safeApiCall { authRepository.deleteAccount() }
                 .getOrThrow()
 
+            notificationManager.cancelAllNotifications()
             sessionManager.clearSession()
             settingsManager.clearSettings()
             showSuccess("Konto zostało usunięte")

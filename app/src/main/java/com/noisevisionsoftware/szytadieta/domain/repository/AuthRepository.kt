@@ -1,11 +1,13 @@
 package com.noisevisionsoftware.szytadieta.domain.repository
 
 import android.icu.util.Calendar
+import android.util.Log
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
+import com.noisevisionsoftware.szytadieta.data.FCMTokenRepository
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
 import com.noisevisionsoftware.szytadieta.domain.model.MeasurementSourceType
@@ -18,7 +20,8 @@ import javax.inject.Inject
 
 class AuthRepository @Inject constructor(
     private val auth: FirebaseAuth,
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val fcmTokenRepository: FCMTokenRepository
 ) {
     suspend fun register(nickname: String, email: String, password: String): Result<User> = try {
         val pendingUserSnapshot = firestore.collection("pendingUsers")
@@ -82,6 +85,11 @@ class AuthRepository @Inject constructor(
                 .set(user)
                 .await()
 
+            fcmTokenRepository.updateToken(user.id)
+                .onFailure { throwable ->
+                    Log.e("AuthRepository", "Błąd podczas aktualizacji tokenu FCM", throwable)
+                }
+
             Result.success(user)
         } ?: Result.failure(Exception("Błąd podczas tworzenia konta"))
     } catch (e: Exception) {
@@ -99,6 +107,11 @@ class AuthRepository @Inject constructor(
 
             val user = documentSnapshot.toObject(User::class.java)
             user?.let {
+                fcmTokenRepository.updateToken(it.id)
+                    .onFailure { throwable ->
+                        Log.e("AuthRepository", "Błąd podczas aktualizacji tokenu FCM", throwable)
+                    }
+
                 Result.success(it)
             } ?: Result.failure(Exception("Nie znaleziono danych użytkownika"))
         } ?: Result.failure(Exception("Błąd podczas logowania"))
@@ -159,7 +172,14 @@ class AuthRepository @Inject constructor(
 
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
-    fun logout(): Result<Unit> = try {
+    suspend fun logout(): Result<Unit> = try {
+        auth.currentUser?.uid?.let { userId ->
+            fcmTokenRepository.deleteToken(userId)
+                .onFailure { throwable ->
+                    Log.e("AuthRepository", "Błąd podczas usuwania tokenu FCM", throwable)
+                }
+        }
+
         auth.signOut()
         Result.success(Unit)
     } catch (e: Exception) {

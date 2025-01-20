@@ -10,6 +10,7 @@ import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserRole
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationManager
 import com.noisevisionsoftware.szytadieta.domain.state.AuthState
 import com.noisevisionsoftware.szytadieta.ui.base.AppEvent
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
@@ -24,6 +25,7 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val sessionManager: SessionManager,
+    private val notificationManager: NotificationManager,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -130,6 +132,7 @@ class AuthViewModel @Inject constructor(
             try {
                 sessionManager.clearSession()
                 authRepository.logout().getOrThrow()
+                notificationManager.cancelAllNotifications()
                 eventBus.emit(AppEvent.UserLoggedOut)
                 _authState.value = AuthState.Logout
             } catch (e: Exception) {
@@ -173,7 +176,6 @@ class AuthViewModel @Inject constructor(
         if (appException is AppException.NetworkException || appException is AppException.UnknownException) {
             _authState.value = AuthState.Error(appException.message)
         } else {
-            // Dla błędów auth zostajemy na ekranie
             _authState.value = AuthState.Initial
         }
         showError(appException.message)

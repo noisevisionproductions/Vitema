@@ -148,6 +148,10 @@ dependencies {
     // Documents reader
     implementation(libs.compose.markdown)
 
+    // Notifications
+    implementation(libs.google.firebase.messaging.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
+
     implementation(libs.androidx.material)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

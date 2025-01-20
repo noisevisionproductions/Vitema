@@ -16,6 +16,7 @@ composeMarkdown = "0.5.6"
 core = "2.0.0-beta.5"
 coreKtx = "1.6.1"
 datastorePreferences = "1.1.1"
+firebaseMessagingKtxVersion = "24.1.0"
 firebaseStorage = "21.0.1"
 firebaseStorageKtx = "21.0.1"
 gson = "2.11.0"
@@ -74,9 +75,10 @@ truth = "1.4.4"
 turbine = "1.2.0"
 
 # Add Gradle plugin versions
-agp = "8.7.3"
+agp = "8.8.0"
 woodstoxCore = "7.0.0"
 woodstoxCoreAsl = "4.4.1"
+workRuntimeKtx = "2.10.0"
 xercesimpl = "2.12.2"
 xmlbeans = "5.2.1"
 navigationSafeArgsGenerator = "2.8.5"
@@ -101,6 +103,7 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
 androidx-material = { module = "androidx.compose.material:material", version.ref = "materialVersion" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 compose-markdown = { module = "com.github.jeziellago:compose-markdown", version.ref = "composeMarkdown" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtx" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
@@ -110,6 +113,7 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version = "25.1.1" }
 firebase-storage = { module = "com.google.firebase:firebase-storage", version.ref = "firebaseStorage" }
 firebase-storage-ktx = { module = "com.google.firebase:firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
+google-firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx", version.ref = "firebaseMessagingKtxVersion" }
 google-services = { module = "com.google.gms:google-services", version.ref = "googleServices" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }

@@ -6,15 +6,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -45,6 +49,12 @@ fun DashboardScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val scope = rememberCoroutineScope()
 
+    val listState = rememberSaveable(
+        saver = LazyListState.Saver
+    ) {
+        LazyListState()
+    }
+
     val pullRefreshState = rememberPullRefreshState(
         refreshing = isRefreshing,
         onRefresh = {
@@ -57,6 +67,18 @@ fun DashboardScreen(
         }
     )
 
+    LaunchedEffect(Unit) {
+        viewModel.scrollPosition?.let { position ->
+            listState.scrollToItem(position)
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.saveScrollPosition(listState.firstVisibleItemIndex)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -64,6 +86,7 @@ fun DashboardScreen(
             .pullRefresh(pullRefreshState)
     ) {
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 24.dp),

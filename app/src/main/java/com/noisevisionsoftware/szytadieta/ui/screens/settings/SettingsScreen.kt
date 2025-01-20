@@ -1,5 +1,7 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.settings
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +16,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
@@ -134,6 +138,8 @@ private fun SettingsContent(
     onPrivacyPolicyClick: () -> Unit,
     onRegulationsClick: () -> Unit
 ) {
+    val context = LocalContext.current
+
     SettingsSection(title = "Wygląd") {
         SettingsSwitchItem(
             title = "Tryb ciemny",
@@ -141,6 +147,24 @@ private fun SettingsContent(
             icon = Icons.Default.DarkMode,
             checked = settingsData.isDarkMode,
             onCheckedChange = onDarkModeChange
+        )
+    }
+
+    SettingsSection(title = "Powiadomienia") {
+        SettingsClickableItem(
+            title = "Powiadomienia",
+            description = if (settingsData.areNotificationsEnabled)
+                "Powiadomienia są włączone"
+            else
+                "Powiadomienia są wyłączone",
+            icon = Icons.Default.Notifications,
+            onClick = {
+                val intent = Intent().apply {
+                    action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                }
+                context.startActivity(intent)
+            }
         )
     }
 
