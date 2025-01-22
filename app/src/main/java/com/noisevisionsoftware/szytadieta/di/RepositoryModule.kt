@@ -6,17 +6,18 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.noisevisionsoftware.szytadieta.data.FCMTokenRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.BodyMeasurementRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.FileRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.StatisticsRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.WeightRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.health.WeightRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.ShoppingListRepository
-import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelParserService
-import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelValidationService
+import com.noisevisionsoftware.szytadieta.domain.repository.health.WaterRepository
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.DietService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.FileMetadataService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.StorageService
+import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelParserService
+import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelValidationService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,8 +42,8 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideWeightRepository(
-        firestore: FirebaseFirestore
-    ): WeightRepository = WeightRepository(firestore)
+        bodyMeasurementRepository: BodyMeasurementRepository
+    ): WeightRepository = WeightRepository(bodyMeasurementRepository)
 
     @Provides
     @Singleton
@@ -72,6 +73,7 @@ object RepositoryModule {
         dietService: DietService,
         excelValidationService: ExcelValidationService,
         excelParserService: ExcelParserService,
+        shoppingListRepository: ShoppingListRepository,
         @ApplicationContext appContext: Context
     ): FileRepository {
         return FileRepository(
@@ -80,6 +82,7 @@ object RepositoryModule {
             dietService,
             excelValidationService,
             excelParserService,
+            shoppingListRepository,
             appContext
         )
     }
@@ -102,4 +105,10 @@ object RepositoryModule {
             firestore = firebaseFirestore
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideWaterRepository(
+        firestore: FirebaseFirestore
+    ): WaterRepository = WaterRepository(firestore)
 }

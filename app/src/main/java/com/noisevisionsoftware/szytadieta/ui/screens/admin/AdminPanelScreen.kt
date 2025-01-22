@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -42,14 +41,13 @@ import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.FileUploadScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.FileUploadViewModel
-import com.noisevisionsoftware.szytadieta.ui.screens.admin.userManagement.UserManagementScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.model.AdminMenuItem
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.navigation.AdminScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.statistics.StatisticsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.statistics.StatisticsViewModel
+import com.noisevisionsoftware.szytadieta.ui.screens.admin.userManagement.UserManagementScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.userManagement.UserManagementViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminPanelScreen(
     adminViewModel: AdminPanelViewModel = hiltViewModel(),

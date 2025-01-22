@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -25,21 +24,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
-import com.noisevisionsoftware.szytadieta.ui.common.CustomProgressIndicator
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
+import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.ErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.screens.bodyMeasurements.components.AddMeasurementsDialog
 import com.noisevisionsoftware.szytadieta.ui.screens.bodyMeasurements.components.MeasurementsList
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BodyMeasurementsScreen(
     viewModel: BodyMeasurementsViewModel = hiltViewModel(),
@@ -47,6 +46,7 @@ fun BodyMeasurementsScreen(
 ) {
     val measurementsState by viewModel.measurementsState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -54,7 +54,9 @@ fun BodyMeasurementsScreen(
                 title = "Pomiary ciała",
                 onBackClick = {
                     onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
-                }
+                },
+                showRefreshIcon = true,
+                onRefreshClick = { viewModel.getMeasurementsHistory() }
             )
         },
         floatingActionButton = {
@@ -76,9 +78,15 @@ fun BodyMeasurementsScreen(
                 AddMeasurementsDialog(
                     onDismiss = { showAddDialog = false },
                     onConfirm = { measurements ->
-                        viewModel.addMeasurements(measurements)
-                        showAddDialog = false
-                    }
+                        scope.launch {
+                            viewModel.addMeasurements(measurements)
+                                .onSuccess {
+                                    showAddDialog = false
+                                    viewModel.getMeasurementsHistory()
+                                }
+                        }
+                    },
+                    viewModel = viewModel
                 )
             }
         }
@@ -128,17 +136,7 @@ private fun MeasurementsContent(
     ) { currentState ->
         when (currentState) {
             is ViewModelState.Initial -> Unit
-            is ViewModelState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CustomProgressIndicator()
-                }
-            }
-
+            is ViewModelState.Loading -> LoadingOverlay()
             is ViewModelState.Success ->
                 MeasurementsList(
                     measurements = currentState.data,
@@ -148,35 +146,4 @@ private fun MeasurementsContent(
             is ViewModelState.Error -> ErrorMessage(message = (state as ViewModelState.Error).message)
         }
     }
-}
-
-data class MeasurementsInputState(
-    val neck: String = "",
-    val biceps: String = "",
-    val chest: String = "",
-    val waist: String = "",
-    val hips: String = "",
-    val thigh: String = "",
-    val calf: String = "",
-    val weight: String = "",
-    val note: String = ""
-) {
-    fun isValid(): Boolean {
-        val measurements = listOf(neck, biceps, chest, waist, hips, thigh, calf, weight)
-        return measurements.all {
-            it.isNotBlank() && it.toIntOrNull()?.let { value -> value > 0 } == true
-        }
-    }
-
-    fun toBodyMeasurements() = BodyMeasurements(
-        neck = neck.toIntOrNull() ?: 0,
-        biceps = biceps.toIntOrNull() ?: 0,
-        chest = chest.toIntOrNull() ?: 0,
-        waist = waist.toIntOrNull() ?: 0,
-        hips = hips.toIntOrNull() ?: 0,
-        thigh = thigh.toIntOrNull() ?: 0,
-        calf = calf.toIntOrNull() ?: 0,
-        weight = weight.toIntOrNull() ?: 0,
-        note = note
-    )
 }

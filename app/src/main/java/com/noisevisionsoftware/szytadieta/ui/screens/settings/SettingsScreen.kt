@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,7 +44,6 @@ import com.noisevisionsoftware.szytadieta.ui.screens.settings.components.DeleteA
 import com.noisevisionsoftware.szytadieta.ui.screens.settings.components.SettingsClickableItem
 import com.noisevisionsoftware.szytadieta.ui.screens.settings.components.SettingsSwitchItem
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
@@ -149,7 +147,6 @@ private fun SettingsContent(
             onCheckedChange = onDarkModeChange
         )
     }
-
     SettingsSection(title = "Powiadomienia") {
         SettingsClickableItem(
             title = "Powiadomienia",

@@ -15,4 +15,8 @@ sealed class FileUploadState {
     data class Success(
         val previousStages: List<UploadResult> = emptyList()
     ) : FileUploadState()
+    data class NeedsConfirmation(
+        val message: String,
+        val onConfirm: () -> Unit
+    ): FileUploadState()
 }

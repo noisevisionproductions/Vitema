@@ -39,8 +39,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.model.user.Gender
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
-import com.noisevisionsoftware.szytadieta.ui.common.CustomProgressIndicator
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
+import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.ErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.components.GenderSelector
@@ -84,7 +84,7 @@ fun ProfileEditScreen(
         ) {
             when (profileState) {
                 is ViewModelState.Initial -> Unit
-                is ViewModelState.Loading -> CustomProgressIndicator()
+                is ViewModelState.Loading -> LoadingOverlay()
                 is ViewModelState.Error -> ErrorMessage(message = (profileState as ViewModelState.Error).message)
                 is ViewModelState.Success -> {
                     EditProfileContent(

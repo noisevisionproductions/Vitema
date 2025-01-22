@@ -7,6 +7,7 @@ data class User(
     val createdAt: Long = 0,
     val email: String = "",
     val nickname: String = "",
+    val firstAndLastName: String = "",
     val gender: Gender? = null,
     val birthDate: Long? = null,
     val storedAge: Int = 0,

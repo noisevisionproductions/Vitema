@@ -1,12 +1,36 @@
 package com.noisevisionsoftware.szytadieta.domain.exceptions
 
+import com.google.firebase.Firebase
 import com.google.firebase.FirebaseException
+import com.google.firebase.auth.FirebaseAuthEmailException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
-import com.google.firebase.auth.FirebaseAuthEmailException
+import com.google.firebase.crashlytics.crashlytics
 
 object FirebaseErrorMapper {
     fun mapFirebaseAuthError(e: Exception): AppException {
+        Firebase.crashlytics.apply {
+            setCustomKey("error_type", "auth_error")
+            setCustomKey("error_message", e.message ?: "Unknown error")
+            setCustomKey("error_class", e.javaClass.simpleName)
+            when (e) {
+                is FirebaseAuthInvalidCredentialsException -> {
+                    setCustomKey("error_code", e.errorCode)
+                    setCustomKey("error_details", "invalid_credentials")
+                }
+
+                is FirebaseAuthInvalidUserException -> {
+                    setCustomKey("error_code", e.errorCode)
+                    setCustomKey("error_details", "invalid_user")
+                }
+
+                is FirebaseAuthEmailException -> {
+                    setCustomKey("error_details", "email_error")
+                }
+            }
+            recordException(e)
+        }
+
         return when (e) {
             is FirebaseAuthInvalidCredentialsException -> {
                 AppException.AuthException(mapErrorCode(e.errorCode))
@@ -65,6 +89,8 @@ object FirebaseErrorMapper {
     }
 
     private fun mapErrorCode(errorCode: String): String {
+        Firebase.crashlytics.setCustomKey("mapped_error_code", errorCode)
+
         return when (errorCode) {
             "ERROR_INVALID_CUSTOM_TOKEN" -> "Błędny token uwierzytelniający"
             "ERROR_CUSTOM_TOKEN_MISMATCH" -> "Token nie pasuje do tej aplikacji"
@@ -86,7 +112,10 @@ object FirebaseErrorMapper {
             "ERROR_WEAK_PASSWORD" -> "Hasło musi zawierać minimum 8 znaków, wielką literę, cyfrę i znak specjalny"
             "ERROR_TOO_MANY_ATTEMPTS" -> "Zbyt wiele prób logowania. Spróbuj ponownie za kilka minut"
 
-            else -> "Wystąpił nieoczekiwany błąd"
+            else -> {
+                Firebase.crashlytics.setCustomKey("error_category", "unknown_error")
+                "Wystąpił nieoczekiwany błąd"
+            }
         }
     }
 }

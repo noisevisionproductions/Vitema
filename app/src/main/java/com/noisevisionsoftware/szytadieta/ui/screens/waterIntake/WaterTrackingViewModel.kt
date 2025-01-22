@@ -1,0 +1,121 @@
+package com.noisevisionsoftware.szytadieta.ui.screens.waterIntake
+
+import androidx.lifecycle.viewModelScope
+import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
+import com.noisevisionsoftware.szytadieta.domain.model.health.WaterIntake
+import com.noisevisionsoftware.szytadieta.domain.model.user.UserSettings
+import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
+import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.health.WaterRepository
+import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
+import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
+import com.noisevisionsoftware.szytadieta.ui.base.EventBus
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class WaterTrackingViewModel @Inject constructor(
+    private val waterRepository: WaterRepository,
+    private val authRepository: AuthRepository,
+    networkManager: NetworkConnectivityManager,
+    alertManager: AlertManager,
+    eventBus: EventBus
+) : BaseViewModel(networkManager, alertManager, eventBus) {
+
+    private val _waterIntakeState =
+        MutableStateFlow<ViewModelState<List<WaterIntake>>>(ViewModelState.Initial)
+    val waterIntakeState = _waterIntakeState.asStateFlow()
+
+    private val _selectedDate = MutableStateFlow(DateUtils.getCurrentLocalDate())
+    val selectedDate = _selectedDate.asStateFlow()
+
+    private val _userSettings =
+        MutableStateFlow<ViewModelState<UserSettings>>(ViewModelState.Initial)
+    val userSettings = _userSettings.asStateFlow()
+
+    init {
+        loadUserSettings()
+        loadWaterIntakes()
+    }
+
+    private fun loadUserSettings() {
+        viewModelScope.launch {
+            try {
+                authRepository.withAuthenticatedUser { userId ->
+                    val settings = waterRepository.getUserSettings(userId).getOrThrow()
+                    _userSettings.value = ViewModelState.Success(settings)
+                }
+            } catch (e: Exception) {
+                _userSettings.value =
+                    ViewModelState.Error(e.message ?: "Błąd podczas ładowania ustawień")
+            }
+        }
+    }
+
+    fun loadWaterIntakes() {
+        handleOperation(_waterIntakeState) {
+            authRepository.withAuthenticatedUser { userId ->
+                loadWaterIntakesData(userId, _selectedDate.value)
+            }
+        }
+    }
+
+    fun addWaterIntake(amount: Int) {
+        viewModelScope.launch {
+            try {
+                _waterIntakeState.value = when (val currentState = _waterIntakeState.value) {
+                    is ViewModelState.Success -> ViewModelState.Loading
+                    else -> currentState
+                }
+
+                authRepository.withAuthenticatedUser { userId ->
+                    val waterIntake = WaterIntake(
+                        userId = userId,
+                        amount = amount,
+                        date = _selectedDate.value
+                    )
+                    waterRepository.addWaterIntake(waterIntake).getOrThrow()
+                    showSuccess("Dodano spożycie wody")
+                    val newData = loadWaterIntakesData(userId, _selectedDate.value)
+                    _waterIntakeState.value = ViewModelState.Success(newData)
+                }
+            } catch (e: Exception) {
+                _waterIntakeState.value = ViewModelState.Error(e.message ?: "Wystąpił błąd")
+                showError(e.message ?: "Wystąpił błąd podczas dodawania wody")
+            }
+        }
+    }
+
+    fun updateDailyTarget(target: Int) {
+        viewModelScope.launch {
+            try {
+                authRepository.withAuthenticatedUser { userId ->
+                    waterRepository.updateUserSettings(userId, target).getOrThrow()
+                    loadUserSettings()
+                    showSuccess("Zaktualizowano dzienny cel")
+                }
+            } catch (e: Exception) {
+                showError(e.message ?: "Wystąpił błąd podczas aktualizacji celu")
+            }
+        }
+    }
+
+    fun updateSelectedDate(date: Long) {
+        _selectedDate.value = date
+        loadWaterIntakes()
+    }
+
+
+    private suspend fun loadWaterIntakesData(userId: String, date: Long): List<WaterIntake> {
+        return waterRepository.getDailyWaterIntakes(userId, date).getOrThrow()
+    }
+
+    override fun onRefreshData() {
+        loadUserSettings()
+        loadWaterIntakes()
+    }
+}

@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,16 +22,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -53,15 +55,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementSourceType
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
+import com.noisevisionsoftware.szytadieta.ui.common.ConfirmAlertDialog
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
+import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
+import com.noisevisionsoftware.szytadieta.ui.screens.weight.components.WeightChart
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeightScreen(
     viewModel: WeightViewModel = hiltViewModel(),
@@ -74,7 +79,9 @@ fun WeightScreen(
         topBar = {
             CustomTopAppBar(
                 title = "Historia wagi",
-                onBackClick = { onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard) }
+                onBackClick = { onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard) },
+                showRefreshIcon = true,
+                onRefreshClick = { viewModel.loadWeights() }
             )
         },
         floatingActionButton = {
@@ -127,24 +134,15 @@ private fun WeightContent(
         }, label = ""
     ) { state ->
         when (state) {
-            is ViewModelState.Loading -> WeightLoadingIndicator()
+            is ViewModelState.Loading -> LoadingOverlay()
             is ViewModelState.Success -> WeightList(
                 bodyMeasurements = state.data,
                 onDeleteClick = onDeleteClick
             )
+
             is ViewModelState.Error -> WeightError(state.message)
             ViewModelState.Initial -> Unit
         }
-    }
-}
-
-@Composable
-private fun WeightLoadingIndicator() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
     }
 }
 
@@ -178,7 +176,26 @@ private fun WeightList(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                WeightStats(bodyMeasurements = bodyMeasurements)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp)
+                ) {
+                    Text(
+                        text = "Historia pomiarów wagi",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Twoje wcześniejsze pomiary oraz ich statystyki",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            item {
+                WeightChart(measurements = bodyMeasurements)
             }
 
             items(
@@ -195,89 +212,39 @@ private fun WeightList(
 }
 
 @Composable
-private fun WeightStats(bodyMeasurements: List<BodyMeasurements>) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Statystyki",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                WeightStatItem(
-                    title = "Ostatni pomiar",
-                    value = bodyMeasurements.firstOrNull()?.let { "${it.weight} kg" } ?: "-"
-                )
-                WeightStatItem(
-                    title = "Średnia waga",
-                    value = bodyMeasurements.takeIf { it.isNotEmpty() }
-                        ?.let { "${it.map { w -> w.weight }.average().toInt()} kg" }
-                        ?: "-"
-                )
-                WeightStatItem(
-                    title = "Liczba pomiarów",
-                    value = bodyMeasurements.size.toString()
-                )
-            }
-
-            if (bodyMeasurements.size >= 2) {
-                val firstWeight = bodyMeasurements.last().weight
-                val lastWeight = bodyMeasurements.first().weight
-                val difference = lastWeight - firstWeight
-                val differenceText = when {
-                    difference > 0 -> "+$difference kg"
-                    difference < 0 -> "$difference kg"
-                    else -> "0 kg"
-                }
-
-                Text(
-                    text = "Zmiana: $differenceText",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = when {
-                        difference > 0 -> MaterialTheme.colorScheme.error
-                        difference < 0 -> MaterialTheme.colorScheme.primary
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun WeightStatItem(
-    title: String,
-    value: String
+    label: String,
+    value: String,
+    trend: Double?
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
-            text = title,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
         )
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSecondaryContainer
         )
+        trend?.let {
+            val trendText = if (it >= 0) "+%.1f" else "%.1f"
+            Text(
+                text = String.format(trendText, it) + " kg/tydz",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
+            )
+        }
     }
 }
 
@@ -317,8 +284,6 @@ private fun EmptyWeightList() {
     }
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun WeightItem(
     bodyMeasurements: BodyMeasurements,
@@ -341,17 +306,16 @@ private fun WeightItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = "${bodyMeasurements.weight} kg",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                WeightHeader(
+                    weight = bodyMeasurements.weight,
+                    sourceType = bodyMeasurements.sourceType
                 )
-                Text(
-                    text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-                        .format(Date(bodyMeasurements.date)),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                WeightDateTime(
+                    date = bodyMeasurements.date,
+                    sourceType = bodyMeasurements.sourceType
                 )
                 if (bodyMeasurements.note.isNotBlank()) {
                     Text(
@@ -375,51 +339,67 @@ private fun WeightItem(
     }
 
     if (showDeleteDialog) {
-        BasicAlertDialog(
-            onDismissRequest = { showDeleteDialog = false }
-        ) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-                shape = MaterialTheme.shapes.large,
-                tonalElevation = AlertDialogDefaults.TonalElevation
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    Text(
-                        text = "Potwierdź usunięcie",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Text(
-                        text = "Czy na pewno chcesz usunąć ten wpis?",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextButton(
-                            onClick = { showDeleteDialog = false }
-                        ) {
-                            Text("Anuluj")
-                        }
-                        TextButton(
-                            onClick = {
-                                onDeleteClick()
-                                showDeleteDialog = false
-                            }
-                        ) {
-                            Text("Usuń")
-                        }
-                    }
-                }
-            }
+        ConfirmAlertDialog(
+            onConfirm = { onDeleteClick() },
+            onDismiss = { showDeleteDialog = false },
+            title = "Potwierdź usunięcie wagi",
+            message = "Czy na pewno chcesz usunąć ten wpis?",
+            confirmActionText = "Usuń",
+            dismissActionText = "Anuluj"
+        )
+    }
+}
+
+@Composable
+private fun WeightHeader(
+    weight: Int,
+    sourceType: MeasurementSourceType,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        Text(
+            text = "$weight kg",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (sourceType == MeasurementSourceType.GOOGLE_SHEET) {
+            Icon(
+                imageVector = Icons.Default.CloudDone,
+                contentDescription = "Dane z Google Sheets",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+private fun WeightDateTime(
+    date: Long,
+    sourceType: MeasurementSourceType,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        Text(
+            text = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                .format(Date(date)),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (sourceType == MeasurementSourceType.GOOGLE_SHEET) {
+            Text(
+                text = "Google Sheets",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+            )
         }
     }
 }
@@ -432,7 +412,7 @@ private fun AddWeightDialog(
 ) {
     var weightText by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
-    var hasError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     BasicAlertDialog(
         onDismissRequest = onDismiss
@@ -461,16 +441,14 @@ private fun AddWeightDialog(
                         value = weightText,
                         onValueChange = {
                             weightText = it
-                            hasError = false
+                            errorMessage = null
                         },
                         label = { Text("Waga (kg)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        isError = hasError,
+                        isError = errorMessage != null,
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        supportingText = if (hasError) {
-                            { Text("Wprowadź prawidłową wagę") }
-                        } else null
+                        supportingText = errorMessage?.let { { Text(it) } }
                     )
 
                     OutlinedTextField(
@@ -496,13 +474,17 @@ private fun AddWeightDialog(
                         onClick = {
                             try {
                                 val weight = weightText.toInt()
-                                if (weight > 0) {
-                                    onConfirm(weight, note)
-                                } else {
-                                    hasError = true
+                                when {
+                                    weight < 40 -> errorMessage =
+                                        "Waga musi być nie mniejsza niż 40 kg"
+
+                                    weight > 250 -> errorMessage =
+                                        "Waga musi być nie większa niż 250 kg"
+
+                                    else -> onConfirm(weight, note)
                                 }
                             } catch (e: NumberFormatException) {
-                                hasError = true
+                                errorMessage = "Wprowadź prawidłową wagę"
                             }
                         }
                     ) {

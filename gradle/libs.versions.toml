@@ -16,6 +16,8 @@ composeMarkdown = "0.5.6"
 core = "2.0.0-beta.5"
 coreKtx = "1.6.1"
 datastorePreferences = "1.1.1"
+firebaseFunctions = "21.1.0"
+firebaseMessaging = "24.1.0"
 firebaseMessagingKtxVersion = "24.1.0"
 firebaseStorage = "21.0.1"
 firebaseStorageKtx = "21.0.1"
@@ -23,6 +25,7 @@ gson = "2.11.0"
 integrity = "1.4.0"
 jopendocument = "1.3"
 junitKtx = "1.2.1"
+konfettiComposeVersion = "2.0.3"
 kotlin = "1.9.22"
 kotlinxCoroutinesTestVersion = "1.10.1"
 ksp = "1.9.22-1.0.17"
@@ -106,11 +109,14 @@ androidx-material = { module = "androidx.compose.material:material", version.ref
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 compose-markdown = { module = "com.github.jeziellago:compose-markdown", version.ref = "composeMarkdown" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtx" }
+dionsegijn-konfetti-compose = { module = "nl.dionsegijn:konfetti-compose", version.ref = "konfettiComposeVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version = "23.1.0" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version = "25.1.1" }
+firebase-functions = { module = "com.google.firebase:firebase-functions", version.ref = "firebaseFunctions" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebaseMessaging" }
 firebase-storage = { module = "com.google.firebase:firebase-storage", version.ref = "firebaseStorage" }
 firebase-storage-ktx = { module = "com.google.firebase:firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
 google-firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx", version.ref = "firebaseMessagingKtxVersion" }

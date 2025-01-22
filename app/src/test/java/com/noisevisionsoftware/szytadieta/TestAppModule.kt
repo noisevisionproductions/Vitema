@@ -1,25 +1,5 @@
 package com.noisevisionsoftware.szytadieta
 
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.noisevisionsoftware.szytadieta.di.FirebaseModule
-import com.noisevisionsoftware.szytadieta.di.ManagerModule
-import com.noisevisionsoftware.szytadieta.di.RepositoryModule
-import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
-import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
-import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
-import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.BodyMeasurementRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.WeightRepository
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.components.SingletonComponent
-import dagger.hilt.testing.TestInstallIn
-import io.mockk.mockk
-import javax.inject.Singleton
-
 /*@Module
 @TestInstallIn(
     components = [SingletonComponent::class],

@@ -1,17 +1,18 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.bodyMeasurements
 
 import android.icu.util.Calendar
-import com.google.firebase.auth.FirebaseUser
+import android.util.Log
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
-import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
-import com.noisevisionsoftware.szytadieta.domain.model.MeasurementType
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementSourceType
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementType
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.BodyMeasurementRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,26 +32,39 @@ class BodyMeasurementsViewModel @Inject constructor(
     val measurementsState = _measurementsState.asStateFlow()
 
     init {
-        getHistory()
+        getMeasurementsHistory()
     }
 
-    fun addMeasurements(measurements: BodyMeasurements) {
-        handleOperation(_measurementsState) {
-            val currentUser = getCurrentUserOrThrow()
+    suspend fun addMeasurements(measurements: BodyMeasurements): Result<Unit> {
+        return try {
 
-            val calendar = Calendar.getInstance()
-            val updatedMeasurements = measurements.copy(
-                userId = currentUser.uid,
-                weekNumber = calendar.get(Calendar.WEEK_OF_YEAR),
-                measurementType = MeasurementType.FULL_BODY
-            )
+            authRepository.withAuthenticatedUser { userId ->
+                val calendar = Calendar.getInstance()
+                val updatedMeasurements = measurements.copy(
+                    userId = userId,
+                    date = DateUtils.getCurrentPreciseTime(),
+                    weekNumber = calendar.get(Calendar.WEEK_OF_YEAR),
+                    measurementType = MeasurementType.FULL_BODY,
+                    sourceType = MeasurementSourceType.APP
+                )
 
-            bodyMeasurementsRepository.addMeasurements(updatedMeasurements)
-                .getOrThrow()
+                Log.d("BodyMeasurementsVM", "Saving measurements: $updatedMeasurements")
 
-            showSuccess("Pomiary zostały zapisane")
-
-            loadMeasurementsHistory()
+                bodyMeasurementsRepository.addMeasurements(updatedMeasurements)
+                    .onSuccess {
+                        showSuccess("Pomiary zostały zapisane")
+                        loadMeasurementsHistory()
+                        Result.success(Unit)
+                    }
+                    .onFailure { error ->
+                        Log.e("BodyMeasurementsVM", "Error saving measurements", error)
+                        showError(error.message ?: "Wystąpił błąd podczas dodawania pomiarów")
+                    }
+            }
+        } catch (e: Exception) {
+            Log.e("BodyMeasurementsVM", "Error adding measurements", e)
+            showError(e.message ?: "Wystąpił błąd podczas dodawania pomiarów")
+            Result.failure(e)
         }
     }
 
@@ -65,32 +79,41 @@ class BodyMeasurementsViewModel @Inject constructor(
         }
     }
 
-    private fun getHistory(monthsBack: Int = 3) {
+    fun getMeasurementsHistory(monthsBack: Int = 3) {
         handleOperation(_measurementsState) {
             loadMeasurementsHistory(monthsBack)
         }
     }
 
     private suspend fun loadMeasurementsHistory(monthsBack: Int = 3): List<BodyMeasurements> {
-        val currentUser = getCurrentUserOrThrow()
+        return authRepository.withAuthenticatedUser { userId ->
+            val calendar = Calendar.getInstance()
+            val endDate = calendar.timeInMillis
+            calendar.add(Calendar.MONTH, -monthsBack)
+            val startDate = calendar.timeInMillis
 
-        val calendar = Calendar.getInstance()
-        val endDate = calendar.timeInMillis
-        calendar.add(Calendar.MONTH, -monthsBack)
-        val startDate = calendar.timeInMillis
-
-        return bodyMeasurementsRepository.getMeasurementsHistory(
-            currentUser.uid,
-            startDate,
-            endDate
-        )
-            .getOrThrow()
-            .filter { it.measurementType == MeasurementType.FULL_BODY }
+            return@withAuthenticatedUser bodyMeasurementsRepository.getMeasurementsHistory(
+                userId,
+                startDate,
+                endDate
+            )
+                .getOrThrow()
+                .filter { it.measurementType == MeasurementType.FULL_BODY }
+        }
     }
 
-    private fun getCurrentUserOrThrow(): FirebaseUser {
-        return authRepository.getCurrentUser()
-            ?: throw AppException.AuthException("Użytkownik nie jest zalogowany")
+    suspend fun getLastMeasurements(): BodyMeasurements? {
+        return try {
+            authRepository.withAuthenticatedUser { userId ->
+                bodyMeasurementsRepository.getMeasurementsHistory(
+                    userId = userId,
+                    limit = 1
+                ).getOrNull()?.firstOrNull()
+            }
+        } catch (e: Exception) {
+            Log.e("BodyMeasurementsVM", "Error getting last measurements", e)
+            null
+        }
     }
 
     override fun onUserLoggedOut() {

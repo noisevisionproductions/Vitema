@@ -9,6 +9,10 @@ fun formatDate(timestamp: Long): String {
     return SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(timestamp))
 }
 
+fun formatHour(timestamp: Long): String {
+    return SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(timestamp))
+}
+
 fun getWeekStartDate(timestamp: Long): Long {
     val calendar = Calendar.getInstance().apply {
         timeInMillis = timestamp

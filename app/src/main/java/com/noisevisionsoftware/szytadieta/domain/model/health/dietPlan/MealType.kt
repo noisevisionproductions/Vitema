@@ -1,7 +1,7 @@
-package com.noisevisionsoftware.szytadieta.domain.model.dietPlan
+package com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan
 
 import com.google.gson.annotations.JsonAdapter
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.adapter.MealTypeAdapter
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.adapter.MealTypeAdapter
 
 @JsonAdapter(MealTypeAdapter::class)
 enum class MealType {

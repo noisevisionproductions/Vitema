@@ -5,11 +5,13 @@ import java.util.Calendar
 object DateUtils {
     fun getCurrentLocalDate(): Long {
         return Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 12)
-            set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
+    }
+
+    fun getCurrentPreciseTime(): Long {
+        return Calendar.getInstance().timeInMillis
     }
 
     fun getLocalDatePlusDays(days: Int): Long {
@@ -30,6 +32,26 @@ object DateUtils {
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    fun getStartOfDay(timestamp: Long): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = timestamp
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    fun getEndOfDay(timestamp: Long): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = timestamp
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
         }.timeInMillis
     }
 

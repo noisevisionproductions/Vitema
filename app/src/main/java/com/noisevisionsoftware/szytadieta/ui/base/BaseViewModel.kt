@@ -1,5 +1,6 @@
 package com.noisevisionsoftware.szytadieta.ui.base
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.Alert
@@ -110,6 +111,7 @@ abstract class BaseViewModel(
                 val result = operation()
                 stateFlow.value = ViewModelState.Success(result)
             } catch (e: Exception) {
+                Log.e("Operation error", "Operation error details:", e)
                 handleError(e, stateFlow)
             }
         }

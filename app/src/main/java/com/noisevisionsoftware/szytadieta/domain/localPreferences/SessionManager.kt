@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
@@ -47,7 +48,14 @@ class SessionManager @Inject constructor(
     companion object {
         private val USER_ID_KEY = stringPreferencesKey("user_id")
         private val USER_EMAIL_KEY = stringPreferencesKey("user_email")
+        private val DASHBOARD_SCROLL_INDEX = intPreferencesKey("dashboard_scroll_index")
+        private val DASHBOARD_SCROLL_OFFSET = intPreferencesKey("dashboard_scroll_offset")
     }
+
+    data class ScrollPosition(
+        val index: Int = 0,
+        val offset: Int = 0
+    )
 
     suspend fun saveUserSession(user: User) {
         dataStore.edit { preferences ->
@@ -59,6 +67,22 @@ class SessionManager @Inject constructor(
     suspend fun clearSession() {
         dataStore.edit { preferences ->
             preferences.clear()
+        }
+    }
+
+    suspend fun saveDashboardScrollPosition(index: Int, offset: Int) {
+        dataStore.edit { preferences ->
+            preferences[DASHBOARD_SCROLL_INDEX] = index
+            preferences[DASHBOARD_SCROLL_OFFSET] = offset
+        }
+    }
+
+    fun getDashboardScrollPosition(): Flow<ScrollPosition> {
+        return dataStore.data.map { preferences ->
+            ScrollPosition(
+                index = preferences[DASHBOARD_SCROLL_INDEX] ?: 0,
+                offset = preferences[DASHBOARD_SCROLL_OFFSET] ?: 0
+            )
         }
     }
 

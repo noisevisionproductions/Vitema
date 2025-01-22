@@ -9,9 +9,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.toObject
 import com.noisevisionsoftware.szytadieta.data.FCMTokenRepository
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
-import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
-import com.noisevisionsoftware.szytadieta.domain.model.MeasurementSourceType
-import com.noisevisionsoftware.szytadieta.domain.model.MeasurementType
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementSourceType
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementType
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.pending.PendingUser
 import com.noisevisionsoftware.szytadieta.utils.DateUtils

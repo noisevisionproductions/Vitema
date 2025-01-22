@@ -1,33 +1,37 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.dashboard
 
 import android.icu.util.Calendar
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
-import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.Meal
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.WeekDay
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Meal
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.WeekDay
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserRole
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.BodyMeasurementRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.WeightRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.UserRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.health.WeightRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
     private val weightRepository: WeightRepository,
     private val sessionManager: SessionManager,
     private val bodyMeasurementRepository: BodyMeasurementRepository,
@@ -64,8 +68,10 @@ class DashboardViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing = _isRefreshing.asStateFlow()
 
-    private var _scrollPosition: Int? = null
-    val scrollPosition: Int? get() = _scrollPosition
+    private val _isActive = MutableStateFlow(false)
+
+    private val _scrollPosition = MutableStateFlow(SessionManager.ScrollPosition())
+    val scrollPosition = _scrollPosition.asStateFlow()
 
     init {
         loadUserRole()
@@ -74,19 +80,33 @@ class DashboardViewModel @Inject constructor(
         loadLatestMeasurements()
         loadTodayMeals()
         observeUserSession()
+        loadScrollPosition()
+
+        viewModelScope.launch {
+            _isActive.collect { isActive ->
+                if (isActive) {
+                    refreshDashboardData()
+                }
+            }
+        }
     }
 
     fun refreshDashboardData() {
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                coroutineScope {
-                    launch { loadUserRole() }
-                    launch { loadUserData() }
-                    launch { loadLatestWeight() }
-                    launch { loadLatestMeasurements() }
-                    launch { loadTodayMeals() }
+                supervisorScope {
+                    val jobs = listOf(
+                        launch { loadUserRole() },
+                        launch { loadUserData() },
+                        launch { loadLatestWeight() },
+                        launch { loadLatestMeasurements() },
+                        launch { loadTodayMeals() }
+                    )
+                    jobs.joinAll()
                 }
+            } catch (e: Exception) {
+                showError(e.message ?: "Wystąpił błąd podczas odświeżania danych")
             } finally {
                 _isRefreshing.value = false
             }
@@ -96,7 +116,7 @@ class DashboardViewModel @Inject constructor(
     fun checkAdminAccess(onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
-                val currentUser = authRepository.getCurrentUserData().getOrThrow()
+                val currentUser = userRepository.getCurrentUserData().getOrThrow()
                 onResult(currentUser?.role == UserRole.ADMIN)
             } catch (e: Exception) {
                 onResult(false)
@@ -107,7 +127,7 @@ class DashboardViewModel @Inject constructor(
 
     private fun loadUserRole() {
         handleOperation(_userState) {
-            authRepository.getCurrentUserData()
+            userRepository.getCurrentUserData()
                 .getOrThrow()
                 ?.role
                 ?: throw AppException.AuthException("Nie można pobrać roli użytkownika")
@@ -116,7 +136,7 @@ class DashboardViewModel @Inject constructor(
 
     private fun loadUserData() {
         handleOperation(_userData) {
-            authRepository.getCurrentUserData()
+            userRepository.getCurrentUserData()
                 .getOrThrow()
                 ?: throw AppException.AuthException("Nie można pobrać danych użytkownika")
         }
@@ -124,14 +144,24 @@ class DashboardViewModel @Inject constructor(
 
     private fun loadLatestWeight() {
         handleOperation(_latestWeight) {
-            authRepository.withAuthenticatedUser { userId ->
-                weightRepository.getLatestWeights(userId, 7).getOrNull()?.firstOrNull()
+            try {
+                authRepository.withAuthenticatedUser { userId ->
+                    weightRepository.getLatestWeights(userId, 7).getOrNull()?.firstOrNull()
+                }
+            } catch (e: Exception) {
+                Log.e("DashboardViewModel", "Error loading latest weight", e)
+                throw e
             }
         }
 
         handleOperation(_weightHistory) {
-            authRepository.withAuthenticatedUser { userId ->
-                weightRepository.getLatestWeights(userId, 7).getOrNull() ?: emptyList()
+            try {
+                authRepository.withAuthenticatedUser { userId ->
+                    weightRepository.getLatestWeights(userId, 7).getOrNull() ?: emptyList()
+                }
+            } catch (e: Exception) {
+                Log.e("DashboardViewModel", "Error loading weight history", e)
+                throw e
             }
         }
     }
@@ -188,7 +218,24 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun saveScrollPosition(index: Int, offset: Int) {
+        viewModelScope.launch {
+            sessionManager.saveDashboardScrollPosition(index, offset)
+        }
+    }
+
+    private fun loadScrollPosition() {
+        viewModelScope.launch {
+            sessionManager.getDashboardScrollPosition().collect { position ->
+                _scrollPosition.value = position
+            }
+        }
+    }
+
     override fun onUserLoggedOut() {
+        viewModelScope.launch {
+            sessionManager.saveDashboardScrollPosition(0, 0)
+        }
         _userState.value = ViewModelState.Initial
         _userData.value = ViewModelState.Initial
         _latestWeight.value = ViewModelState.Initial
@@ -196,15 +243,6 @@ class DashboardViewModel @Inject constructor(
         _latestMeasurements.value = ViewModelState.Initial
         _measurementsHistory.value = ViewModelState.Initial
         _todayMeals.value = ViewModelState.Initial
-    }
-
-    fun saveScrollPosition(position: Int) {
-        _scrollPosition = position
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        _scrollPosition = null
     }
 
     override fun onRefreshData() {

@@ -1,9 +1,8 @@
 package com.noisevisionsoftware.szytadieta.domain.service.excelParser
 
 import android.util.Log
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.ShoppingCategory
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.ShoppingList
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.ShoppingProduct
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingCategory
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingProduct
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Sheet
@@ -17,7 +16,7 @@ class ShoppingListSheetParser @Inject constructor() {
         private const val QUANTITY_COLUMN = 2
     }
 
-    fun parseShoppingList(sheet: Sheet): ShoppingList {
+    fun parseShoppingList(sheet: Sheet): List<ShoppingCategory> {
         val categoryMap = mutableMapOf<String, MutableList<ShoppingProduct>>()
         var currentCategory = ""
 
@@ -52,11 +51,9 @@ class ShoppingListSheetParser @Inject constructor() {
             }
         }
 
-        return ShoppingList(
-            categoryMap.map { (name, products) ->
-                ShoppingCategory(name, products.sortedBy { it.name })
-            }.sortedBy { it.name }
-        )
+        return categoryMap.map { (name, products) ->
+            ShoppingCategory(name, products.sortedBy { it.name })
+        }.sortedBy { it.name }
     }
 
     private fun parseQuantityAndUnit(value: String): Pair<Double, String> {
@@ -106,6 +103,7 @@ class ShoppingListSheetParser @Inject constructor() {
                     value.toString()
                 }
             }
+
             CellType.STRING -> cell.stringCellValue
             CellType.FORMULA -> when (cell.cachedFormulaResultType) {
                 CellType.NUMERIC -> {
@@ -116,6 +114,7 @@ class ShoppingListSheetParser @Inject constructor() {
                         value.toString()
                     }
                 }
+
                 CellType.STRING -> cell.stringCellValue
                 else -> ""
             }

@@ -32,7 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.ShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingList
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 
 @Composable

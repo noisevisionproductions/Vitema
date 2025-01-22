@@ -1,7 +1,7 @@
 package com.noisevisionsoftware.szytadieta.domain.service.excelParser
 
-import android.util.Log
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.Diet
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Diet
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingList
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import java.io.InputStream
 import javax.inject.Inject
@@ -13,32 +13,42 @@ class ExcelParserService @Inject constructor(
     companion object {
         private const val DIET_SHEET_INDEX = 0
         private const val SHOPPING_LIST_SHEET_INDEX = 1
-        private const val TAG = "ExcelParserService"
     }
 
-    fun parseDietFile(
+    data class ParseResult(
+        val diet: Diet,
+        val shoppingList: ShoppingList
+    )
+
+    fun parseFile(
         inputStream: InputStream,
         userId: String,
         fileUrl: String,
-        fileExtension: String
-    ): Result<Diet> = runCatching {
-        if (fileExtension.lowercase() !in listOf("xlsx", "xls")) {
-            throw IllegalArgumentException("Nieobsługiwany format pliku. Wspierane formaty to: .xlsx, .xls")
-        }
-
+        startDate: Long,
+        endDate: Long
+    ): Result<ParseResult> = runCatching {
         val workbook = WorkbookFactory.create(inputStream)
 
-        Diet(
+        val diet = Diet(
             userId = userId,
             fileUrl = fileUrl,
-            weeklyPlan = dietSheetParser.parseWeeklyPlan(workbook.getSheetAt(DIET_SHEET_INDEX)),
-            shoppingList = shoppingListSheetParser.parseShoppingList(workbook.getSheetAt(
-                SHOPPING_LIST_SHEET_INDEX
-            ))
-        ).also {
-            workbook.close()
-        }
-    }.onFailure {
-        Log.e(TAG, "Błąd podczas parsowania pliku: ${it.message}", it)
+            startDate = startDate,
+            endDate = endDate,
+            weeklyPlan = dietSheetParser.parseWeeklyPlan(workbook.getSheetAt(DIET_SHEET_INDEX))
+        )
+
+        val shoppingList = ShoppingList(
+            userId = userId,
+            dietId = diet.id,
+            startDate = startDate,
+            endDate = endDate,
+            categories = shoppingListSheetParser.parseShoppingList(
+                workbook.getSheetAt(
+                    SHOPPING_LIST_SHEET_INDEX
+                )
+            )
+        )
+
+        ParseResult(diet, shoppingList)
     }
 }

@@ -1,7 +1,7 @@
 package com.noisevisionsoftware.szytadieta.domain.service.dietService
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.Diet
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Diet
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 

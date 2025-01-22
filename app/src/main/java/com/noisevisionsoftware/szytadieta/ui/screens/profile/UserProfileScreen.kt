@@ -24,7 +24,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,13 +43,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.ConfirmAlertDialog
-import com.noisevisionsoftware.szytadieta.ui.common.CustomProgressIndicator
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
+import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.ErrorMessage
 import com.noisevisionsoftware.szytadieta.utils.formatDate
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserProfileScreen(
     viewModel: UserProfileViewModel = hiltViewModel(),
@@ -74,7 +72,7 @@ fun UserProfileScreen(
         ) {
             when (val state = profileState) {
                 is ViewModelState.Initial -> Unit
-                is ViewModelState.Loading -> CustomProgressIndicator()
+                is ViewModelState.Loading -> LoadingOverlay()
                 is ViewModelState.Success -> ProfileScreenPage(
                     state = state,
                     onNavigate = onNavigate,
@@ -149,12 +147,6 @@ private fun ProfileScreenPage(
                         label = "Data urodzenia",
                         value = formatDate(state.data.birthDate)
                     )
-                } else {
-                    ProfileItem(
-                        icon = Icons.Default.DateRange,
-                        label = "Wiek",
-                        value = "${state.data.storedAge}"
-                    )
                 }
                 if (state.data.gender != null) {
                     ProfileItem(
@@ -205,39 +197,44 @@ private fun ProfileScreenPage(
                 }
 
                 FilledTonalButton(
-                    onClick = { showLogoutDialog = true },
+                    onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.EditProfile) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
+                        containerColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        imageVector = Icons.Default.Edit,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onErrorContainer
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        "Wyloguj się",
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
+                    Text("Edytuj dane")
                 }
             }
         }
 
         Button(
-            onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.EditProfile) },
-            modifier = Modifier.fillMaxWidth()
+            onClick = { showLogoutDialog = true },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer
+            )
         ) {
             Icon(
-                imageVector = Icons.Default.Edit,
+                imageVector = Icons.AutoMirrored.Filled.Logout,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onErrorContainer
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Edytuj profil")
+            Text(
+                "Wyloguj się",
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
         }
+
+
     }
 
     if (showLogoutDialog) {

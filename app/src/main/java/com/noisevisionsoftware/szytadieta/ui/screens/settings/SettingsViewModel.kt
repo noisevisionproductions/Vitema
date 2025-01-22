@@ -6,10 +6,12 @@ import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.exceptions.FirebaseErrorMapper
 import com.noisevisionsoftware.szytadieta.domain.exceptions.PasswordField
 import com.noisevisionsoftware.szytadieta.domain.exceptions.ValidationManager
+import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.UserRepository
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationManager
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
@@ -24,9 +26,11 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
     private val settingsManager: SettingsManager,
     private val sessionManager: SessionManager,
     private val appVersionUtils: AppVersionUtils,
+    private val preferencesManager: PreferencesManager,
     private val notificationManager: NotificationManager,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
@@ -83,18 +87,21 @@ class SettingsViewModel @Inject constructor(
 
     fun deleteAccount() {
         handleOperation(_settingsState) {
-            safeApiCall { authRepository.deleteAccount() }
-                .getOrThrow()
+            authRepository.withAuthenticatedUser { userId ->
 
-            notificationManager.cancelAllNotifications()
-            sessionManager.clearSession()
-            settingsManager.clearSettings()
-            showSuccess("Konto zostało usunięte")
+                safeApiCall { userRepository.deleteAccount() }
+                    .getOrThrow()
 
-            SettingsData(
-                isAccountDeleted = true,
-                appVersion = appVersionUtils.getAppVersion()
-            )
+                sessionManager.clearSession()
+                settingsManager.clearSettings()
+                preferencesManager.clearAllUserData(userId = userId)
+                showSuccess("Konto zostało usunięte")
+
+                SettingsData(
+                    isAccountDeleted = true,
+                    appVersion = appVersionUtils.getAppVersion()
+                )
+            }
         }
     }
 
@@ -103,7 +110,7 @@ class SettingsViewModel @Inject constructor(
             ValidationManager.validatePassword(oldPassword).getOrThrow()
             ValidationManager.validatePassword(newPassword).getOrThrow()
 
-            safeApiCall { authRepository.updatePassword(oldPassword, newPassword) }
+            safeApiCall { userRepository.updatePassword(oldPassword, newPassword) }
                 .fold(
                     onSuccess = {
                         showSuccess("Hasło zostało zmienione")

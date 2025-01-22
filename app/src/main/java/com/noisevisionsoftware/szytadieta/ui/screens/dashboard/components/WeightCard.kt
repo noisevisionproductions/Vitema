@@ -34,7 +34,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.utils.Utils
-import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.utils.formatDate
@@ -256,7 +256,7 @@ private fun EmptyStateView() {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Brak pomiarów",
+            text = "Brak wagi ciała",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSecondaryContainer
         )
@@ -266,7 +266,7 @@ private fun EmptyStateView() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Kliknij, aby dodać pierwszy pomiar",
+                text = "Kliknij, aby dodać pierwszą wagę ciała",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
             )

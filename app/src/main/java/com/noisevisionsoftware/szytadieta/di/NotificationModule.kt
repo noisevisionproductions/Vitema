@@ -11,13 +11,13 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class NotificationModule {
+object NotificationModule {
 
     @Provides
     @Singleton
     fun provideNotificationManager(
         @ApplicationContext context: Context
-    ): NotificationManager{
+    ): NotificationManager {
         return context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 }

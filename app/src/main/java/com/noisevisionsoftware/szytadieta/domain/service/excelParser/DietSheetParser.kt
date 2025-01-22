@@ -1,9 +1,9 @@
 package com.noisevisionsoftware.szytadieta.domain.service.excelParser
 
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.DayPlan
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.Meal
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.MealType
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.WeekDay
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.DayPlan
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Meal
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.MealType
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.WeekDay
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import javax.inject.Inject

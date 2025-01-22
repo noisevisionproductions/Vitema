@@ -34,7 +34,7 @@ android {
         version = Version(
             major = 1,
             minor = 0,
-            patch = 2
+            patch = 7
         )
 
         applicationId = "com.noisevisionsoftware.szytadieta"
@@ -60,12 +60,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             isDebuggable = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
             signingConfig = signingConfigs.getByName("release")
         }
         debug {
@@ -129,6 +125,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.functions)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
@@ -145,12 +142,13 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.preferences.core)
 
+    // Notifications
+    implementation(libs.firebase.messaging)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.google.firebase.messaging.ktx)
+
     // Documents reader
     implementation(libs.compose.markdown)
-
-    // Notifications
-    implementation(libs.google.firebase.messaging.ktx)
-    implementation(libs.androidx.work.runtime.ktx)
 
     implementation(libs.androidx.material)
     implementation(libs.androidx.core.ktx)
@@ -165,6 +163,9 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Confetti
+    implementation (libs.dionsegijn.konfetti.compose)
 
     // Charts - Vico
     implementation(libs.mpandroidchart)

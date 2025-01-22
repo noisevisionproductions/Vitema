@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.domain.model.dietPlan
+package com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan
 
 data class ShoppingProduct(
     val name: String = "",

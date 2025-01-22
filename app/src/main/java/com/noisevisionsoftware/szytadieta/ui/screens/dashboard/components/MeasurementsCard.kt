@@ -27,7 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.utils.formatDate
 
@@ -242,7 +242,7 @@ private fun EmptyMeasurementsContent() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Dodaj pomiary",
+                text = "Kliknij, aby dodać pierwsze pomiary",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )

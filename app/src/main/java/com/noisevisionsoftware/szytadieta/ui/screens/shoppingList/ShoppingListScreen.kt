@@ -13,7 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.ShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingList
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.CustomErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
@@ -24,7 +24,6 @@ import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.NoS
 import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.ProductList
 import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.ShoppingListPeriodSelector
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListScreen(
     viewModel: ShoppingListViewModel = hiltViewModel(),

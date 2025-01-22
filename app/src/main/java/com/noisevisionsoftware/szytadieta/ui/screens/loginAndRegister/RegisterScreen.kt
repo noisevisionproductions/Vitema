@@ -37,15 +37,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.state.AuthState
@@ -126,7 +124,11 @@ fun RegisterScreen(
                         value = nickname,
                         onValueChange = { nickname = it },
                         label = { Text("Nazwa użytkownika") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = "Pole wprowadzania nazwy użytkownika"
+                            },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Text,
                             imeAction = ImeAction.Next
@@ -142,7 +144,11 @@ fun RegisterScreen(
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = "Pole wprowadzania adresu email"
+                            },
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
                             imeAction = ImeAction.Next
@@ -158,7 +164,11 @@ fun RegisterScreen(
                         value = password,
                         onValueChange = { password = it },
                         label = { Text("Hasło") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = "Pole wprowadzania hasła"
+                            },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
@@ -175,7 +185,11 @@ fun RegisterScreen(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
                         label = { Text("Potwierdź hasło") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = "Pole wprowadzania nazwy użytkownika"
+                            },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
@@ -217,7 +231,7 @@ fun RegisterScreen(
             }
 
             AcceptTerms(
-                onRegulationsClick = {onNavigate(NavigationDestination.UnauthenticatedDestination.Regulations)},
+                onRegulationsClick = { onNavigate(NavigationDestination.UnauthenticatedDestination.Regulations) },
                 onPrivacyPolicyClick = { onNavigate(NavigationDestination.UnauthenticatedDestination.PrivacyPolicy) }
             )
 
@@ -228,90 +242,52 @@ fun RegisterScreen(
 
 @Composable
 private fun AcceptTerms(
-    onRegulationsClick: () -> Unit = {},
-    onPrivacyPolicyClick: () -> Unit = {}
+    onRegulationsClick: () -> Unit,
+    onPrivacyPolicyClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val annotatedText = buildAnnotatedString {
-        append("Tworząc konto, akceptujesz ")
-
-        pushStringAnnotation(
-            tag = "regulamin",
-            annotation = "regulamin"
-        )
-        withStyle(
-            style = SpanStyle(
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium
-            )
-        ) {
-            append("Regulamin")
-        }
-        pop()
-
-        append(" oraz ")
-
-        pushStringAnnotation(
-            tag = "polityka",
-            annotation = "polityka"
-        )
-        withStyle(
-            style = SpanStyle(
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium
-            )
-        ) {
-            append("Politykę prywatności")
-        }
-        pop()
-    }
-
-    Box(
-        modifier = Modifier
+    Column(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = annotatedText,
-            style = MaterialTheme.typography.bodySmall.copy(
-                textAlign = TextAlign.Center
-            ),
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    role = Role.Button
-                ) { }
+            text = "Tworząc konto, akceptujesz:",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
-        annotatedText.getStringAnnotations("regulamin", 0, annotatedText.length)
-            .firstOrNull()?.let {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clickable(
-                            enabled = true,
-                            onClickLabel = "Regulamin",
-                            role = Role.Button,
-                            onClick = onRegulationsClick
-                        )
-                )
-            }
+        Spacer(modifier = Modifier.height(8.dp))
 
-        annotatedText.getStringAnnotations("polityka", 0, annotatedText.length)
-            .firstOrNull()?.let {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clickable(
-                            enabled = true,
-                            onClickLabel = "Polityka prywatności",
-                            role = Role.Button,
-                            onClick = onPrivacyPolicyClick
-                        )
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onRegulationsClick) {
+                Text(
+                    text = "Regulamin",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
+            Text(
+                text = " oraz ",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            TextButton(onClick = onPrivacyPolicyClick) {
+                Text(
+                    text = "Politykę prywatności",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }
 

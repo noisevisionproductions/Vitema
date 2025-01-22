@@ -7,7 +7,7 @@ import com.noisevisionsoftware.szytadieta.domain.exceptions.ValidationManager
 import com.noisevisionsoftware.szytadieta.domain.model.user.Gender
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
-import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.UserRepository
 import com.noisevisionsoftware.szytadieta.ui.base.AppEvent
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CompleteProfileViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -42,7 +42,7 @@ class CompleteProfileViewModel @Inject constructor(
     private var tempGender: Gender? = null
 
     private fun checkProfileCompletion(): Flow<Boolean> = flow {
-        authRepository.getCurrentUserData()
+        userRepository.getCurrentUserData()
             .onSuccess { user ->
                 val isCompleted = user?.let {
                     it.birthDate != null &&
@@ -90,12 +90,12 @@ class CompleteProfileViewModel @Inject constructor(
     }
 
     private suspend fun updateUserField(updateUser: (User) -> User) {
-        authRepository.getCurrentUser()?.let {
-            safeApiCall { authRepository.getCurrentUserData() }
+        userRepository.getCurrentUser()?.let {
+            safeApiCall { userRepository.getCurrentUserData() }
                 .onSuccess { currentUser ->
                     currentUser?.let { user ->
                         val updatedUser = updateUser(user)
-                        safeApiCall { authRepository.updateUserData(updatedUser) }
+                        safeApiCall { userRepository.updateUserData(updatedUser) }
                             .onSuccess {
                                 _completeProfileState.value =
                                     CompleteProfileState.Success(updatedUser)

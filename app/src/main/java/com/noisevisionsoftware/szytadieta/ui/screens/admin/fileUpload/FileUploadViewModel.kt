@@ -8,6 +8,7 @@ import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.FileRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.domain.state.file.FileUploadState
 import com.noisevisionsoftware.szytadieta.domain.state.file.UploadProgress
@@ -27,6 +28,7 @@ import javax.inject.Inject
 class FileUploadViewModel @Inject constructor(
     private val fileRepository: FileRepository,
     private val adminRepository: AdminRepository,
+    private val dietRepository: DietRepository,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -44,6 +46,12 @@ class FileUploadViewModel @Inject constructor(
 
     private val _selectedStartDate = MutableStateFlow<Long?>(null)
     val selectedStartDate = _selectedStartDate.asStateFlow()
+
+    private val _selectedFileUri = MutableStateFlow<Uri?>(null)
+    val selectedFileUri = _selectedFileUri.asStateFlow()
+
+    private val _selectedFileName = MutableStateFlow<String?>(null)
+    val selectedFileName = _selectedFileName.asStateFlow()
 
     private val uploadResults = mutableListOf<UploadResult>()
 
@@ -67,7 +75,10 @@ class FileUploadViewModel @Inject constructor(
     fun loadUploadScreen() {
         _uploadState.value = FileUploadState.Initial
         _selectedUsers.value = emptySet()
+        _userState.value = ViewModelState.Initial
         _selectedStartDate.value = null
+        _selectedFileUri.value = null
+        _selectedFileName.value = null
         uploadResults.clear()
         loadUsers()
     }
@@ -94,60 +105,105 @@ class FileUploadViewModel @Inject constructor(
         _selectedStartDate.value = date
     }
 
+    fun setSelectedFile(uri: Uri?, fileName: String?) {
+        _selectedFileUri.value = uri
+        _selectedFileName.value = fileName
+    }
+
     fun uploadFile(uri: Uri, fileName: String) {
-        when {
-            selectedUsers.value.isEmpty() -> {
-                showError("Wybierz przynajmniej jednego użytkownika")
-                return
-            }
+        viewModelScope.launch {
+            when {
+                selectedUsers.value.isEmpty() -> {
+                    showError("Wybierz przynajmniej jednego użytkownika")
+                    return@launch
+                }
 
-            selectedStartDate.value == null -> {
-                showError("Wybierz tydzień dla diety")
-                return
-            }
+                selectedStartDate.value == null -> {
+                    showError("Wybierz tydzień dla diety")
+                    return@launch
+                }
 
-            else -> {
-                viewModelScope.launch {
-                    try {
-                        uploadResults.clear()
-                        _uploadState.value = FileUploadState.Loading(
-                            message = "Rozpoczynanie przesyłania",
-                            progress = 0,
-                            stage = UploadStage.UPLOADING,
-                            previousStages = emptyList()
-                        )
-
-                        selectedUsers.value.forEach { userId ->
-                            val startDate = selectedStartDate.value!!
-                            val endDate = DateUtils.addDaysToDate(startDate,6)
-
-                            fileRepository.uploadFile(
-                                uri = uri,
-                                userId = userId,
-                                fileName = fileName,
-                                startDate = startDate,
-                                endDate = endDate
-                            ).collect { progress ->
-                                when (progress) {
-                                    is UploadProgress.Progress -> {
-                                        handleProgressUpdate(progress)
-                                    }
-
-                                    is UploadProgress.Success -> {
-                                        handleUploadSuccess()
-                                    }
-
-                                    is UploadProgress.Error -> {
-                                        handleUploadError(progress.message)
-                                    }
-                                }
-                            }
+                else -> {
+                    val existingDiets = checkExistingDiets()
+                    if (existingDiets.isNotEmpty()) {
+                        showConfirmationDialogForOverwrite(existingDiets) {
+                            startUpload(uri, fileName)
                         }
-                    } catch (e: Exception) {
-                        val errorMessage = e.message ?: "Wystąpił błąd podczas przesyłania pliku"
-                        handleUploadError(errorMessage)
+                    } else {
+                        startUpload(uri, fileName)
                     }
                 }
+            }
+        }
+    }
+
+    private suspend fun checkExistingDiets(): List<String> {
+        val startDate = selectedStartDate.value!!
+
+        return selectedUsers.value.mapNotNull { userId ->
+            val exists = dietRepository.getDietForSpecificUserAndDate(userId, startDate)
+                .getOrNull() != null
+            if (exists) userId else null
+        }
+    }
+
+    private fun showConfirmationDialogForOverwrite(
+        userIds: List<String>,
+        onConfirm: () -> Unit
+    ) {
+        val userEmails = (_userState.value as? ViewModelState.Success)?.data?.items
+            ?.filter { it.id in userIds }
+            ?.joinToString("\n") { it.email }
+
+        _uploadState.value = FileUploadState.NeedsConfirmation(
+            message = "Następujący użytkownicy mają już przypisaną dietę w tym terminie:\n\n" +
+                    "$userEmails\n\n" +
+                    "Czy chcesz nadpisać istniejące diety?",
+            onConfirm = onConfirm
+        )
+    }
+
+    private fun startUpload(uri: Uri, fileName: String) {
+        viewModelScope.launch {
+            try {
+                uploadResults.clear()
+
+                _uploadState.value = FileUploadState.Loading(
+                    message = "Rozpoczynanie przesyłania",
+                    progress = 0,
+                    stage = UploadStage.UPLOADING,
+                    previousStages = emptyList()
+                )
+
+                selectedUsers.value.forEach { userId ->
+                    val startDate = selectedStartDate.value!!
+                    val endDate = DateUtils.addDaysToDate(startDate, 6)
+
+                    fileRepository.uploadFile(
+                        uri = uri,
+                        userId = userId,
+                        fileName = fileName,
+                        startDate = startDate,
+                        endDate = endDate
+                    ).collect { progress ->
+                        when (progress) {
+                            is UploadProgress.Progress -> {
+                                handleProgressUpdate(progress)
+                            }
+
+                            is UploadProgress.Success -> {
+                                handleUploadSuccess()
+                            }
+
+                            is UploadProgress.Error -> {
+                                handleUploadError(progress.message)
+                            }
+                        }
+                    }
+
+                }
+            } catch (e: Exception) {
+                handleUploadError(e.message ?: "Wystąpił błąd podczas przesyłania pliku")
             }
         }
     }

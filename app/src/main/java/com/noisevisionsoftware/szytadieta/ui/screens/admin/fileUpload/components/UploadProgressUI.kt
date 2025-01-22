@@ -60,6 +60,7 @@ fun UploadProgressUI(
             }
 
             FileUploadState.Initial -> Unit
+            is FileUploadState.NeedsConfirmation -> Unit
         }
 
         when (uploadState) {
@@ -76,6 +77,7 @@ fun UploadProgressUI(
             }
 
             FileUploadState.Initial -> Unit
+            is FileUploadState.NeedsConfirmation -> Unit
         }
     }
 }

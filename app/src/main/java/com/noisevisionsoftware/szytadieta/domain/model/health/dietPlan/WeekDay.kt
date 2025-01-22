@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.domain.model.dietPlan
+package com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan
 
 enum class WeekDay {
     MONDAY,

@@ -39,10 +39,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.DayPlan
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.Meal
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.MealType
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.WeekDay
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.DayPlan
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Meal
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.MealType
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.WeekDay
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.CustomErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
@@ -51,7 +51,6 @@ import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.NoMealPlanMessage
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MealPlanScreen(
     viewModel: MealPlanViewModel = hiltViewModel(),

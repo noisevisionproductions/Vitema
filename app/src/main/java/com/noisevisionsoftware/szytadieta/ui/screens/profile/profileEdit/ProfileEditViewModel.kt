@@ -4,9 +4,8 @@ import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
-import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.UserRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
-import com.noisevisionsoftware.szytadieta.ui.base.AppEvent
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileEditViewModel @Inject constructor(
-    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -31,7 +30,7 @@ class ProfileEditViewModel @Inject constructor(
 
     private fun loadProfile() {
         handleOperation(_profileState) {
-            authRepository.getCurrentUserData()
+            userRepository.getCurrentUserData()
                 .getOrThrow()
                 ?: throw AppException.AuthException("Nie można załadować profilu")
         }
@@ -39,12 +38,9 @@ class ProfileEditViewModel @Inject constructor(
 
     fun updateProfile(updatedUser: User) {
         handleOperation(_profileState) {
-            authRepository.updateUserData(updatedUser)
+            userRepository.updateUserData(updatedUser)
                 .getOrThrow()
             showSuccess("Profil został zaktualizowany")
-
-            eventBus.emit(AppEvent.RefreshData)
-
             updatedUser
         }
     }

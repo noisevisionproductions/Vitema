@@ -22,7 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.noisevisionsoftware.szytadieta.domain.model.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
 
 @Composable
 fun MeasurementsList(
@@ -37,20 +37,11 @@ fun MeasurementsList(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
             contentPadding = PaddingValues(
-                top = 16.dp,
-                bottom = 88.dp,
-                start = 16.dp,
-                end = 16.dp
+                vertical = 16.dp,
+                horizontal = 16.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item {
-                MeasurementsStats(
-                    measurements = measurements,
-                    modifier = Modifier.animateItem()
-                )
-            }
-
             item {
                 Column(
                     modifier = Modifier
@@ -71,10 +62,10 @@ fun MeasurementsList(
             }
 
             items(
-                items = measurements.drop(1),
+                items = measurements,
                 key = { it.id }
             ) { measurement ->
-                MeasurementItem(
+                ExpandableMeasurementCard(
                     measurement = measurement,
                     onDeleteClick = { onDeleteClick(measurement.id) },
                     modifier = Modifier.animateItem()
@@ -110,7 +101,7 @@ fun EmptyMeasurementsList() {
             )
 
             Text(
-                text = "Brak pomiarów",
+                text = "Brak pomiarów ciała",
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground
             )

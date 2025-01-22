@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.domain.model.dietPlan
+package com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan
 
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import java.util.UUID
@@ -11,5 +11,4 @@ data class Diet(
     val startDate: Long = DateUtils.getCurrentLocalDate(),
     val endDate: Long = DateUtils.getLocalDatePlusDays(7),
     val weeklyPlan: List<DayPlan> = emptyList(),
-    val shoppingList: ShoppingList? = null
 )

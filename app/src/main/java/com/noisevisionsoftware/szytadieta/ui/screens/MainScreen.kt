@@ -46,6 +46,7 @@ import com.noisevisionsoftware.szytadieta.ui.screens.settings.SettingsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.ShoppingListScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.splash.SplashScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.subscription.SubscriptionPlanScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.waterIntake.WaterTrackingScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.weight.WeightScreen
 import kotlinx.coroutines.delay
 
@@ -192,6 +193,9 @@ private fun AuthenticatedContent(
                     NavigationDestination.AuthenticatedDestination.Weight ->
                         WeightScreen(onNavigate = onNavigate)
 
+                    NavigationDestination.AuthenticatedDestination.WaterIntake ->
+                        WaterTrackingScreen(onNavigate = onNavigate)
+
                     NavigationDestination.AuthenticatedDestination.Subscription ->
                         SubscriptionPlanScreen(onNavigate = onNavigate)
 
@@ -312,6 +316,7 @@ private fun HandleBackButton(
             NavigationDestination.AuthenticatedDestination.BodyMeasurements,
             NavigationDestination.AuthenticatedDestination.Profile,
             NavigationDestination.AuthenticatedDestination.MealPlan,
+            NavigationDestination.AuthenticatedDestination.WaterIntake,
             NavigationDestination.AuthenticatedDestination.ShoppingList -> {
                 onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
             }

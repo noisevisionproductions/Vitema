@@ -104,8 +104,7 @@ fun SubscriptionPlanScreen(
         ) {
             item {
                 Text(
-                    text = "Wybierz plan dla siebie\n" +
-                            "Testowe plany",
+                    text = "Wybierz plan dla siebie (Testowe plany)",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(

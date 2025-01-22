@@ -2,8 +2,7 @@ package com.noisevisionsoftware.szytadieta.domain.repository.dietRepository
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.Diet
-import com.noisevisionsoftware.szytadieta.domain.model.dietPlan.ShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingList
 import com.noisevisionsoftware.szytadieta.utils.getWeekStartDate
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +20,7 @@ class ShoppingListRepository @Inject constructor(
         val weekStart = getWeekStartDate(weekDate)
         val weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000L
 
-        val snapshot = firestore.collection("diets")
+        val snapshot = firestore.collection("shopping_lists")
             .whereEqualTo("userId", userId)
             .whereGreaterThanOrEqualTo("startDate", weekStart)
             .whereLessThan("startDate", weekEnd)
@@ -29,26 +28,25 @@ class ShoppingListRepository @Inject constructor(
             .await()
 
         snapshot.documents.firstOrNull()
-            ?.toObject(Diet::class.java)
-            ?.shoppingList
+            ?.toObject(ShoppingList::class.java)
             ?: throw Exception("Nie znaleziono listy zakupów dla wybranego tygodnia")
     }
 
 
     suspend fun getAvailableWeeks(userId: String): Result<List<Long>> = runCatching {
-        val snapshot = firestore.collection("diets")
+        val snapshot = firestore.collection("shopping_lists")
             .whereEqualTo("userId", userId)
             .orderBy("startDate", Query.Direction.ASCENDING)
             .get()
             .await()
 
         snapshot.documents.mapNotNull {
-            it.toObject(Diet::class.java)?.startDate
+            it.toObject(ShoppingList::class.java)?.startDate
         }.distinct()
     }
 
     fun observerDietChanges(userId: String): Flow<Boolean> = callbackFlow {
-        val subscription = firestore.collection("diets")
+        val subscription = firestore.collection("shopping_lists")
             .whereEqualTo("userId", userId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -60,5 +58,12 @@ class ShoppingListRepository @Inject constructor(
             }
 
         awaitClose { subscription.remove() }
+    }
+
+    suspend fun saveShoppingList(shoppingList: ShoppingList): Result<Unit> = runCatching {
+        firestore.collection("shopping_lists")
+            .document(shoppingList.id)
+            .set(shoppingList)
+            .await()
     }
 }

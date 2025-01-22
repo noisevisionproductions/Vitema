@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.noisevisionsoftware.szytadieta.domain.state.file.FileUploadState
 import com.noisevisionsoftware.szytadieta.ui.common.ConfirmAlertDialog
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UploadArea
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.fileUpload.components.UploadControls
@@ -44,8 +45,8 @@ fun FileUploadScreen(
     val userState by viewModel.userState.collectAsState()
     val selectedUsers by viewModel.selectedUsers.collectAsState()
     val selectedStartDate by viewModel.selectedStartDate.collectAsState()
-    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-    var selectedFileName by remember { mutableStateOf<String?>(null) }
+    val selectedFileUri by viewModel.selectedFileUri.collectAsState()
+    val selectedFileName by  viewModel.selectedFileName.collectAsState()
     var showUserSearch by remember { mutableStateOf(false) }
     var showConfirmationDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -54,14 +55,12 @@ fun FileUploadScreen(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         uri?.let {
-            selectedFileUri = it
-            selectedFileName =
-                context.contentResolver.query(it, null, null, null, null)?.use { cursor ->
-                    val nameIndex =
-                        cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    cursor.moveToFirst()
-                    cursor.getString(nameIndex)
-                }
+            val fileName = context.contentResolver.query(it, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                cursor.moveToFirst()
+                cursor.getString(nameIndex)
+            }
+            viewModel.setSelectedFile(it, fileName)
         }
     }
 
@@ -100,13 +99,13 @@ fun FileUploadScreen(
             selectedFileName = selectedFileName,
             onFileSelect = { filePickerLauncher.launch(SUPPORTED_MIME_TYPES) }
         )
+
         UploadControls(
             uploadState = uploadState,
             onUploadClick = { showConfirmationDialog = true },
             onRetryClick = handleUpload,
             onNewFileClick = {
-                selectedFileUri = null
-                selectedFileName = null
+               viewModel.setSelectedFile(null, null)
             },
             isUploadEnabled = selectedFileUri != null && selectedUsers.isNotEmpty() && selectedStartDate != null
         )
@@ -117,17 +116,38 @@ fun FileUploadScreen(
         )
     }
 
-    if (showConfirmationDialog) {
-        ConfirmAlertDialog(
-            onConfirm = {
-                showConfirmationDialog = false
-                handleUpload()
-            },
-            onDismiss = {showConfirmationDialog = false},
-            title = "Potwierdź przydzielanie diety",
-            message = "Czy na pewno chcesz udostępnić tą dietę dla tych użytkowników:",
-            confirmActionText = "Udostępnij",
-            dismissActionText = "Anuluj"
-        )
+    when (val state = uploadState) {
+        is FileUploadState.NeedsConfirmation -> {
+            ConfirmAlertDialog(
+                onConfirm = {
+                    state.onConfirm()
+                },
+                onDismiss = {
+                    viewModel.loadUploadScreen()
+                },
+                title = "Nadpisanie diet",
+                message = state.message,
+                confirmActionText = "Nadpisz",
+                dismissActionText = "Anuluj"
+            )
+        }
+        is FileUploadState.Initial,
+        is FileUploadState.Loading,
+        is FileUploadState.Success,
+        is FileUploadState.Error -> {
+            if (showConfirmationDialog) {
+                ConfirmAlertDialog(
+                    onConfirm = {
+                        showConfirmationDialog = false
+                        handleUpload()
+                    },
+                    onDismiss = { showConfirmationDialog = false },
+                    title = "Potwierdź przydzielanie diety",
+                    message = "Czy na pewno chcesz udostępnić tą dietę dla tych użytkowników:",
+                    confirmActionText = "Udostępnij",
+                    dismissActionText = "Anuluj"
+                )
+            }
+        }
     }
 }

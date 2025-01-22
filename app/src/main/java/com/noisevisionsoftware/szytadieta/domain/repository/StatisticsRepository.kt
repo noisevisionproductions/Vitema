@@ -55,7 +55,7 @@ class StatisticsRepository @Inject constructor(
         val genderStats = users.groupBy { it.gender ?: Gender.OTHER }
             .mapValues { it.value.size }
 
-        val averageAge = users.mapNotNull { it.calculateAge() }
+        val averageAge = users.map { it.calculateAge() }
             .takeIf { it.isNotEmpty() }
             ?.average()
 
