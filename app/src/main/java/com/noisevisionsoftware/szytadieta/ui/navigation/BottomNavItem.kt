@@ -30,6 +30,6 @@ sealed class BottomNavItem(
     )
 
     companion object {
-        val items = listOf(Dashboard, MealPlan, Profile)
+        val items = listOf(MealPlan, Dashboard, Profile)
     }
 }

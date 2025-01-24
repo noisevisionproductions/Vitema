@@ -19,7 +19,9 @@ import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import com.noisevisionsoftware.szytadieta.utils.AppVersionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -44,6 +46,12 @@ class SettingsViewModel @Inject constructor(
     private val _passwordUpdateState =
         MutableStateFlow<ViewModelState<PasswordUpdateData>>(ViewModelState.Initial)
     val passwordUpdateState = _passwordUpdateState.asStateFlow()
+
+    val waterNotificationsEnabled = notificationManager.waterNotificationsEnabled.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = true
+    )
 
     data class SettingsData(
         val isDarkMode: Boolean = false,
@@ -128,6 +136,12 @@ class SettingsViewModel @Inject constructor(
                         throw AppException.ValidationException(error.message, field)
                     }
                 )
+        }
+    }
+
+    fun setWaterNotificationsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            notificationManager.setWaterNotificationsEnabled(enabled)
         }
     }
 

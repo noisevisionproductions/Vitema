@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -94,6 +95,7 @@ fun SettingsScreen(
                 is ViewModelState.Success -> {
                     SettingsContent(
                         settingsData = state.data,
+                        viewModel = viewModel,
                         onDarkModeChange = viewModel::updateSettings,
                         onChangePasswordClick = { showChangePasswordDialog = true },
                         onDeleteAccountClick = { showDeleteAccountDialog = true },
@@ -130,6 +132,7 @@ fun SettingsScreen(
 @Composable
 private fun SettingsContent(
     settingsData: SettingsViewModel.SettingsData,
+    viewModel: SettingsViewModel,
     onDarkModeChange: (Boolean) -> Unit,
     onChangePasswordClick: () -> Unit,
     onDeleteAccountClick: () -> Unit,
@@ -149,7 +152,7 @@ private fun SettingsContent(
     }
     SettingsSection(title = "Powiadomienia") {
         SettingsClickableItem(
-            title = "Powiadomienia",
+            title = "Powiadomienia systemowe",
             description = if (settingsData.areNotificationsEnabled)
                 "Powiadomienia są włączone"
             else
@@ -162,6 +165,16 @@ private fun SettingsContent(
                 }
                 context.startActivity(intent)
             }
+        )
+
+        val waterNotificationsEnabled by viewModel.waterNotificationsEnabled.collectAsState()
+
+        SettingsSwitchItem(
+            title = "Przypomnienia o wodzie",
+            description = "Codzienne przypomnienie o piciu wody",
+            icon = Icons.Default.WaterDrop,
+            checked = waterNotificationsEnabled,
+            onCheckedChange = viewModel::setWaterNotificationsEnabled
         )
     }
 

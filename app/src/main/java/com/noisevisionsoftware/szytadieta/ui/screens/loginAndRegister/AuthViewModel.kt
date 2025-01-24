@@ -72,7 +72,6 @@ class AuthViewModel @Inject constructor(
                 val result = authRepository.login(email, password)
                 result.onSuccess { user ->
                     handleSuccessfulAuth(user)
-                    showSuccess("Zalogowano pomyślnie")
                 }.onFailure { throwable ->
                     handleAuthError(throwable)
                 }

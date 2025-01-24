@@ -1,19 +1,15 @@
 package com.noisevisionsoftware.szytadieta.domain.service.notifications
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Intent
-import androidx.core.app.NotificationCompat
+import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.noisevisionsoftware.szytadieta.MainActivity
 import com.noisevisionsoftware.szytadieta.data.FCMTokenRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
-import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,70 +23,46 @@ class NotificationService : FirebaseMessagingService() {
     lateinit var authRepository: AuthRepository
 
     @Inject
-    lateinit var notificationManager: NotificationManager
+    lateinit var notificationHelper: NotificationHelper
+
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     companion object {
-        private const val CHANNEL_ID = "szyta_dieta_channel"
-        private const val CHANNEL_NAME = "Szyta Dieta"
-        private const val CHANNEL_DESCRIPTION = "Powiadomienia z aplikacji Szyta Dieta"
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        createNotificationChannel()
+        private const val TAG = "NotificationService"
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-
-        val title = message.notification?.title ?: "Szyta Dieta"
-        val body = message.notification?.body ?: return
-
-        showNotification(title, body)
+        message.notification?.let { notification ->
+            notificationHelper.showBasicNotification(
+                notification.title ?: "Szyta Dieta",
+                notification.body ?: return
+            )
+        }
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-
-        CoroutineScope(Dispatchers.IO).launch {
-            authRepository.withAuthenticatedUser { userId ->
-                fcmTokenRepository.updateToken(userId)
-            }
+        serviceScope.launch {
+            updateFCMToken()
         }
     }
 
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            CHANNEL_NAME,
-            NotificationManager.IMPORTANCE_DEFAULT
-        ).apply {
-            description = CHANNEL_DESCRIPTION
+    private suspend fun updateFCMToken() {
+        try {
+            authRepository.getCurrentUser()?.let { user ->
+                fcmTokenRepository.updateToken(user.uid)
+                    .onFailure { error ->
+                        Log.e(TAG, "Błąd podczas aktualizacji tokenu FCM", error)
+                    }
+            } ?: Log.d(TAG, "Pomijanie aktualizacji tokenu FCM - użytkownik nie jest zalogowany")
+        } catch (e: Exception) {
+            Log.e(TAG, "Błąd podczas obsługi nowego tokenu FCM", e)
         }
-        notificationManager.createNotificationChannel(channel)
     }
 
-    private fun showNotification(title: String, message: String) {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(title)
-            .setContentText(message)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .build()
-
-        notificationManager.notify(DateUtils.getCurrentLocalDate().toInt(), notification)
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
     }
 }

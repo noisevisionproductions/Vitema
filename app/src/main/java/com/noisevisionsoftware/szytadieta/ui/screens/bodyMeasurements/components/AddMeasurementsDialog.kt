@@ -29,6 +29,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
@@ -108,10 +109,27 @@ fun AddMeasurementsDialog(
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = "Dodaj nowe pomiary",
-                    style = MaterialTheme.typography.headlineSmall
-                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Dodaj pomiary",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+
+                    IconButton(
+                        onClick = onDismiss
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Zamknij",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -355,7 +373,10 @@ private fun BasicMeasurementsSection(
 
         MeasurementField(
             label = "Waga",
-            value = TextFieldValue(measurements.weight, selection = TextRange(measurements.weight.length)),
+            value = TextFieldValue(
+                measurements.weight,
+                selection = TextRange(measurements.weight.length)
+            ),
             onValueChange = { newValue -> onMeasurementsChange(measurements.copy(weight = newValue.text)) },
             unit = "kg",
             errorMessage = measurements.validationState.weight,
@@ -370,7 +391,10 @@ private fun BasicMeasurementsSection(
 
         MeasurementField(
             label = "Wzrost",
-            value = TextFieldValue(measurements.height, selection = TextRange(measurements.height.length)),
+            value = TextFieldValue(
+                measurements.height,
+                selection = TextRange(measurements.height.length)
+            ),
             onValueChange = { newValue -> onMeasurementsChange(measurements.copy(height = newValue.text)) },
             unit = "cm",
             errorMessage = measurements.validationState.height,
@@ -466,7 +490,10 @@ private fun UpperBodyMeasurementsSection(
         ) {
             MeasurementField(
                 label = "Szyja",
-                value = TextFieldValue(measurements.neck, selection = TextRange(measurements.neck.length)),
+                value = TextFieldValue(
+                    measurements.neck,
+                    selection = TextRange(measurements.neck.length)
+                ),
                 onValueChange = { newValue -> onMeasurementsChange(measurements.copy(neck = newValue.text)) },
                 unit = "cm",
                 errorMessage = measurements.validationState.neck,
@@ -481,7 +508,10 @@ private fun UpperBodyMeasurementsSection(
 
             MeasurementField(
                 label = "Biceps",
-                value = TextFieldValue(measurements.biceps, selection = TextRange(measurements.biceps.length)),
+                value = TextFieldValue(
+                    measurements.biceps,
+                    selection = TextRange(measurements.biceps.length)
+                ),
                 onValueChange = { newValue -> onMeasurementsChange(measurements.copy(biceps = newValue.text)) },
                 unit = "cm",
                 errorMessage = measurements.validationState.biceps,
@@ -496,7 +526,10 @@ private fun UpperBodyMeasurementsSection(
 
             MeasurementField(
                 label = "Klatka piersiowa",
-                value = TextFieldValue(measurements.chest, selection = TextRange(measurements.chest.length)),
+                value = TextFieldValue(
+                    measurements.chest,
+                    selection = TextRange(measurements.chest.length)
+                ),
                 onValueChange = { newValue -> onMeasurementsChange(measurements.copy(chest = newValue.text)) },
                 unit = "cm",
                 errorMessage = measurements.validationState.chest,
@@ -511,7 +544,10 @@ private fun UpperBodyMeasurementsSection(
 
             MeasurementField(
                 label = "Pas",
-                value = TextFieldValue(measurements.belt, selection = TextRange(measurements.belt.length)),
+                value = TextFieldValue(
+                    measurements.belt,
+                    selection = TextRange(measurements.belt.length)
+                ),
                 onValueChange = { newValue -> onMeasurementsChange(measurements.copy(belt = newValue.text)) },
                 unit = "cm",
                 errorMessage = measurements.validationState.belt,
@@ -560,7 +596,10 @@ private fun LowerBodyMeasurementsSection(
         ) {
             MeasurementField(
                 label = "Talia",
-                value = TextFieldValue(measurements.waist, selection = TextRange(measurements.waist.length)),
+                value = TextFieldValue(
+                    measurements.waist,
+                    selection = TextRange(measurements.waist.length)
+                ),
                 onValueChange = { newValue -> onMeasurementsChange(measurements.copy(waist = newValue.text)) },
                 unit = "cm",
                 errorMessage = measurements.validationState.waist,
@@ -575,7 +614,10 @@ private fun LowerBodyMeasurementsSection(
 
             MeasurementField(
                 label = "Biodra",
-                value = TextFieldValue(measurements.hips, selection = TextRange(measurements.hips.length)),
+                value = TextFieldValue(
+                    measurements.hips,
+                    selection = TextRange(measurements.hips.length)
+                ),
                 onValueChange = { newValue -> onMeasurementsChange(measurements.copy(hips = newValue.text)) },
                 unit = "cm",
                 errorMessage = measurements.validationState.hips,
@@ -590,7 +632,10 @@ private fun LowerBodyMeasurementsSection(
 
             MeasurementField(
                 label = "Uda",
-                value = TextFieldValue(measurements.thigh, selection = TextRange(measurements.thigh.length)),
+                value = TextFieldValue(
+                    measurements.thigh,
+                    selection = TextRange(measurements.thigh.length)
+                ),
                 onValueChange = { newValue -> onMeasurementsChange(measurements.copy(thigh = newValue.text)) },
                 unit = "cm",
                 errorMessage = measurements.validationState.thigh,
@@ -605,7 +650,10 @@ private fun LowerBodyMeasurementsSection(
 
             MeasurementField(
                 label = "Łydki",
-                value = TextFieldValue(measurements.calf, selection = TextRange(measurements.calf.length)),
+                value = TextFieldValue(
+                    measurements.calf,
+                    selection = TextRange(measurements.calf.length)
+                ),
                 onValueChange = { newValue -> onMeasurementsChange(measurements.copy(calf = newValue.text)) },
                 unit = "cm",
                 imeAction = ImeAction.Done,

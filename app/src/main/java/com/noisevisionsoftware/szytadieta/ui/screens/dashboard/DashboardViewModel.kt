@@ -13,10 +13,10 @@ import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserRole
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.UserRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.health.WeightRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.health.WeightRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
@@ -70,8 +70,8 @@ class DashboardViewModel @Inject constructor(
 
     private val _isActive = MutableStateFlow(false)
 
-    private val _scrollPosition = MutableStateFlow(SessionManager.ScrollPosition())
-    val scrollPosition = _scrollPosition.asStateFlow()
+    private val _showTutorial = MutableStateFlow(false)
+    val showTutorial = _showTutorial.asStateFlow()
 
     init {
         loadUserRole()
@@ -80,7 +80,7 @@ class DashboardViewModel @Inject constructor(
         loadLatestMeasurements()
         loadTodayMeals()
         observeUserSession()
-        loadScrollPosition()
+        isDashboardTutorialShown()
 
         viewModelScope.launch {
             _isActive.collect { isActive ->
@@ -127,10 +127,15 @@ class DashboardViewModel @Inject constructor(
 
     private fun loadUserRole() {
         handleOperation(_userState) {
+            if (authRepository.getCurrentUser() == null) {
+                _userState.value = ViewModelState.Initial
+                return@handleOperation UserRole.USER
+            }
+
             userRepository.getCurrentUserData()
                 .getOrThrow()
                 ?.role
-                ?: throw AppException.AuthException("Nie można pobrać roli użytkownika")
+                ?: UserRole.USER
         }
     }
 
@@ -212,23 +217,29 @@ class DashboardViewModel @Inject constructor(
 
     private fun observeUserSession() {
         viewModelScope.launch {
-            sessionManager.userSessionFlow.collect {
-                loadUserRole()
+            sessionManager.userSessionFlow.collect { user ->
+                if (user == null) {
+                    _userState.value = ViewModelState.Initial
+                    _userData.value = ViewModelState.Initial
+                } else {
+                    loadUserRole()
+                }
             }
         }
     }
 
-    fun saveScrollPosition(index: Int, offset: Int) {
+    private fun isDashboardTutorialShown() {
         viewModelScope.launch {
-            sessionManager.saveDashboardScrollPosition(index, offset)
+            sessionManager.isDashboardTutorialShown.collect { isShown ->
+                _showTutorial.value = !isShown
+            }
         }
     }
 
-    private fun loadScrollPosition() {
+    fun dismissTutorial() {
         viewModelScope.launch {
-            sessionManager.getDashboardScrollPosition().collect { position ->
-                _scrollPosition.value = position
-            }
+            sessionManager.markDashboardTutorialAsShown()
+            _showTutorial.value = false
         }
     }
 

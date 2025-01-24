@@ -8,6 +8,7 @@ import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
+import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -29,6 +30,7 @@ abstract class BaseViewModel(
         viewModelScope.launch {
             eventBus.events.collect { event ->
                 when (event) {
+                    is AppEvent.Navigation -> onNavigationEvent(event.destination)
                     is AppEvent.UserLoggedOut -> onUserLoggedOut()
                     is AppEvent.RefreshData -> onRefreshData()
                 }
@@ -36,11 +38,21 @@ abstract class BaseViewModel(
         }
     }
 
+    protected open fun onNavigationEvent(destination: NavigationDestination){
+
+    }
+
     protected open fun onUserLoggedOut() {
 
     }
 
     protected open fun onRefreshData() {
+    }
+
+    protected fun navigate(destination: NavigationDestination) {
+        viewModelScope.launch {
+            eventBus.emit(AppEvent.Navigation(destination))
+        }
     }
 
     private fun observeNetworkConnection() {

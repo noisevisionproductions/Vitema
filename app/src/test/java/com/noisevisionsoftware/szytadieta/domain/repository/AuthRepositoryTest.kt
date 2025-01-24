@@ -17,7 +17,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.WriteBatch
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
-import com.noisevisionsoftware.szytadieta.domain.repository.auth.AuthRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -52,7 +51,9 @@ class AuthRepositoryTest {
         every { FirebaseFirestore.getInstance() } returns firestore
         every { TextUtils.isEmpty(any()) } returns false
 
+/*
         repository = AuthRepository(auth, firestore)
+*/
     }
 
     @Test

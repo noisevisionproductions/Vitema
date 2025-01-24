@@ -10,6 +10,7 @@ import com.noisevisionsoftware.szytadieta.domain.repository.health.WaterReposito
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
+import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -79,7 +80,6 @@ class WaterTrackingViewModel @Inject constructor(
                         date = _selectedDate.value
                     )
                     waterRepository.addWaterIntake(waterIntake).getOrThrow()
-                    showSuccess("Dodano spożycie wody")
                     val newData = loadWaterIntakesData(userId, _selectedDate.value)
                     _waterIntakeState.value = ViewModelState.Success(newData)
                 }
@@ -117,5 +117,14 @@ class WaterTrackingViewModel @Inject constructor(
     override fun onRefreshData() {
         loadUserSettings()
         loadWaterIntakes()
+    }
+
+    override fun onNavigationEvent(destination: NavigationDestination) {
+        when (destination) {
+            NavigationDestination.AuthenticatedDestination.WaterIntake -> {
+                loadWaterIntakes()
+            }
+            else -> super.onNavigationEvent(destination)
+        }
     }
 }

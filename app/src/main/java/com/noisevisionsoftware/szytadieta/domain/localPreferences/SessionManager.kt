@@ -3,6 +3,7 @@ package com.noisevisionsoftware.szytadieta.domain.localPreferences
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -50,6 +51,7 @@ class SessionManager @Inject constructor(
         private val USER_EMAIL_KEY = stringPreferencesKey("user_email")
         private val DASHBOARD_SCROLL_INDEX = intPreferencesKey("dashboard_scroll_index")
         private val DASHBOARD_SCROLL_OFFSET = intPreferencesKey("dashboard_scroll_offset")
+        private val DASHBOARD_TUTORIAL_SHOWN = booleanPreferencesKey("dashboard_tutorial_shown")
     }
 
     data class ScrollPosition(
@@ -67,6 +69,8 @@ class SessionManager @Inject constructor(
     suspend fun clearSession() {
         dataStore.edit { preferences ->
             preferences.clear()
+            preferences[DASHBOARD_SCROLL_INDEX] = 0
+            preferences[DASHBOARD_SCROLL_OFFSET] = 0
         }
     }
 
@@ -83,6 +87,16 @@ class SessionManager @Inject constructor(
                 index = preferences[DASHBOARD_SCROLL_INDEX] ?: 0,
                 offset = preferences[DASHBOARD_SCROLL_OFFSET] ?: 0
             )
+        }
+    }
+
+    val isDashboardTutorialShown: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[DASHBOARD_TUTORIAL_SHOWN] ?: false
+    }
+
+    suspend fun markDashboardTutorialAsShown() {
+        dataStore.edit { preferences ->
+            preferences[DASHBOARD_TUTORIAL_SHOWN] = true
         }
     }
 

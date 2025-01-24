@@ -1,7 +1,6 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.weight
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -171,7 +170,8 @@ private fun WeightList(
         EmptyWeightList()
     } else {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -293,11 +293,11 @@ private fun WeightItem(
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(),
+            .fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier

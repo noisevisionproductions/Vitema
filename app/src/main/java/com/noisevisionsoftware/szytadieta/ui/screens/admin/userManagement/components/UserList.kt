@@ -78,6 +78,7 @@ private fun UserCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = { expanded = !expanded }
     ) {
         Column(

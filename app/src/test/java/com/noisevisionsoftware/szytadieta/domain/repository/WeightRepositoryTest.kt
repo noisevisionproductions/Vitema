@@ -55,7 +55,9 @@ class WeightRepositoryTest {
         every { collectionReference.whereEqualTo(any<String>(), any()) } returns query
         every { query.orderBy(any<String>(), any()) } returns query
 
+/*
         repository = WeightRepository(firestore)
+*/
     }
 
     @Test

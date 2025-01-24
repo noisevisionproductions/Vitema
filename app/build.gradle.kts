@@ -14,7 +14,7 @@ data class Version(
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.ksp)
+    kotlin("kapt")
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
@@ -33,8 +33,8 @@ android {
     defaultConfig {
         version = Version(
             major = 1,
-            minor = 0,
-            patch = 7
+            minor = 1,
+            patch = 0
         )
 
         applicationId = "com.noisevisionsoftware.szytadieta"
@@ -48,7 +48,12 @@ android {
             useSupportLibrary = true
         }
     }
-
+    kapt {
+        correctErrorTypes = true
+    }
+    hilt {
+        enableAggregatingTask = true
+    }
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String
@@ -62,10 +67,18 @@ android {
         release {
             isMinifyEnabled = false
             isDebuggable = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isDebuggable = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
@@ -134,9 +147,10 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    ksp(libs.hilt.android.compiler)
+    kapt(libs.hilt.android.compiler)  // Change from ksp to kapt
     implementation(libs.androidx.hilt.navigation.compose)
-    kspTest(libs.hilt.android.compiler)
+    implementation(libs.androidx.hilt.work)
+    kapt(libs.androidx.hilt.compiler)  // Add this
 
     // Preferences
     implementation(libs.androidx.datastore.preferences)
@@ -165,7 +179,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Confetti
-    implementation (libs.dionsegijn.konfetti.compose)
+    implementation(libs.dionsegijn.konfetti.compose)
 
     // Charts - Vico
     implementation(libs.mpandroidchart)

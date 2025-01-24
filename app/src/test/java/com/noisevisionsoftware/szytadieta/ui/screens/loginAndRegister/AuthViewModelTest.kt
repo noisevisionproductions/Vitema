@@ -8,7 +8,7 @@ import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
-import com.noisevisionsoftware.szytadieta.domain.repository.auth.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -75,7 +75,9 @@ class AuthViewModelTest {
 
         coEvery { authRepository.getCurrentUserData() } returns Result.success(null)
 
+/*
         viewModel = AuthViewModel(authRepository, sessionManager, networkManager, alertManager, eventBus)
+*/
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.noisevisionsoftware.szytadieta.ui.base
 
+import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
@@ -16,6 +17,7 @@ class EventBus @Inject constructor(){
 }
 
 sealed class AppEvent {
+    data class Navigation(val destination: NavigationDestination) : AppEvent()
     data object UserLoggedOut : AppEvent()
     data object RefreshData : AppEvent()
 }

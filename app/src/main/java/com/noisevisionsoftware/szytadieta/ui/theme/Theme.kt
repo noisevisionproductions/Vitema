@@ -32,9 +32,9 @@ fun FitApplicationTheme(
     }
 
     val patternColor = if (darkTheme) {
-        colorScheme.primary.copy(alpha = 0.2f)
+        colorScheme.primary.copy(alpha = 0.4f)
     } else {
-        colorScheme.primary.copy(alpha = 0.3f)
+        colorScheme.primary.copy(alpha = 0.7f)
     }
 
     val backgroundColor = if (darkTheme) {
