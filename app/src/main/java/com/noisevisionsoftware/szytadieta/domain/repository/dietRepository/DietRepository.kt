@@ -1,10 +1,15 @@
 package com.noisevisionsoftware.szytadieta.domain.repository.dietRepository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Diet
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Diet
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.math.abs
 
@@ -14,27 +19,7 @@ class DietRepository @Inject constructor(
 ) {
     suspend fun getUserDietForDate(date: Long): Result<Diet?> = runCatching {
         authRepository.withAuthenticatedUser { userId ->
-            getDietForDateAndUser(userId, date)
-        }
-    }
-
-    suspend fun getDietForSpecificUserAndDate(userId: String, date: Long): Result<Diet?> = runCatching {
-        getDietForDateAndUser(userId, date)
-    }
-
-    private suspend fun getDietForDateAndUser(userId: String, date: Long): Diet? {
-        val snapshot = firestore.collection("diets")
-            .whereEqualTo("userId", userId)
-            .whereLessThanOrEqualTo("startDate", date)
-            .whereGreaterThanOrEqualTo("endDate", date)
-            .get()
-            .await()
-
-        return snapshot.documents.firstOrNull()?.toObject(Diet::class.java)
-    }
-
-    suspend fun getAvailableWeekDates(): Result<List<Long>> = runCatching {
-        authRepository.withAuthenticatedUser { userId ->
+            val formattedDate = formatFirestoreDate(date)
 
             val snapshot = firestore.collection("diets")
                 .whereEqualTo("userId", userId)
@@ -42,15 +27,51 @@ class DietRepository @Inject constructor(
                 .await()
 
             snapshot.documents.mapNotNull { doc ->
-                doc.getLong("startDate")
-            }.distinct().sorted()
+                doc.toObject(Diet::class.java)?.copy(
+                    id = doc.id
+                )
+            }.firstOrNull { diet ->
+                diet.days.any { it.date == formattedDate }
+            }.also { diet ->
+                Log.d("DietRepository", "Found diet: ${diet?.id} for date: $formattedDate")
+            }
         }
     }
 
-    suspend fun getClosestAvailableWeekDate(): Result<Long?> = runCatching {
-        getAvailableWeekDates().getOrNull()?.let { dates ->
-            val currentDate = DateUtils.getCurrentLocalDate()
-            dates.minByOrNull { abs(it - currentDate) }
+    suspend fun getAvailableDates(): Result<List<Long>> = runCatching {
+        authRepository.withAuthenticatedUser { userId ->
+            val snapshot = firestore.collection("diets")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            snapshot.documents
+                .mapNotNull { it.toObject(Diet::class.java) }
+                .flatMap { diet ->
+                    diet.days.mapNotNull { day ->
+                        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+                            .parse(day.date)?.time
+                    }
+                }
+                .distinct()
+                .sorted()
+        }
+    }
+
+    suspend fun getClosestAvailableDate(): Result<Long?> = runCatching {
+        getAvailableDates().getOrNull()?.let { dates ->
+            val today = DateUtils.getCurrentLocalDate()
+            val startOfToday = Calendar.getInstance().apply {
+                timeInMillis = today
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+
+            dates.minByOrNull { date ->
+                abs(date - startOfToday)
+            }
         }
     }
 
@@ -64,5 +85,9 @@ class DietRepository @Inject constructor(
 
             !snapshot.isEmpty
         }
+    }
+
+    private fun formatFirestoreDate(date: Long): String {
+        return SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(date))
     }
 }

@@ -8,6 +8,7 @@ import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.FileRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.RecipeRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.StatisticsRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.WeightRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
@@ -111,4 +112,11 @@ object RepositoryModule {
     fun provideWaterRepository(
         firestore: FirebaseFirestore
     ): WaterRepository = WaterRepository(firestore)
+
+
+    @Provides
+    @Singleton
+    fun provideRecipeRepository(
+        firestore: FirebaseFirestore
+    ): RecipeRepository = RecipeRepository(firestore)
 }

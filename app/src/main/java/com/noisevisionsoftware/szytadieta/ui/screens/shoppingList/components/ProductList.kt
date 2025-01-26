@@ -3,7 +3,6 @@ package com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,25 +28,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingProduct
 
 @Composable
 fun ProductList(
-    products: List<ShoppingProduct>,
+    products: List<String>,
     checkedProducts: Set<String>,
     onProductCheckedChange: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val validProducts = remember(products) {
-        products.filter { it.name.isNotBlank() }
+        products.filter { it.isNotBlank() }
     }
 
     val uncheckedProducts = remember(validProducts, checkedProducts) {
-        validProducts.filter { !checkedProducts.contains(it.name) }
+        validProducts.filter { !checkedProducts.contains(it) }
     }
 
     val checkedProductsList = remember(validProducts, checkedProducts) {
-        validProducts.filter { checkedProducts.contains(it.name) }
+        validProducts.filter { checkedProducts.contains(it) }
     }
 
     LazyColumn(
@@ -58,13 +56,13 @@ fun ProductList(
     ) {
         items(
             items = uncheckedProducts,
-            key = { "${it.name}_unchecked" }
+            key = { "${it}_unchecked" }
         ) { product ->
             ProductItem(
                 product = product,
-                isChecked = checkedProducts.contains(product.name),
+                isChecked = checkedProducts.contains(product),
                 onCheckedChange = { checked ->
-                    onProductCheckedChange(product.name, checked)
+                    onProductCheckedChange(product, checked)
                 }
             )
         }
@@ -90,13 +88,13 @@ fun ProductList(
 
             items(
                 items = checkedProductsList,
-                key = { "${it.name}_checked" }
+                key = { "${it}_checked" }
             ) { product ->
                 ProductItem(
                     product = product,
                     isChecked = true,
                     onCheckedChange = { checked ->
-                        onProductCheckedChange(product.name, checked)
+                        onProductCheckedChange(product, checked)
                     }
                 )
             }
@@ -106,7 +104,7 @@ fun ProductList(
 
 @Composable
 private fun ProductItem(
-    product: ShoppingProduct,
+    product: String,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -150,43 +148,21 @@ private fun ProductItem(
                 modifier = Modifier.scale(1.1f)
             )
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = product.name,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = if (isChecked) FontWeight.Normal else FontWeight.Medium
-                    ),
-                    color = if (isChecked) {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    textDecoration = if (isChecked) TextDecoration.LineThrough else null,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                if (product.weeklyQuantity > 0 || product.unit.isNotBlank()) {
-                    Text(
-                        text = buildString {
-                            append(product.weeklyQuantity)
-                            if (product.unit.isNotBlank()) {
-                                append(" ")
-                                append(product.unit)
-                            }
-                        },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (isChecked) {
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        }
-                    )
-                }
-            }
+            Text(
+                text = product,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = if (isChecked) FontWeight.Normal else FontWeight.Medium
+                ),
+                color = if (isChecked) {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                textDecoration = if (isChecked) TextDecoration.LineThrough else null,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

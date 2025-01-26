@@ -75,13 +75,6 @@ class UserRepository @Inject constructor(
         Result.failure(e)
     }
 
-    suspend fun resetPassword(email: String): Result<Unit> = try {
-        auth.sendPasswordResetEmail(email).await()
-        Result.success(Unit)
-    } catch (e: Exception) {
-        Result.failure(e)
-    }
-
     suspend fun updatePassword(oldPassword: String, newPassword: String): Result<Unit> {
         return try {
             val currentUser = auth.currentUser

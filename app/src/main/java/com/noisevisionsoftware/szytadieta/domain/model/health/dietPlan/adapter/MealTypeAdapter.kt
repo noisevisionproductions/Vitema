@@ -6,7 +6,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.MealType
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.MealType
 import java.lang.reflect.Type
 
 class MealTypeAdapter : JsonSerializer<MealType>, JsonDeserializer<MealType> {

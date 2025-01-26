@@ -24,26 +24,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.noisevisionsoftware.szytadieta.ui.common.CustomDatePickerDialog
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
-import com.noisevisionsoftware.szytadieta.utils.getFormattedWeekDate
-import java.util.Calendar
+import com.noisevisionsoftware.szytadieta.utils.formatDate
 
 @Composable
 fun DaySelectorForMealPlan(
     currentDate: Long,
     onDateSelected: (Long) -> Unit,
-    availableWeeks: List<Long>? = null,
+    availableWeeks: List<Long>,
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
-    val currentCalendar = Calendar.getInstance().apply { timeInMillis = currentDate }
-    val hasActiveDiet = availableWeeks?.any { startDate ->
-        val endDate = DateUtils.addDaysToDate(startDate, 6)
-        currentDate in startDate..endDate
-    } ?: false
+    val isDateAvailable = remember(currentDate, availableWeeks) {
+        availableWeeks.any { availableDate ->
+            val currentDay = DateUtils.getStartOfDay(currentDate)
+            val availableDay = DateUtils.getStartOfDay(availableDate)
+            currentDay == availableDay
+        }
+    }
 
     Column(
         modifier = modifier
@@ -57,17 +57,14 @@ fun DaySelectorForMealPlan(
         ) {
             IconButton(
                 onClick = {
-                    currentCalendar.add(Calendar.DAY_OF_YEAR, -1)
-                    onDateSelected(currentCalendar.timeInMillis)
+                    val prevDate = DateUtils.addDaysToDate(currentDate, -1)
+                    onDateSelected(prevDate)
                 }
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Poprzedni tydzień",
-                    tint = if (hasActiveDiet)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    contentDescription = "Poprzedni dzień",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -83,36 +80,32 @@ fun DaySelectorForMealPlan(
                     imageVector = Icons.Default.CalendarToday,
                     contentDescription = "Kalendarz",
                     modifier = Modifier.size(24.dp),
-                    tint = if (hasActiveDiet)
+                    tint = if (isDateAvailable)
                         MaterialTheme.colorScheme.primary
                     else
                         MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = getFormattedWeekDate(currentDate),
+                    text = formatDate(currentDate),
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (hasActiveDiet)
+                    color = if (isDateAvailable)
                         MaterialTheme.colorScheme.onSurface
                     else
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             IconButton(
                 onClick = {
-                    currentCalendar.add(Calendar.DAY_OF_YEAR, 1)
-                    onDateSelected(currentCalendar.timeInMillis)
+                    val nextDate = DateUtils.addDaysToDate(currentDate, 1)
+                    onDateSelected(nextDate)
                 }
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = "Następny tydzień",
-                    tint = if (hasActiveDiet)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    contentDescription = "Następny dzień",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -120,7 +113,6 @@ fun DaySelectorForMealPlan(
         if (showDatePicker) {
             CustomDatePickerDialog(
                 highlightedDates = availableWeeks,
-                currentDate = currentDate,
                 onDateSelected = { date ->
                     onDateSelected(date)
                     showDatePicker = false

@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
 
@@ -19,28 +18,27 @@ import com.noisevisionsoftware.szytadieta.utils.DateUtils
 @Composable
 fun CustomDatePickerDialog(
     highlightedDates: List<Long>? = null,
-    currentDate: Long,
     onDateSelected: (Long) -> Unit,
-    onDismiss: () -> Unit,
-    allowAllDates: Boolean = false
+    onDismiss: () -> Unit
 ) {
-    val selectableDates = remember(highlightedDates) {
+    val selectableDates = if (highlightedDates != null) {
         object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return if (allowAllDates) {
-                    true
-                } else {
-                    highlightedDates?.any { startDate ->
-                        val weekEnd = DateUtils.addDaysToDate(startDate, 6)
-                        utcTimeMillis in startDate..weekEnd
-                    } ?: false
+                return highlightedDates.any { availableDate ->
+                    val selectedDay = DateUtils.getStartOfDay(utcTimeMillis)
+                    val availableDay = DateUtils.getStartOfDay(availableDate)
+                    selectedDay == availableDay
                 }
             }
+        }
+    } else {
+        object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean = true
         }
     }
 
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = currentDate,
+        initialSelectedDateMillis = highlightedDates?.firstOrNull() ?: DateUtils.getCurrentLocalDate(),
         selectableDates = selectableDates
     )
 

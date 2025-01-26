@@ -80,9 +80,7 @@ fun WeekSelectorForDietUpload(
                     onDateSelected(timestamp)
                     showDatePicker = false
                 },
-                onDismiss = { showDatePicker = false },
-                currentDate = DateUtils.getCurrentLocalDate(),
-                allowAllDates = true
+                onDismiss = { showDatePicker = false }
             )
         }
     }

@@ -1,7 +1,7 @@
 package com.noisevisionsoftware.szytadieta.domain.service.excelParser
 
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Diet
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Diet
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.ShoppingList
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import java.io.InputStream
 import javax.inject.Inject
@@ -19,7 +19,7 @@ class ExcelParserService @Inject constructor(
         val diet: Diet,
         val shoppingList: ShoppingList
     )
-
+/*
     fun parseFile(
         inputStream: InputStream,
         userId: String,
@@ -50,5 +50,5 @@ class ExcelParserService @Inject constructor(
         )
 
         ParseResult(diet, shoppingList)
-    }
+    }*/
 }

@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -54,6 +55,7 @@ fun DraggableCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+
             .offset { IntOffset(0, animatedOffset.roundToInt()) }
             .graphicsLayer {
                 if (isDragged) {
@@ -66,6 +68,10 @@ fun DraggableCard(
                 cardHeight.intValue = size.height
                 maxOffset.floatValue = size.height.toFloat()
             }
+            .shadow(
+                elevation = 10.dp,
+                shape = MaterialTheme.shapes.medium
+            )
             .then(
                 if (isEditMode) {
                     Modifier.pointerInput(Unit) {

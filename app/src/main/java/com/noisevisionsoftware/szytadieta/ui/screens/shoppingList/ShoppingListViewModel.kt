@@ -4,7 +4,8 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DatePeriod
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.ShoppingList
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.ShoppingListRepository
@@ -12,14 +13,15 @@ import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
-import com.noisevisionsoftware.szytadieta.utils.getWeekStartDate
+import com.noisevisionsoftware.szytadieta.utils.formatDate
+import com.noisevisionsoftware.szytadieta.utils.isDateInRange
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.abs
 
 @HiltViewModel
 class ShoppingListViewModel @Inject constructor(
@@ -35,14 +37,11 @@ class ShoppingListViewModel @Inject constructor(
         MutableStateFlow<ViewModelState<ShoppingList>>(ViewModelState.Initial)
     val shoppingListState = _shoppingListState.asStateFlow()
 
-    private val _selectedCategory = MutableStateFlow<String?>(null)
-    val selectedCategory = _selectedCategory.asStateFlow()
+    private val _availablePeriods = MutableStateFlow<List<DatePeriod>>(emptyList())
+    val availablePeriods = _availablePeriods.asStateFlow()
 
-    private val _availableWeeks = MutableStateFlow<List<Long>>(emptyList())
-    val availableWeeks = _availableWeeks.asStateFlow()
-
-    private val _selectedWeek = MutableStateFlow<Long?>(null)
-    val selectedWeek = _selectedWeek
+    private val _selectedPeriod = MutableStateFlow<DatePeriod?>(null)
+    val selectedPeriod = _selectedPeriod.asStateFlow()
 
     private val _checkedProducts = MutableStateFlow<Set<String>>(emptySet())
     val checkedProducts = _checkedProducts.asStateFlow()
@@ -53,24 +52,26 @@ class ShoppingListViewModel @Inject constructor(
         observeDietChanges()
     }
 
-    fun loadAvailableWeeks() {
+    private fun loadAvailableWeeks() {
         viewModelScope.launch {
             try {
                 authRepository.withAuthenticatedUser { userId ->
-                    val weeks = shoppingListRepository.getAvailableWeeks(userId).getOrThrow()
-                    _availableWeeks.value = weeks
+                    val periods = shoppingListRepository.getAvailablePeriods(userId).getOrThrow()
+                    _availablePeriods.value = periods
 
-                    if (weeks.isNotEmpty()) {
-                        val currentWeekStart = getWeekStartDate(DateUtils.getCurrentLocalDate())
-                        val closestWeek = weeks.minByOrNull {
-                            abs(it - currentWeekStart)
-                        } ?: weeks.first()
+                    if (periods.isNotEmpty()) {
+                        val currentDate = formatDate(DateUtils.getCurrentLocalDate())
+                        val closestPeriod = periods.firstOrNull { period ->
+                            isDateInRange(
+                                currentDate,
+                                period.startDate,
+                                period.endDate
+                            )
+                        } ?: periods.first()
 
-                        selectWeek(closestWeek)
+                        selectPeriod(closestPeriod)
                     } else {
-                        _shoppingListState.value = ViewModelState.Success(
-                            ShoppingList(categories = emptyList())
-                        )
+                        _shoppingListState.value = ViewModelState.Success(ShoppingList())
                     }
                 }
             } catch (e: Exception) {
@@ -80,7 +81,7 @@ class ShoppingListViewModel @Inject constructor(
         }
     }
 
-    fun loadCheckedProducts() {
+    private fun loadCheckedProducts() {
         viewModelScope.launch {
             try {
                 authRepository.withAuthenticatedUser { userId ->
@@ -95,36 +96,22 @@ class ShoppingListViewModel @Inject constructor(
         }
     }
 
-    fun selectWeek(selectedDate: Long) {
-        val weekStartDate = getWeekStartDate(selectedDate)
-        _selectedWeek.value = weekStartDate
-        loadShoppingListForWeek(weekStartDate)
+    fun selectPeriod(period: DatePeriod) {
+        _selectedPeriod.value = period
+        loadShoppingListForPeriod(period)
     }
 
-    private fun loadShoppingListForWeek(weekStartDate: Long) {
+    private fun loadShoppingListForPeriod(period: DatePeriod) {
         handleOperation(_shoppingListState) {
             authRepository.withAuthenticatedUser { userId ->
                 try {
-                    val shoppingList =
-                        shoppingListRepository.getShoppingListForWeek(userId, weekStartDate)
-                            .getOrThrow()
-
-                    shoppingList.copy(
-                        categories = shoppingList.categories.map { category ->
-                            category.copy(
-                                products = category.products.filter { it.name.isNotBlank() }
-                            )
-                        }.filter { it.products.isNotEmpty() }
-                    )
+                    shoppingListRepository.getShoppingListForDate(userId, period.startDate)
+                        .getOrThrow()
                 } catch (e: Exception) {
-                    ShoppingList(categories = emptyList())
+                    ShoppingList()
                 }
             }
         }
-    }
-
-    fun selectedCategory(category: String?) {
-        _selectedCategory.value = category
     }
 
     fun toggleProductCheck(productName: String) {
@@ -154,8 +141,8 @@ class ShoppingListViewModel @Inject constructor(
     fun navigateToClosestAvailableWeek() {
         viewModelScope.launch {
             try {
-                availableWeeks.value.firstOrNull()?.let { closestDate ->
-                    selectWeek(closestDate)
+                _availablePeriods.value.firstOrNull()?.let { closestPeriod ->
+                    selectPeriod(closestPeriod)
                 }
             } catch (e: Exception) {
                 Log.e("Shopping List", "Error navigating to closest available week", e)
@@ -168,14 +155,19 @@ class ShoppingListViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 authRepository.withAuthenticatedUser { userId ->
-                    shoppingListRepository.observerDietChanges(userId).collect { hasActiveDiet ->
-                        if (!hasActiveDiet) {
-                            preferencesManager.clearCheckedProducts(userId)
-                            _checkedProducts.value = emptySet()
+                    shoppingListRepository.observeShoppingLists(userId)
+                        .catch { e ->
+                            Log.e("ShoppingListViewModel", "Error observing lists", e)
                             _shoppingListState.value =
-                                ViewModelState.Success(ShoppingList(categories = emptyList()))
+                                ViewModelState.Error("Błąd podczas ładowania list zakupów")
                         }
-                    }
+                        .collect { lists ->
+                            if (lists.isEmpty()) {
+                                preferencesManager.clearCheckedProducts(userId)
+                                _checkedProducts.value = emptySet()
+                                _shoppingListState.value = ViewModelState.Success(ShoppingList())
+                            }
+                        }
                 }
             } catch (e: Exception) {
                 Log.e("ShoppingListViewModel", "Error observing diet changes", e)
@@ -187,7 +179,7 @@ class ShoppingListViewModel @Inject constructor(
         _shoppingListState.value = ViewModelState.Initial
     }
 
-    override fun onRefreshData() {
+    public override fun onRefreshData() {
         loadAvailableWeeks()
         loadCheckedProducts()
     }

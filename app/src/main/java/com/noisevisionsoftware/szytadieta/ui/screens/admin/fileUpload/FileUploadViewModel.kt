@@ -141,7 +141,7 @@ class FileUploadViewModel @Inject constructor(
         val startDate = selectedStartDate.value!!
 
         return selectedUsers.value.mapNotNull { userId ->
-            val exists = dietRepository.getDietForSpecificUserAndDate(userId, startDate)
+            val exists = dietRepository.hasAnyDiets()
                 .getOrNull() != null
             if (exists) userId else null
         }

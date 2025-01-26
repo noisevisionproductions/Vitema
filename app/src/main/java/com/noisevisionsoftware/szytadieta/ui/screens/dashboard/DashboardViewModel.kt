@@ -6,13 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Meal
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.WeekDay
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Meal
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserRole
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.RecipeRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.UserRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
@@ -20,6 +21,7 @@ import com.noisevisionsoftware.szytadieta.domain.repository.health.WeightReposit
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
+import com.noisevisionsoftware.szytadieta.utils.formatDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,6 +38,7 @@ class DashboardViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val bodyMeasurementRepository: BodyMeasurementRepository,
     private val dietRepository: DietRepository,
+    private val recipeRepository: RecipeRepository,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -64,6 +67,9 @@ class DashboardViewModel @Inject constructor(
 
     private val _todayMeals = MutableStateFlow<ViewModelState<List<Meal>>>(ViewModelState.Initial)
     val todayMeals = _todayMeals.asStateFlow()
+
+    private val _recipes = MutableStateFlow<Map<String, Recipe>>(emptyMap())
+    val recipes = _recipes.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing = _isRefreshing.asStateFlow()
@@ -193,25 +199,22 @@ class DashboardViewModel @Inject constructor(
                 val calendar = Calendar.getInstance()
                 val today = calendar.timeInMillis
 
-                dietRepository.getUserDietForDate(today)
+                val meals = dietRepository.getUserDietForDate(today)
                     .getOrNull()
-                    ?.weeklyPlan
-                    ?.firstOrNull { it.dayOfWeek == getCurrentWeekDay() }
+                    ?.days
+                    ?.firstOrNull { it.date == formatDate(today) }
                     ?.meals
                     ?: emptyList()
-            }
-        }
-    }
 
-    private fun getCurrentWeekDay(): WeekDay {
-        return when (Calendar.getInstance().get(Calendar.DAY_OF_WEEK)) {
-            Calendar.MONDAY -> WeekDay.MONDAY
-            Calendar.TUESDAY -> WeekDay.TUESDAY
-            Calendar.WEDNESDAY -> WeekDay.WEDNESDAY
-            Calendar.THURSDAY -> WeekDay.THURSDAY
-            Calendar.FRIDAY -> WeekDay.FRIDAY
-            Calendar.SATURDAY -> WeekDay.SATURDAY
-            else -> WeekDay.SUNDAY
+                if (meals.isNotEmpty()) {
+                    recipeRepository.getRecipesForMeals(meals)
+                        .onSuccess { recipes ->
+                            _recipes.value = recipes
+                        }
+                }
+
+                meals
+            }
         }
     }
 

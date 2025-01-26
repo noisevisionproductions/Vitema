@@ -27,16 +27,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DatePeriod
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingListPeriodSelector(
-    availableWeeks: List<Long>,
-    selectedWeek: Long?,
-    onWeekSelected: (Long) -> Unit,
+    availablePeriods: List<DatePeriod>,
+    selectedPeriod: DatePeriod?,
+    onPeriodSelected: (DatePeriod) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDropdown by remember { mutableStateOf(false) }
@@ -63,7 +61,7 @@ fun ShoppingListPeriodSelector(
             )
 
             Text(
-                text = selectedWeek?.let { "Lista zakupów na tydzień ${getFormattedWeekRange(it)}" }
+                text = selectedPeriod?.let { "Lista zakupów ${it.startDate} - ${it.endDate}" }
                     ?: "Wybierz listę zakupów",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -72,7 +70,7 @@ fun ShoppingListPeriodSelector(
 
         Icon(
             imageVector = Icons.Default.ArrowDropDown,
-            contentDescription = "Wybierz tydzień",
+            contentDescription = "Wybierz okres",
             tint = MaterialTheme.colorScheme.primary
         )
     }
@@ -91,12 +89,12 @@ fun ShoppingListPeriodSelector(
                 LazyColumn(
                     modifier = Modifier.padding(vertical = 8.dp)
                 ) {
-                    items(availableWeeks.sortedDescending()) { week ->
+                    items(availablePeriods.sortedByDescending { it.startDate }) { period ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    onWeekSelected(week)
+                                    onPeriodSelected(period)
                                     showDropdown = false
                                 }
                                 .padding(16.dp),
@@ -104,12 +102,12 @@ fun ShoppingListPeriodSelector(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = getFormattedWeekRange(week),
+                                text = "${period.startDate} - ${period.endDate}",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
 
-                            if (week == selectedWeek) {
+                            if (period == selectedPeriod) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = null,
@@ -122,18 +120,4 @@ fun ShoppingListPeriodSelector(
             }
         }
     }
-}
-
-private fun getFormattedWeekRange(timestamp: Long): String {
-    val calendar = Calendar.getInstance().apply {
-        timeInMillis = timestamp
-        firstDayOfWeek = Calendar.MONDAY
-        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-    }
-
-    val weekStart = SimpleDateFormat("dd.MM", Locale("pl")).format(calendar.time)
-    calendar.add(Calendar.DAY_OF_YEAR, 6)
-    val weekEnd = SimpleDateFormat("dd.MM", Locale("pl")).format(calendar.time)
-
-    return "$weekStart - $weekEnd"
 }

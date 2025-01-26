@@ -26,6 +26,11 @@ val Grey40 = Color(0xFF999999)
 val Grey20 = Color(0xFFE0E0E0)
 val Grey10 = Color(0xFFF5F5F5)
 
+val Blue90 = Color(0xFF0D47A1)
+val Blue70 = Color(0xFF1976D2)
+val Blue30 = Color(0xFF64B5F6)
+val Blue20 = Color(0xFF90CAF9)
+
 val DarkColorScheme = darkColorScheme(
     primary = BrightGreen,
     onPrimary = Grey90,
@@ -62,7 +67,13 @@ val DarkColorScheme = darkColorScheme(
     inverseSurface = Grey20,
     inverseOnSurface = Grey90,
 
-    scrim = Color(0xFF000000)
+    scrim = Color(0xFF000000),
+
+    surfaceContainerHighest = Blue90,
+    surfaceContainerHigh = Blue70,
+    surfaceContainer = Grey80,
+    surfaceContainerLow = Blue30,
+    surfaceContainerLowest = Blue20,
 )
 
 val LightColorScheme = lightColorScheme(
@@ -101,5 +112,11 @@ val LightColorScheme = lightColorScheme(
     inverseSurface = Grey80, // Darker contrast for inversions
     inverseOnSurface = Grey10, // Light text on inverse surface
 
-    scrim = Color(0xFF000000) // Unchanged
+    scrim = Color(0xFF000000), // Unchanged
+
+    surfaceContainerHighest = Blue20,
+    surfaceContainerHigh = Blue30,
+    surfaceContainer = Grey20,
+    surfaceContainerLow = Blue70,
+    surfaceContainerLowest = Blue90,
 )

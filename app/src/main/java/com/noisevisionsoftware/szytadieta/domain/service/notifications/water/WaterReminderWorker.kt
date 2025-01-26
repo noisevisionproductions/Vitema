@@ -27,7 +27,14 @@ class WaterReminderWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            notificationHelper.showWaterReminder("Czas na szklankę wody! 💧")
+            val messages = listOf(
+                "Czas na łyka wody! 💧",
+                "Nawodnij się! Twoje ciało będzie wdzięczne. 💦",
+                "Pamiętaj o wodzie - to Twój codzienny zastrzyk energii! 🚰",
+                "Kilka łyków wody doda Ci sił! 💧"
+            )
+
+            notificationHelper.showWaterReminder(messages.random())
             NotificationScheduler(applicationContext, settingsManager).scheduleWaterReminder()
             Result.success()
         } catch (e: Exception) {

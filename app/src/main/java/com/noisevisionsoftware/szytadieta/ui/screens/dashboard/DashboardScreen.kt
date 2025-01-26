@@ -66,6 +66,7 @@ fun DashboardScreen(
     val latestMeasurements by viewModel.latestMeasurements.collectAsState()
     val measurementsHistory by viewModel.measurementsHistory.collectAsState()
     val todayMeals by viewModel.todayMeals.collectAsState()
+    val recipes by viewModel.recipes.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val showTutorial by viewModel.showTutorial.collectAsState()
     var editButtonBounds by remember { mutableStateOf(Rect.Zero) }
@@ -163,7 +164,8 @@ fun DashboardScreen(
                                     when (cardType) {
                                         DashboardCardType.MEAL_PLAN -> MealPlanCard(
                                             todayMeals = todayMeals,
-                                            onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.MealPlan) }
+                                            onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.MealPlan) },
+                                            recipes = recipes
                                         )
 
                                         DashboardCardType.SHOPPING_LIST -> ShoppingListCard(

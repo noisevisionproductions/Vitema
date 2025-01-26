@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan
+package com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels
 
 import com.google.gson.annotations.JsonAdapter
 import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.adapter.MealTypeAdapter
@@ -28,15 +28,4 @@ enum class MealType {
             SNACK -> "Podwieczorek"
             DINNER -> "Kolacja"
         }
-
-    companion object {
-        fun fromPolishName(name: String): MealType? = when (name.lowercase().trim()) {
-            "śniadanie" -> BREAKFAST
-            "drugie śniadanie" -> SECOND_BREAKFAST
-            "obiad" -> LUNCH
-            "podwieczorek" -> SNACK
-            "kolacja" -> DINNER
-            else -> null
-        }
-    }
 }

@@ -42,11 +42,9 @@ fun MeasurementsCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+        )
     ) {
         Column(
             modifier = Modifier
@@ -155,13 +153,7 @@ private fun MeasurementContent(
     }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
-                RoundedCornerShape(8.dp)
-            )
-            .padding(12.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

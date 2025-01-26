@@ -1,8 +1,6 @@
 package com.noisevisionsoftware.szytadieta.domain.service.excelParser
 
 import android.util.Log
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingCategory
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingProduct
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Sheet
@@ -15,7 +13,7 @@ class ShoppingListSheetParser @Inject constructor() {
         private const val PRODUCT_COLUMN = 1
         private const val QUANTITY_COLUMN = 2
     }
-
+/*
     fun parseShoppingList(sheet: Sheet): List<ShoppingCategory> {
         val categoryMap = mutableMapOf<String, MutableList<ShoppingProduct>>()
         var currentCategory = ""
@@ -54,7 +52,7 @@ class ShoppingListSheetParser @Inject constructor() {
         return categoryMap.map { (name, products) ->
             ShoppingCategory(name, products.sortedBy { it.name })
         }.sortedBy { it.name }
-    }
+    }*/
 
     private fun parseQuantityAndUnit(value: String): Pair<Double, String> {
         val pattern = """([\d,.]+)\s*([a-zA-Złśżźćńąę]+|sztuki?|opakowania?)?""".toRegex()

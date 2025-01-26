@@ -66,7 +66,7 @@ fun DailyProgressCard(
     val progressColor by remember(animatedProgress) {
         derivedStateOf {
             lerp(
-                start = Color(0xFFFFCC00),
+                start = Color(0xFFFFa000),
                 stop = Color(0xFF7CB342),
                 fraction = animatedProgress
             )

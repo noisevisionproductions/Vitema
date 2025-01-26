@@ -46,7 +46,7 @@ class FileRepository @Inject constructor(
             val fileMetadata =
                 fileMetadataService.createAndSaveMetadata(userId, fileName, downloadUrl)
 
-            parseAndSaveDiet(
+         /*   parseAndSaveDiet(
                 uri = uri,
                 userId = userId,
                 downloadUrl = downloadUrl,
@@ -55,7 +55,7 @@ class FileRepository @Inject constructor(
             ) { stage, progress ->
                 trySend(UploadProgress.Progress(progress, stage))
             }
-
+*/
             fileMetadataService.updateStatus(fileMetadata.id, FileStatus.PROCESSED)
             trySend(UploadProgress.Success(downloadUrl))
 
@@ -73,7 +73,7 @@ class FileRepository @Inject constructor(
                 .getOrThrow()
         } ?: throw IOException("Nie można otworzyć pliku do walidacji")
     }
-
+/*
     private suspend fun parseAndSaveDiet(
         uri: Uri,
         userId: String,
@@ -95,7 +95,9 @@ class FileRepository @Inject constructor(
             onProgress(UploadStage.SAVING, 90)
 
             dietService.saveDiet(parseResult.diet)
+*//*
             shoppingListRepository.saveShoppingList(parseResult.shoppingList)
+*//*
         } ?: throw IOException("Nie można otworzyć pliku do parsowania")
-    }
+    }*/
 }

@@ -1,6 +1,5 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.mealPlan
 
-import android.icu.util.Calendar
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -25,7 +24,6 @@ import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,18 +35,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.DayPlan
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Meal
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.MealType
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.WeekDay
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DietDay
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Meal
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.MealType
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.NutritionalValues
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.CustomErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
-import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.DaySelectorForMealPlan
 import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
+import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.DaySelectorForMealPlan
 import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.NoMealPlanMessage
 
 @Composable
@@ -57,6 +57,7 @@ fun MealPlanScreen(
     onNavigate: (NavigationDestination) -> Unit
 ) {
     val mealPlanState by viewModel.mealPlanState.collectAsState()
+    val recipesState by viewModel.recipesState.collectAsState()
     val hasAnyMealPlans by viewModel.hasAnyMealPlans.collectAsState()
     val currentDate by viewModel.currentDate.collectAsState()
     val availableWeeks by viewModel.availableWeeks.collectAsState()
@@ -92,8 +93,8 @@ fun MealPlanScreen(
                 )
 
                 is ViewModelState.Success -> {
-                    val weeklyPlan = (mealPlanState as ViewModelState.Success<List<DayPlan>>).data
-                    if (weeklyPlan.isEmpty()) {
+                    val dietDay = (mealPlanState as ViewModelState.Success<DietDay>).data
+                    if (dietDay.meals.isEmpty()) {
                         NoMealPlanMessage(
                             hasAnyMealPlans = hasAnyMealPlans ?: false,
                             onNavigateToAvailableWeek = if (hasAnyMealPlans == true) {
@@ -102,9 +103,9 @@ fun MealPlanScreen(
                             onNavigate = onNavigate
                         )
                     } else {
-                        WeeklyPlanContent(
-                            weeklyPlan = weeklyPlan,
-                            currentDate = currentDate
+                        DayMealList(
+                            dietDay = dietDay,
+                            recipes = recipesState
                         )
                     }
                 }
@@ -114,47 +115,40 @@ fun MealPlanScreen(
 }
 
 @Composable
-private fun WeeklyPlanContent(
-    weeklyPlan: List<DayPlan>,
-    currentDate: Long
+private fun DayMealList(
+    dietDay: DietDay,
+    recipes: Map<String, Recipe>,
+    modifier: Modifier = Modifier
 ) {
-    val selectedDayPlan = weeklyPlan.find { dayPlan ->
-        val calendar = Calendar.getInstance().apply { timeInMillis = currentDate }
-        val dayOfWeek = when (calendar.get(Calendar.DAY_OF_WEEK)) {
-            Calendar.MONDAY -> WeekDay.MONDAY
-            Calendar.TUESDAY -> WeekDay.TUESDAY
-            Calendar.WEDNESDAY -> WeekDay.WEDNESDAY
-            Calendar.THURSDAY -> WeekDay.THURSDAY
-            Calendar.FRIDAY -> WeekDay.FRIDAY
-            Calendar.SATURDAY -> WeekDay.SATURDAY
-            Calendar.SUNDAY -> WeekDay.SUNDAY
-            else -> WeekDay.MONDAY
-        }
-        dayPlan.dayOfWeek == dayOfWeek
-    }
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        items(
+            items = dietDay.meals.sortedBy { it.mealType.ordinal },
+            key = { meal -> "${meal.recipeId}_${meal.time}" }
+        ) { meal ->
+            MealCard(
+                meal = meal,
+                recipe = recipes[meal.recipeId]
+            )
 
-    selectedDayPlan?.let { dayPlan ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(dayPlan.meals.sortedBy { it.name.ordinal }) { meal ->
-                MealCard(meal)
-            }
         }
     }
 }
 
 @Composable
 private fun MealCard(
-    meal: Meal
+    meal: Meal,
+    recipe: Recipe?,
+    modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(true) }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable { expanded = !expanded },
         colors = CardDefaults.cardColors(
@@ -172,7 +166,7 @@ private fun MealCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = when (meal.name) {
+                    imageVector = when (meal.mealType) {
                         MealType.BREAKFAST -> Icons.Default.WbSunny
                         MealType.SECOND_BREAKFAST -> Icons.Default.BrunchDining
                         MealType.LUNCH -> Icons.Default.LunchDining
@@ -183,11 +177,18 @@ private fun MealCard(
                     tint = MaterialTheme.colorScheme.primary
                 )
 
-                Text(
-                    text = meal.name.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column {
+                    Text(
+                        text = meal.mealType.displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = meal.time,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             AnimatedVisibility(
@@ -195,13 +196,68 @@ private fun MealCard(
                 enter = expandVertically() + fadeIn(),
                 exit = shrinkVertically() + fadeOut()
             ) {
-                Text(
-                    text = meal.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
+                Column(
+                    modifier = Modifier.padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    recipe?.let { recipeData ->
+                        Text(
+                            text = recipeData.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        NutritionalValues(values = recipeData.nutritionalValues)
+
+                        Text(
+                            text = recipeData.instructions,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } ?: Text(
+                        text = "Ładowanie przepisu...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun NutritionalValues(
+    values: NutritionalValues,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        NutritionalValue("Kalorie", "${values.calories} kcal")
+        NutritionalValue("Białko", "${values.protein}g")
+        NutritionalValue("Tłuszcze", "${values.fat}g")
+        NutritionalValue("Węglowodany", "${values.carbs}g")
+    }
+}
+
+@Composable
+private fun NutritionalValue(
+    label: String,
+    value: String
+) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Medium
+        )
     }
 }

@@ -13,7 +13,7 @@ import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 @Composable
 fun NoShoppingListMessage(
     hasAnyShoppingLists: Boolean,
-    onNavigateToAvailableWeek: (() -> Unit)? = null,
+    onNavigateToAvailablePeriod: (() -> Unit)? = null,
     onNavigate: (NavigationDestination) -> Unit
 ) {
     EmptyStateMessage(
@@ -27,11 +27,11 @@ fun NoShoppingListMessage(
         else
             "Lista zakupów pojawi się automatycznie po przydzieleniu planu posiłków przez dietetyka.",
         actionButton = {
-            if (hasAnyShoppingLists && onNavigateToAvailableWeek != null) {
+            if (hasAnyShoppingLists && onNavigateToAvailablePeriod != null) {
                 NavigationActionButton(
                     text = "Przejdź do dostępnej listy",
                     icon = Icons.Default.CalendarMonth,
-                    onClick = onNavigateToAvailableWeek
+                    onClick = onNavigateToAvailablePeriod
                 )
             } else if (!hasAnyShoppingLists) {
                 NavigationActionButton(

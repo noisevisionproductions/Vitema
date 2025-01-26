@@ -4,21 +4,19 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.ShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.ShoppingList
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.ShoppingListRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
+import com.noisevisionsoftware.szytadieta.utils.DateUtils
+import com.noisevisionsoftware.szytadieta.utils.formatDate
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,9 +36,8 @@ class DashboardShoppingListViewModel @Inject constructor(
     private val _remainingItems = MutableStateFlow<ViewModelState<Int>>(ViewModelState.Initial)
     val remainingItems = _remainingItems.asStateFlow()
 
-    private val _isRefreshingShoppingList = MutableStateFlow(false)
-
     private val _checkedProducts = MutableStateFlow<Set<String>>(emptySet())
+    val checkedProducts = _checkedProducts.asStateFlow()
 
     init {
         loadCurrentWeekShoppingList()
@@ -51,16 +48,15 @@ class DashboardShoppingListViewModel @Inject constructor(
         viewModelScope.launch {
             handleOperation(_weeklyShoppingList) {
                 authRepository.withAuthenticatedUser { userId ->
-                    val currentWeekStart = Calendar.getInstance().apply {
-                        set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
-                    }.timeInMillis
-
-                    shoppingListRepository.getShoppingListForWeek(userId, currentWeekStart)
-                        .getOrNull()
+                    val currentDate = DateUtils.getCurrentLocalDate()
+                    val formattedDate = formatDate(currentDate)
+                    val shoppingList =
+                        shoppingListRepository.getShoppingListForDate(userId, formattedDate)
+                            .getOrNull()
+                    shoppingList?.also {
+                        calculateRemainingItems(it)
+                    }
+                    shoppingList
                 }
             }
         }
@@ -72,60 +68,28 @@ class DashboardShoppingListViewModel @Inject constructor(
                 authRepository.withAuthenticatedUser { userId ->
                     preferencesManager.getCheckedProducts(userId).collect { savedProducts ->
                         _checkedProducts.value = savedProducts
-                        calculateRemainingItems()
+                        (_weeklyShoppingList.value as? ViewModelState.Success)?.data?.let {
+                            calculateRemainingItems(it)
+                        }
                     }
                 }
             } catch (e: Exception) {
-                Log.e(
-                    "Dashboard Shopping List View Model",
-                    "Error while loading checked products:",
-                    e
-                )
-                throw e
+                Log.e("DashboardShoppingList", "Error loading checked products", e)
             }
         }
     }
 
-    fun calculateRemainingItems() {
+    private fun calculateRemainingItems(shoppingList: ShoppingList) {
         viewModelScope.launch {
-            val currentList = _weeklyShoppingList.value
-            if (currentList is ViewModelState.Success && currentList.data != null) {
-                val allProducts = currentList.data.categories
-                    .flatMap { it.products }
-                    .map { it.name }
-
-                val remainingCount = allProducts.count { productName ->
-                    !_checkedProducts.value.contains(productName)
-                }
-
-                _remainingItems.value = ViewModelState.Success(remainingCount)
-            }
+            val totalItems = shoppingList.items.size
+            val checkedItems = _checkedProducts.value.size
+            _remainingItems.value = ViewModelState.Success(totalItems - checkedItems)
         }
     }
 
-    fun getFormattedWeekDates(): String {
-        val calendar = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat("dd.MM", Locale.getDefault())
 
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-        val weekStart = dateFormat.format(calendar.time)
-
-        calendar.add(Calendar.DAY_OF_YEAR, 6)
-        val weekEnd = dateFormat.format(calendar.time)
-
-        return "$weekStart - $weekEnd"
-    }
-
-
-    suspend fun refreshShoppingList() {
-        _isRefreshingShoppingList.value = true
-        try {
-            coroutineScope {
-                launch { loadCurrentWeekShoppingList() }
-            }
-        } finally {
-            _isRefreshingShoppingList.value = false
-        }
+    fun refreshShoppingList() {
+        loadCurrentWeekShoppingList()
     }
 
     override fun onUserLoggedOut() {

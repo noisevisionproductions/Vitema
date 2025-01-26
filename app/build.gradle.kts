@@ -34,7 +34,7 @@ android {
         version = Version(
             major = 1,
             minor = 1,
-            patch = 0
+            patch = 3
         )
 
         applicationId = "com.noisevisionsoftware.szytadieta"

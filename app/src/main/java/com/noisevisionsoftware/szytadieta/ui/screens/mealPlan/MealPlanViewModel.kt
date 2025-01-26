@@ -3,13 +3,17 @@ package com.noisevisionsoftware.szytadieta.ui.screens.mealPlan
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.DayPlan
+import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DietDay
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
+import com.noisevisionsoftware.szytadieta.domain.repository.RecipeRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
+import com.noisevisionsoftware.szytadieta.utils.formatDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,14 +23,17 @@ import javax.inject.Inject
 @HiltViewModel
 class MealPlanViewModel @Inject constructor(
     private val dietRepository: DietRepository,
+    private val recipeRepository: RecipeRepository,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
 ) : BaseViewModel(networkManager, alertManager, eventBus) {
 
-    private val _mealPlanState =
-        MutableStateFlow<ViewModelState<List<DayPlan>>>(ViewModelState.Initial)
+    private val _mealPlanState = MutableStateFlow<ViewModelState<DietDay>>(ViewModelState.Initial)
     val mealPlanState = _mealPlanState.asStateFlow()
+
+    private val _recipesState = MutableStateFlow<Map<String, Recipe>>(emptyMap())
+    val recipesState = _recipesState.asStateFlow()
 
     private val _hasAnyMealPlans = MutableStateFlow<Boolean?>(null)
     val hasAnyMealPlans = _hasAnyMealPlans.asStateFlow()
@@ -38,9 +45,6 @@ class MealPlanViewModel @Inject constructor(
     val availableWeeks = _availableWeeks.asStateFlow()
 
     init {
-/*
-        refreshMealPlan()
-*/
         loadMealPlan(_currentDate.value)
         loadAvailableWeeks()
         checkForAnyPlans()
@@ -50,24 +54,40 @@ class MealPlanViewModel @Inject constructor(
         handleOperation(_mealPlanState) {
             try {
                 val result = dietRepository.getUserDietForDate(date)
+                val diet = result.getOrNull()
 
-                result.map { diet ->
-                    diet?.let {
-                        Log.d("MealPlanViewModel", "Weekly plan: ${it.weeklyPlan}")
-                        it.weeklyPlan
-                    } ?: emptyList()
-                }.getOrThrow()
+                val dietDay = diet?.days?.firstOrNull { formatDate(date) == it.date }
+                    ?: DietDay(date = formatDate(date))
+
+                if (dietDay.meals.isNotEmpty()) {
+                    loadRecipesForDay(dietDay)
+                }
+
+                dietDay
+
             } catch (e: Exception) {
                 Log.e("MealPlanViewModel", "Error loading meal plan", e)
-                throw e
+                throw AppException.UnknownException("Wystąpił błąd podczas ładowania planu")
             }
+        }
+    }
+
+    private suspend fun loadRecipesForDay(dietDay: DietDay) {
+        try {
+            val recipes = recipeRepository.getRecipesForMeals(dietDay.meals).getOrNull()
+            if (recipes != null) {
+                _recipesState.value = recipes
+            }
+        } catch (e: Exception) {
+            Log.e("MealPlanViewModel", "Error loading recipes", e)
+            throw e
         }
     }
 
     private fun loadAvailableWeeks() {
         viewModelScope.launch {
             try {
-                val weeks = dietRepository.getAvailableWeekDates().getOrNull() ?: emptyList()
+                val weeks = dietRepository.getAvailableDates().getOrNull() ?: emptyList()
                 _availableWeeks.value = weeks
                 _hasAnyMealPlans.value = weeks.isNotEmpty()
             } catch (e: Exception) {
@@ -86,13 +106,13 @@ class MealPlanViewModel @Inject constructor(
     fun navigateToClosestAvailableWeek() {
         viewModelScope.launch {
             try {
-                val closestDate = dietRepository.getClosestAvailableWeekDate().getOrNull()
+                val closestDate = dietRepository.getClosestAvailableDate().getOrNull()
                 closestDate?.let {
                     _currentDate.value = it
                     loadMealPlan(it)
                 }
             } catch (e: Exception) {
-                throw e
+                Log.e("MealPlanViewModel", "Error navigating to closest available week", e)
             }
         }
     }
