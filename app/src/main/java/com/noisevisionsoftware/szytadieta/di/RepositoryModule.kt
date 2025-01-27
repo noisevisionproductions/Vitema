@@ -3,6 +3,7 @@ package com.noisevisionsoftware.szytadieta.di
 import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.noisevisionsoftware.szytadieta.data.FCMTokenRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
@@ -117,6 +118,7 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideRecipeRepository(
-        firestore: FirebaseFirestore
-    ): RecipeRepository = RecipeRepository(firestore)
+        firestore: FirebaseFirestore,
+        storage: FirebaseStorage
+    ): RecipeRepository = RecipeRepository(firestore, storage)
 }

@@ -7,6 +7,7 @@ import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesMan
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.ShoppingList
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.ShoppingListRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
@@ -24,6 +25,7 @@ class DashboardShoppingListViewModel @Inject constructor(
     private val shoppingListRepository: ShoppingListRepository,
     private val authRepository: AuthRepository,
     private val preferencesManager: PreferencesManager,
+    private val dietRepository: DietRepository,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -42,6 +44,7 @@ class DashboardShoppingListViewModel @Inject constructor(
     init {
         loadCurrentWeekShoppingList()
         loadCheckedProducts()
+        observeDietChanges()
     }
 
     private fun loadCurrentWeekShoppingList() {
@@ -87,9 +90,58 @@ class DashboardShoppingListViewModel @Inject constructor(
         }
     }
 
+    private fun observeDietChanges() {
+        viewModelScope.launch {
+            try {
+                authRepository.withAuthenticatedUser { userId ->
+                    dietRepository.observeDietChanges(userId)
+                        .collect { diets ->
+                            if (diets.isEmpty()) {
+                                clearShoppingListData(userId)
+                            } else {
+                                refreshShoppingList()
+                                synchronizeCheckedProducts(userId)
+                            }
+                        }
+                }
+            } catch (e: Exception) {
+                Log.e("DashboardShoppingList", "Error observing diet changes", e)
+            }
+        }
+    }
+
+    private suspend fun clearShoppingListData(userId: String) {
+        _weeklyShoppingList.value = ViewModelState.Success(null)
+        _remainingItems.value = ViewModelState.Success(0)
+        preferencesManager.clearCheckedProducts(userId)
+        _checkedProducts.value = emptySet()
+    }
+
+    private suspend fun synchronizeCheckedProducts(userId: String) {
+        val currentList = (_weeklyShoppingList.value as? ViewModelState.Success)?.data
+        if (currentList != null) {
+            val allCurrentProducts = currentList.items.toSet()
+            val currentCheckedProducts = _checkedProducts.value
+
+            val updatedCheckedProducts =
+                currentCheckedProducts.filter { it in allCurrentProducts }.toSet()
+
+
+            if (updatedCheckedProducts != currentCheckedProducts) {
+                _checkedProducts.value = updatedCheckedProducts
+                preferencesManager.saveCheckedProducts(userId, updatedCheckedProducts)
+                calculateRemainingItems(currentList)
+            }
+        }
+    }
 
     fun refreshShoppingList() {
         loadCurrentWeekShoppingList()
+    }
+
+    override fun onRefreshData() {
+        loadCurrentWeekShoppingList()
+        loadCheckedProducts()
     }
 
     override fun onUserLoggedOut() {

@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.noisevisionsoftware.szytadieta.domain.model.health.WaterIntake
+import com.noisevisionsoftware.szytadieta.domain.model.health.water.WaterIntake
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

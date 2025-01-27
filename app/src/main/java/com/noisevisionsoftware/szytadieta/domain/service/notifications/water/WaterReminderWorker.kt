@@ -30,8 +30,7 @@ class WaterReminderWorker @AssistedInject constructor(
             val messages = listOf(
                 "Czas na łyka wody! 💧",
                 "Nawodnij się! Twoje ciało będzie wdzięczne. 💦",
-                "Pamiętaj o wodzie - to Twój codzienny zastrzyk energii! 🚰",
-                "Kilka łyków wody doda Ci sił! 💧"
+                "Pamiętaj o wodzie! 🚰",
             )
 
             notificationHelper.showWaterReminder(messages.random())

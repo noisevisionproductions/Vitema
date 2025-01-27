@@ -5,6 +5,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Diet
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -73,6 +76,25 @@ class DietRepository @Inject constructor(
                 abs(date - startOfToday)
             }
         }
+    }
+
+    suspend fun observeDietChanges(userId: String): Flow<List<Diet>> = callbackFlow {
+        val subscription = firestore.collection("diets")
+            .whereEqualTo("userId", userId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val diets = snapshot?.documents?.mapNotNull {
+                    it.toObject(Diet::class.java)?.copy(id = it.id)
+                } ?: emptyList()
+
+                trySend(diets)
+            }
+
+        awaitClose { subscription.remove() }
     }
 
     suspend fun hasAnyDiets(): Result<Boolean> = runCatching {

@@ -50,7 +50,7 @@ fun ProductList(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         state = rememberLazyListState()
     ) {
@@ -78,10 +78,11 @@ fun ProductList(
                 ) {
                     Text(
                         text = "Zaznaczone produkty",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
 
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -112,11 +113,12 @@ private fun ProductItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .height(48.dp)
             .clickable { onCheckedChange(!isChecked) }
             .then(
                 if (isChecked) {
                     Modifier.border(
-                        width = 1.5.dp,
+                        width = 1.dp,
                         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                         shape = MaterialTheme.shapes.medium
                     )
@@ -133,8 +135,8 @@ private fun ProductItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(
@@ -145,12 +147,12 @@ private fun ProductItem(
                     uncheckedColor = MaterialTheme.colorScheme.outline,
                     checkmarkColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                modifier = Modifier.scale(1.1f)
+                modifier = Modifier.scale(0.9f)
             )
 
             Text(
                 text = product,
-                style = MaterialTheme.typography.bodyLarge.copy(
+                style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = if (isChecked) FontWeight.Normal else FontWeight.Medium
                 ),
                 color = if (isChecked) {

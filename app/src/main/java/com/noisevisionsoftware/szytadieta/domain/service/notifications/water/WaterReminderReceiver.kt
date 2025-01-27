@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import com.noisevisionsoftware.szytadieta.domain.model.health.WaterIntake
+import com.noisevisionsoftware.szytadieta.domain.model.health.water.WaterIntake
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.WaterRepository
 import dagger.hilt.android.AndroidEntryPoint

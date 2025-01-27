@@ -36,14 +36,16 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.noisevisionsoftware.szytadieta.domain.model.health.water.CustomWaterAmount
 
 @Composable
 fun WaterTrackingCard(
     currentAmount: Int,
     targetAmount: Int,
-    onAddWater: () -> Unit,
+    onAddWater: (Int) -> Unit,
     onClick: () -> Unit,
     isLoading: Boolean = false,
+    customAmount: CustomWaterAmount? = null,
     modifier: Modifier = Modifier
 ) {
     val progress = (currentAmount.toFloat() / targetAmount).coerceIn(0f, 1f)
@@ -140,12 +142,18 @@ fun WaterTrackingCard(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(
-                    onClick = onAddWater,
+                    onClick = {
+                        onAddWater(customAmount?.amount ?: 250)
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = progressColor
                     )
                 ) {
-                    Text("Dodaj szklankę wody (250ml)")
+                    Text(
+                        text = customAmount?.let {
+                            "Dodaj ${it.label} (${it.amount}ml)"
+                        } ?: "Dodaj szklankę wody (250ml)"
+                    )
                 }
             }
         }

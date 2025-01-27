@@ -1,6 +1,7 @@
 package com.noisevisionsoftware.szytadieta
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -25,6 +26,7 @@ import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManage
 import com.noisevisionsoftware.szytadieta.domain.navigation.NavigationManager
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationHelper
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationScheduler
+import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationType
 import com.noisevisionsoftware.szytadieta.ui.common.AlertHandler
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.MainScreen
@@ -36,11 +38,16 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @Inject lateinit var alertManager: AlertManager
-    @Inject lateinit var settingsManager: SettingsManager
-    @Inject lateinit var navigationManager: NavigationManager
-    @Inject lateinit var notificationScheduler: NotificationScheduler
-    @Inject lateinit var notificationHelper: NotificationHelper
+    @Inject
+    lateinit var alertManager: AlertManager
+    @Inject
+    lateinit var settingsManager: SettingsManager
+    @Inject
+    lateinit var navigationManager: NavigationManager
+    @Inject
+    lateinit var notificationScheduler: NotificationScheduler
+    @Inject
+    lateinit var notificationHelper: NotificationHelper
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -59,14 +66,25 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleNotificationNavigation(intent)
+    }
+
     @Composable
     private fun MainScreenContent() {
         val isDarkMode by settingsManager.isDarkMode.collectAsState(initial = isSystemInDarkTheme())
         val destination = intent.getStringExtra("destination")
+        val dietId = intent.getStringExtra("diet_id")
 
         LaunchedEffect(destination) {
             if (destination == NotificationHelper.EXTRA_DESTINATION) {
                 navigationManager.navigateToScreen(NavigationDestination.AuthenticatedDestination.WaterIntake)
+            }
+            if (destination == "diet_plan" && dietId != null) {
+                navigationManager.navigateToScreen(
+                    NavigationDestination.AuthenticatedDestination.MealPlan
+                )
             }
         }
 
@@ -95,6 +113,28 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun handleNotificationNavigation(intent: Intent?) {
+        when (intent?.getStringExtra("notification_type")) {
+            NotificationType.WATER_REMINDER.name -> {
+                lifecycleScope.launch {
+                    navigationManager.navigateToScreen(
+                        NavigationDestination.AuthenticatedDestination.WaterIntake
+                    )
+                }
+            }
+            NotificationType.DIET_UPDATE.name -> {
+                val dietId = intent.getStringExtra("diet_id")
+                if (dietId != null) {
+                    lifecycleScope.launch {
+                        navigationManager.navigateToScreen(
+                            NavigationDestination.AuthenticatedDestination.MealPlan
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun scheduleNotifications() {
         lifecycleScope.launch {
             try {
@@ -117,6 +157,7 @@ class MainActivity : ComponentActivity() {
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     scheduleNotifications()
                 }
+
                 shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
                     alertManager.showAlert(
                         Alert.Error(
@@ -124,6 +165,7 @@ class MainActivity : ComponentActivity() {
                         )
                     )
                 }
+
                 else -> {
                     requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }

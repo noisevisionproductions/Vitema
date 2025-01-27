@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.noisevisionsoftware.szytadieta.domain.model.health.water.CustomWaterAmount
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -22,6 +24,8 @@ class PreferencesManager @Inject constructor(
     companion object {
         private const val CHECKED_PRODUCTS_KEY_PREFIX = "checked_products_"
         private const val SEPARATOR = "|"
+        private const val CUSTOM_WATER_AMOUNT = "custom_water_amount"
+        private const val CUSTOM_WATER_LABEL = "custom_water_label"
     }
 
     suspend fun saveCheckedProducts(userId: String, checkedProducts: Set<String>) {
@@ -39,9 +43,27 @@ class PreferencesManager @Inject constructor(
     }
 
     suspend fun clearCheckedProducts(userId: String) {
-        val key = getCheckedProductsKey(userId)
         dataStore.edit { preferences ->
-            preferences.remove(key)
+            preferences.remove(stringPreferencesKey("${CHECKED_PRODUCTS_KEY_PREFIX}$userId"))
+        }
+    }
+
+    suspend fun saveCustomWaterAmount(userId: String, amount:  CustomWaterAmount) {
+        context.dataStore.edit { preferences ->
+            preferences[intPreferencesKey("${userId}_${CUSTOM_WATER_AMOUNT}")] = amount.amount
+            preferences[stringPreferencesKey("${userId}_${CUSTOM_WATER_LABEL}")] = amount.label
+        }
+    }
+
+    fun getCustomWaterAmount(userId: String): Flow<CustomWaterAmount?> {
+        return context.dataStore.data.map { preferences ->
+            val amount = preferences[intPreferencesKey("${userId}_custom_water_amount")]
+            val label = preferences[stringPreferencesKey("${userId}_custom_water_label")]
+            if (amount != null && label != null) {
+                CustomWaterAmount(amount, label)
+            } else {
+                null
+            }
         }
     }
 

@@ -9,6 +9,7 @@ androidxComposeCompiler = "1.5.8"
 # Kotlin and KSP
 apachePoi = "5.2.3"
 apachePoiOoxml = "5.2.3"
+coilCompose = "2.7.0"
 commonsCodec = "1.17.0"
 commonsCompress = "1.26.2"
 composeM3 = "2.0.0-beta.5"
@@ -109,6 +110,7 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidxLifecycle" }
 androidx-material = { module = "androidx.compose.material:material", version.ref = "materialVersion" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 compose-markdown = { module = "com.github.jeziellago:compose-markdown", version.ref = "composeMarkdown" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtx" }
 dionsegijn-konfetti-compose = { module = "nl.dionsegijn:konfetti-compose", version.ref = "konfettiComposeVersion" }

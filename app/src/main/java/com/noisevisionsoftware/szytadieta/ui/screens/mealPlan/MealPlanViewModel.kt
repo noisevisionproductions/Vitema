@@ -59,28 +59,28 @@ class MealPlanViewModel @Inject constructor(
                 val dietDay = diet?.days?.firstOrNull { formatDate(date) == it.date }
                     ?: DietDay(date = formatDate(date))
 
+
                 if (dietDay.meals.isNotEmpty()) {
-                    loadRecipesForDay(dietDay)
+                    val recipesResult = recipeRepository.getRecipesForMeals(dietDay.meals)
+                    when {
+                        recipesResult.isSuccess -> {
+                            val recipes = recipesResult.getOrNull() ?: emptyMap()
+                            _recipesState.value = recipes
+                        }
+
+                        recipesResult.isFailure -> {
+                            _recipesState.value = emptyMap()
+                        }
+                    }
+                } else {
+                    _recipesState.value = emptyMap()
                 }
 
                 dietDay
-
             } catch (e: Exception) {
                 Log.e("MealPlanViewModel", "Error loading meal plan", e)
                 throw AppException.UnknownException("Wystąpił błąd podczas ładowania planu")
             }
-        }
-    }
-
-    private suspend fun loadRecipesForDay(dietDay: DietDay) {
-        try {
-            val recipes = recipeRepository.getRecipesForMeals(dietDay.meals).getOrNull()
-            if (recipes != null) {
-                _recipesState.value = recipes
-            }
-        } catch (e: Exception) {
-            Log.e("MealPlanViewModel", "Error loading recipes", e)
-            throw e
         }
     }
 

@@ -40,6 +40,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.state.AuthState
+import com.noisevisionsoftware.szytadieta.ui.common.PasswordTextField
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 
 @Composable
@@ -58,6 +59,7 @@ fun LoginScreen(
             authState is AuthState.Success && profileCompleted == false -> {
                 onNavigate(NavigationDestination.AuthenticatedDestination.CompleteProfile)
             }
+
             authState is AuthState.Success && profileCompleted == true -> {
                 onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
             }
@@ -97,7 +99,8 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .padding(vertical = 16.dp),
             colors = CardDefaults.cardColors(
-                contentColor = MaterialTheme.colorScheme.surfaceVariant
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
             )
         ) {
             Column(
@@ -122,21 +125,15 @@ fun LoginScreen(
                     singleLine = true
                 )
 
-                OutlinedTextField(
+                PasswordTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Hasło") },
-                    modifier = Modifier.fillMaxWidth(),
-                    visualTransformation = PasswordVisualTransformation(),
+                    label = "Hasło",
+                    contentDescription = "Pole wprowadzania hasła",
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
-                    ),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    ),
-                    singleLine = true
+                    )
                 )
             }
         }

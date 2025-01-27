@@ -1,27 +1,35 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.mealPlan
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BrunchDining
 import androidx.compose.material.icons.filled.DinnerDining
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LunchDining
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -41,19 +49,20 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DietDay
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Meal
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.MealType
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.NutritionalValues
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.CustomErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
 import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
+import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationViewModel
 import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.DaySelectorForMealPlan
 import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.NoMealPlanMessage
 
 @Composable
 fun MealPlanScreen(
     viewModel: MealPlanViewModel = hiltViewModel(),
+    navigationViewModel: NavigationViewModel = hiltViewModel(),
     onNavigate: (NavigationDestination) -> Unit
 ) {
     val mealPlanState by viewModel.mealPlanState.collectAsState()
@@ -105,7 +114,11 @@ fun MealPlanScreen(
                     } else {
                         DayMealList(
                             dietDay = dietDay,
-                            recipes = recipesState
+                            recipes = recipesState,
+                            onRecipeClick = { recipeId ->
+                                navigationViewModel.setRecipeId(recipeId)
+                                onNavigate(NavigationDestination.AuthenticatedDestination.RecipeScreen)
+                            }
                         )
                     }
                 }
@@ -118,6 +131,7 @@ fun MealPlanScreen(
 private fun DayMealList(
     dietDay: DietDay,
     recipes: Map<String, Recipe>,
+    onRecipeClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -132,7 +146,8 @@ private fun DayMealList(
         ) { meal ->
             MealCard(
                 meal = meal,
-                recipe = recipes[meal.recipeId]
+                recipe = recipes[meal.recipeId],
+                onRecipeClick = onRecipeClick
             )
 
         }
@@ -143,18 +158,17 @@ private fun DayMealList(
 private fun MealCard(
     meal: Meal,
     recipe: Recipe?,
+    onRecipeClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(true) }
+    var expanded by remember { mutableStateOf(false) }
 
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { expanded = !expanded },
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(
             modifier = Modifier
@@ -162,6 +176,9 @@ private fun MealCard(
                 .padding(16.dp)
         ) {
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -177,7 +194,7 @@ private fun MealCard(
                     tint = MaterialTheme.colorScheme.primary
                 )
 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = meal.mealType.displayName,
                         style = MaterialTheme.typography.titleMedium,
@@ -189,6 +206,39 @@ private fun MealCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                AnimatedContent(
+                    targetState = expanded,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
+                                fadeOut(animationSpec = tween(90))
+                    }, label = "Expand/Collapse Icon"
+                ) { isExpanded ->
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (isExpanded) "Zwiń" else "Rozwiń",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.padding(top = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                recipe?.let { recipeData ->
+                    Text(
+                        text = recipeData.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                } ?: Text(
+                    text = "Ładowanie przepisu...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             AnimatedVisibility(
@@ -202,62 +252,22 @@ private fun MealCard(
                 ) {
                     recipe?.let { recipeData ->
                         Text(
-                            text = recipeData.name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        NutritionalValues(values = recipeData.nutritionalValues)
-
-                        Text(
                             text = recipeData.instructions,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    } ?: Text(
-                        text = "Ładowanie przepisu...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(
+                            onClick = { onRecipeClick(recipe.id) },
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Text("Zobacz szczegóły")
+                        }
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun NutritionalValues(
-    values: NutritionalValues,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        NutritionalValue("Kalorie", "${values.calories} kcal")
-        NutritionalValue("Białko", "${values.protein}g")
-        NutritionalValue("Tłuszcze", "${values.fat}g")
-        NutritionalValue("Węglowodany", "${values.carbs}g")
-    }
-}
-
-@Composable
-private fun NutritionalValue(
-    label: String,
-    value: String
-) {
-    Column {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.Medium
-        )
     }
 }

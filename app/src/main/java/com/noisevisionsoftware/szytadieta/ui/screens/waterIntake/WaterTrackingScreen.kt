@@ -72,7 +72,7 @@ fun WaterTrackingScreen(
                 title = "Śledzenie wody",
                 onBackClick = { onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard) },
                 showRefreshIcon = true,
-                onRefreshClick = { viewModel.loadWaterIntakes() }
+                onRefreshClick = { viewModel.onRefreshData() }
             )
 
             Box(

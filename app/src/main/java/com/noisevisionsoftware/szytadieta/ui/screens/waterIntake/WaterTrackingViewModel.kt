@@ -1,8 +1,11 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.waterIntake
 
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.model.health.WaterIntake
+import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
+import com.noisevisionsoftware.szytadieta.domain.model.health.water.CustomWaterAmount
+import com.noisevisionsoftware.szytadieta.domain.model.health.water.WaterIntake
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserSettings
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
@@ -22,6 +25,7 @@ import javax.inject.Inject
 class WaterTrackingViewModel @Inject constructor(
     private val waterRepository: WaterRepository,
     private val authRepository: AuthRepository,
+    private val preferencesManager: PreferencesManager,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -30,6 +34,9 @@ class WaterTrackingViewModel @Inject constructor(
     private val _waterIntakeState =
         MutableStateFlow<ViewModelState<List<WaterIntake>>>(ViewModelState.Initial)
     val waterIntakeState = _waterIntakeState.asStateFlow()
+
+    private val _customAmount = MutableStateFlow<CustomWaterAmount?>(null)
+    val customAmount = _customAmount.asStateFlow()
 
     private val _selectedDate = MutableStateFlow(DateUtils.getCurrentLocalDate())
     val selectedDate = _selectedDate.asStateFlow()
@@ -41,6 +48,7 @@ class WaterTrackingViewModel @Inject constructor(
     init {
         loadUserSettings()
         loadWaterIntakes()
+        loadCustomAmount()
     }
 
     private fun loadUserSettings() {
@@ -57,7 +65,7 @@ class WaterTrackingViewModel @Inject constructor(
         }
     }
 
-    fun loadWaterIntakes() {
+    private fun loadWaterIntakes() {
         handleOperation(_waterIntakeState) {
             authRepository.withAuthenticatedUser { userId ->
                 loadWaterIntakesData(userId, _selectedDate.value)
@@ -107,23 +115,52 @@ class WaterTrackingViewModel @Inject constructor(
     fun updateSelectedDate(date: Long) {
         _selectedDate.value = date
         loadWaterIntakes()
+        loadCustomAmount()
     }
 
+
+    private fun loadCustomAmount() {
+        viewModelScope.launch {
+            authRepository.withAuthenticatedUser { userId ->
+                preferencesManager.getCustomWaterAmount(userId).collect { amount ->
+                    _customAmount.value = amount
+                }
+            }
+        }
+    }
+
+    fun saveCustomAmount(amount: Int, label: String) {
+        viewModelScope.launch {
+            try {
+                authRepository.withAuthenticatedUser { userId ->
+                    val customAmount = CustomWaterAmount(amount, label)
+                    preferencesManager.saveCustomWaterAmount(userId, customAmount)
+                    _customAmount.value = customAmount
+                    showSuccess("Zapisano własną wartość")
+                }
+            } catch (e: Exception) {
+                showError("Błąd podczas zapisywania własnej wartości")
+            }
+        }
+    }
 
     private suspend fun loadWaterIntakesData(userId: String, date: Long): List<WaterIntake> {
         return waterRepository.getDailyWaterIntakes(userId, date).getOrThrow()
     }
 
-    override fun onRefreshData() {
+    public override fun onRefreshData() {
         loadUserSettings()
         loadWaterIntakes()
+        loadCustomAmount()
     }
 
     override fun onNavigationEvent(destination: NavigationDestination) {
         when (destination) {
             NavigationDestination.AuthenticatedDestination.WaterIntake -> {
                 loadWaterIntakes()
+                loadCustomAmount()
             }
+
             else -> super.onNavigationEvent(destination)
         }
     }

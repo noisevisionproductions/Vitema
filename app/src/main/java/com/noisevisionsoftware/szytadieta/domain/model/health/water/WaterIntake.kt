@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.domain.model.health
+package com.noisevisionsoftware.szytadieta.domain.model.health.water
 
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import java.util.UUID

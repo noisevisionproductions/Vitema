@@ -33,8 +33,8 @@ android {
     defaultConfig {
         version = Version(
             major = 1,
-            minor = 1,
-            patch = 3
+            minor = 2,
+            patch = 0
         )
 
         applicationId = "com.noisevisionsoftware.szytadieta"
@@ -174,6 +174,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.material)
+    implementation(libs.coil.compose)
     implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

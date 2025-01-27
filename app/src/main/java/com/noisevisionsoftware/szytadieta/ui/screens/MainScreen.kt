@@ -29,6 +29,7 @@ import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.state.AuthState
 import com.noisevisionsoftware.szytadieta.ui.navigation.BottomNavItem
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
+import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationViewModel
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.AdminPanelScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.bodyMeasurements.BodyMeasurementsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.DashboardScreen
@@ -42,6 +43,7 @@ import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.MealPlanScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.UserProfileScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile.CompleteProfileScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.profileEdit.ProfileEditScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.recipe.RecipeScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.settings.SettingsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.ShoppingListScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.splash.SplashScreen
@@ -128,8 +130,11 @@ fun MainScreen(
 private fun AuthenticatedContent(
     currentScreen: NavigationDestination.AuthenticatedDestination,
     authViewModel: AuthViewModel,
+    navigationViewModel: NavigationViewModel = hiltViewModel(),
     onNavigate: (NavigationDestination) -> Unit
 ) {
+    val recipeId by navigationViewModel.recipeId.collectAsState()
+
     Scaffold(
         bottomBar = {
             AppBottomNavigation(
@@ -213,6 +218,15 @@ private fun AuthenticatedContent(
                             onNavigate = onNavigate,
                             isAuthenticated = true
                         )
+
+                    NavigationDestination.AuthenticatedDestination.RecipeScreen -> {
+                        recipeId?.let { id ->
+                            RecipeScreen(
+                                recipeId = id,
+                                onNavigate = onNavigate
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -305,6 +319,10 @@ private fun HandleBackButton(
                 if (userSession != null || authState is AuthState.Success) {
                     onNavigate(NavigationDestination.AuthenticatedDestination.Settings)
                 }
+            }
+
+            NavigationDestination.AuthenticatedDestination.RecipeScreen -> {
+                onNavigate(NavigationDestination.AuthenticatedDestination.MealPlan)
             }
 
             NavigationDestination.UnauthenticatedDestination.Regulations -> {

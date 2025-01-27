@@ -2,7 +2,7 @@ package com.noisevisionsoftware.szytadieta.domain.repository.health
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.noisevisionsoftware.szytadieta.domain.model.health.WaterIntake
+import com.noisevisionsoftware.szytadieta.domain.model.health.water.WaterIntake
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserSettings
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import kotlinx.coroutines.tasks.await

@@ -33,11 +33,21 @@ class NotificationService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        message.notification?.let { notification ->
-            notificationHelper.showBasicNotification(
-                notification.title ?: "Szyta Dieta",
-                notification.body ?: return
-            )
+
+        when (message.data["type"]) {
+            "new_diet" -> {
+                val dietId = message.data["diet_id"] ?: return
+                val dietName = message.data["diet_name"] ?: "Nowa dieta"
+                notificationHelper.showNewDietNotification(dietId, dietName)
+            }
+
+            else ->
+                message.notification?.let { notification ->
+                    notificationHelper.showBasicNotification(
+                        notification.title ?: "Szyta Dieta",
+                        notification.body ?: return
+                    )
+                }
         }
     }
 

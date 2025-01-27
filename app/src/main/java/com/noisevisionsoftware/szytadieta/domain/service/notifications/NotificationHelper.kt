@@ -1,5 +1,6 @@
 package com.noisevisionsoftware.szytadieta.domain.service.notifications
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -109,6 +110,41 @@ class NotificationHelper @Inject constructor(
             .build()
 
         notificationManager.notify(WATER_REMINDER_NOTIFICATION_ID, notification)
+    }
+
+    fun showNewDietNotification(dietId: String, dietName: String) {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(EXTRA_DESTINATION, "diet_plan")
+            putExtra("diet_id", dietId)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.mipmap.szyta_dieta_logo)
+            .setContentTitle("Nowa dieta dostępna!")
+            .setContentText("Twoja dieta \"$dietName\" jest gotowa do przejrzenia")
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(
+                        "Twoja nowa dieta \"$dietName\" została właśnie przypisana. " +
+                                "Kliknij, aby zobaczyć szczegółowy plan posiłków i listę zakupów."
+                    )
+            )
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(Notification.CATEGORY_MESSAGE)
+            .build()
+
+        val notificationId = dietId.hashCode()
+        notificationManager.notify(notificationId, notification)
     }
 
     fun cancelNotification(notificationId: Int) {

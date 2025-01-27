@@ -16,6 +16,7 @@ sealed class NavigationDestination {
         data object PrivacyPolicy : AuthenticatedDestination()
         data object Regulations : AuthenticatedDestination()
         data object WaterIntake : AuthenticatedDestination()
+        data object RecipeScreen : AuthenticatedDestination()
     }
 
     sealed class UnauthenticatedDestination : NavigationDestination() {

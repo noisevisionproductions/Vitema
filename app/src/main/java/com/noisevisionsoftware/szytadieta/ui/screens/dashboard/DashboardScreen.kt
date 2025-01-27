@@ -176,6 +176,7 @@ fun DashboardScreen(
                                             currentAmount = totalWaterIntake,
                                             targetAmount = dailyTarget,
                                             isLoading = waterIntakeIsLoading,
+                                            customAmount = (waterTrackingViewModel.customAmount.collectAsState().value),
                                             onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.WaterIntake) },
                                             onAddWater = { waterTrackingViewModel.addWaterIntake(250) }
                                         )

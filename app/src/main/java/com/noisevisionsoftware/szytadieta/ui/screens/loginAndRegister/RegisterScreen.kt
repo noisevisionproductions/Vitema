@@ -42,11 +42,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.state.AuthState
+import com.noisevisionsoftware.szytadieta.ui.common.PasswordTextField
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 
 @Composable
@@ -111,7 +111,8 @@ fun RegisterScreen(
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
                 colors = CardDefaults.cardColors(
-                    contentColor = MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Column(
@@ -160,46 +161,26 @@ fun RegisterScreen(
                         singleLine = true
                     )
 
-                    OutlinedTextField(
+                    PasswordTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Hasło") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics {
-                                contentDescription = "Pole wprowadzania hasła"
-                            },
-                        visualTransformation = PasswordVisualTransformation(),
+                        label = "Hasło",
+                        contentDescription = "Pole wprowadzania hasła",
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Next
-                        ),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.outline
-                        ),
-                        singleLine = true
+                        )
                     )
 
-                    OutlinedTextField(
+                    PasswordTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        label = { Text("Potwierdź hasło") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics {
-                                contentDescription = "Pole wprowadzania nazwy użytkownika"
-                            },
-                        visualTransformation = PasswordVisualTransformation(),
+                        label = "Potwierdź hasło",
+                        contentDescription = "Pole potwierdzenia hasła",
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
-                        ),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.outline
-                        ),
-                        singleLine = true
+                        )
                     )
                 }
             }
