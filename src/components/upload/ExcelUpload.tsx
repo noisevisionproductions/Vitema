@@ -57,40 +57,30 @@ const ExcelUpload: React.FC = () => {
         setIsProcessing(true);
         try {
             const parsedData = await ExcelParserService.parseDietExcel(file);
-
             const fileUrl = await FirebaseService.uploadExcelFile(file, selectedUser.id);
 
-            const recipeIds = await Promise.all(
-                parsedData.flatMap(day =>
-                    day.meals.map(meal =>
-                        FirebaseService.saveRecipe({
-                            name: meal.name,
-                            instructions: meal.instructions,
-                            nutritionalValues: meal.nutritionalValues
-                        })
-                    )
-                )
-            );
-
-            await FirebaseService.saveDiet({
-                userId: selectedUser.id,
-                createdAt: Timestamp.fromDate(new Date()),
-                updatedAt: Timestamp.fromDate(new Date()),
-                days: parsedData.map(day => ({
-                    date: day.date,
-                    meals: day.meals.map((meal, index) => ({
-                        recipeId: recipeIds[index],
-                        mealType: meal.mealType,
-                        time: meal.time,
-                        ingredients: meal.ingredients
-                    }))
-                })),
-                metadata: {
-                    totalDays: parsedData.length,
+            const dietId = await FirebaseService.saveDiet(
+                parsedData,
+                selectedUser.id,
+                {
                     fileName: file.name,
                     fileUrl
                 }
-            });
+            );
+
+            if (parsedData.shoppingList && parsedData.shoppingList.length > 0) {
+                const startDate = parsedData.days[0]?.date.replace(',', '');
+                const endDate = parsedData.days[parsedData.days.length - 1]?.date?.replace(',', '');
+
+                await FirebaseService.saveShoppingList({
+                    userId: selectedUser.id,
+                    dietId,
+                    items: parsedData.shoppingList,
+                    createdAt: Timestamp.fromDate(new Date()),
+                    startDate,
+                    endDate
+                });
+            }
 
             toast.success('Dieta została pomyślnie zapisana');
             setFile(null);

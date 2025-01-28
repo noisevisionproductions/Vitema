@@ -1,5 +1,5 @@
 import {TabName} from "../../types/navigation";
-import {ChevronLeft, ChevronRight, FileSpreadsheet, LogOut, Settings, Upload, Users} from "lucide-react";
+import {BarChart3, ChevronLeft, ChevronRight, FileSpreadsheet, LogOut, Upload, Users} from "lucide-react";
 import NavButton from "./NavButton";
 import React, {useState} from "react";
 import {cn} from "../../utils/cs";
@@ -16,11 +16,11 @@ const navigationItems = [
     {id: 'upload', label: 'Upload Excel', icon: Upload},
     {id: 'data', label: 'Zarządzanie Dietami', icon: FileSpreadsheet},
     {id: 'users', label: 'Użytkownicy', icon: Users},
-    {id: 'settings', label: 'Ustawienia', icon: Settings},
+    {id: 'stats', label: 'Statystyki', icon: BarChart3},
 ] as const;
 
 const Sidebar: React.FC<SidebarProps> = ({activeTab, onTabChange}) => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
     const {logout} = useAuth();
     const navigate = useNavigate();
 

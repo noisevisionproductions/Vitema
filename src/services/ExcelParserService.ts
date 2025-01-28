@@ -12,7 +12,6 @@ interface ParsedMeal {
         fat: number;
         carbs: number;
     };
-    ingredients: string[];
 }
 
 export interface ParsedDay {
@@ -20,12 +19,17 @@ export interface ParsedDay {
     meals: ParsedMeal[];
 }
 
+export interface ParsedExcelResult {
+    days: ParsedDay[];
+    shoppingList: string[];
+}
+
 export class ExcelParserService {
     private static getMealType(time: string): MealType {
         const hour = parseInt(time.split(':')[0]);
 
-        if (hour >= 6 && hour < 10) return MealType.BREAKFAST;
-        if (hour >= 10 && hour < 12) return MealType.SECOND_BREAKFAST;
+        if (hour >= 3 && hour < 9) return MealType.BREAKFAST;
+        if (hour >= 9 && hour < 12) return MealType.SECOND_BREAKFAST;
         if (hour >= 12 && hour < 16) return MealType.LUNCH;
         if (hour >= 16 && hour < 19) return MealType.SNACK;
         return MealType.DINNER
@@ -47,15 +51,31 @@ export class ExcelParserService {
         };
     }
 
-    static async parseDietExcel(file: File): Promise<ParsedDay[]> {
+    static async parseDietExcel(file: File): Promise<ParsedExcelResult> {
         try {
             const data = await file.arrayBuffer();
             const workbook: WorkBook = read(data);
             const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = utils.sheet_to_json(worksheet, {header: 1});
+            const jsonData = utils.sheet_to_json<string[]>(worksheet, {
+                header: 1,
+                raw: false,
+                defval: ''
+            }) as string[][];
 
             const days: ParsedDay[] = [];
             let currentDay: ParsedDay | null = null;
+            let shoppingList: string[] = [];
+
+            const firstDataRow = jsonData[1];
+            if (firstDataRow && firstDataRow.length >= 5) {
+                const shoppingListText = firstDataRow[4];
+                if (shoppingListText) {
+                    shoppingList = shoppingListText
+                        .split(',')
+                        .map(item => item.trim())
+                        .filter(item => item.length > 0);
+                }
+            }
 
             // Pomijamy wiersz nagłówkowy
             for (let i = 1; i < jsonData.length; i++) {
@@ -63,9 +83,9 @@ export class ExcelParserService {
                 if (!row[0]) continue;
 
                 const time = row[0];
-                const date = time.split(' ')[0];
+                const [datePart] = time.split(' ');
+                const date = datePart.replace(',', '').trim();
 
-                // Jeśli to nowy dzień, tworzymy nowy obiekt dnia
                 if (!currentDay || currentDay.date !== date) {
                     if (currentDay) days.push(currentDay);
                     currentDay = {
@@ -80,15 +100,17 @@ export class ExcelParserService {
                         mealType: this.getMealType(time.split(' ')[1]),
                         name: row[1],
                         instructions: row[2],
-                        nutritionalValues: this.parseNutritionalValues(row[3]),
-                        ingredients: row[4]?.split(',').map((i: string) => i.trim()) || []
+                        nutritionalValues: this.parseNutritionalValues(row[3])
                     });
                 }
             }
 
             if (currentDay) days.push(currentDay);
 
-            return days;
+            return {
+                days,
+                shoppingList
+            };
         } catch (error) {
             console.error('Error parsing Excel file:', error);
             throw new Error('Błąd podczas parsowania pliku Excel');

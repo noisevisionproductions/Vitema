@@ -131,7 +131,7 @@ export class ExcelValidationService {
             aliases: ['lista zakupow', 'lista zakupów', 'zakupy', 'shopping list', 'ingredients'],
             required: true,
             validate: (value: string, row: number) => {
-                if (!value || value.split(',').length === 0) {
+                if (!value || row === 1) {
                     return {
                         row,
                         column: 'Lista zakupów',
@@ -374,8 +374,7 @@ export class ExcelValidationService {
                 // Parsowanie danych po pomyślnej walidacji
                 const parsedData = await ExcelParserService.parseDietExcel(file);
 
-                // Dodatkowa walidacja sparsowanych danych
-                if (!parsedData || parsedData.length === 0) {
+                if (!parsedData || !parsedData.days || parsedData.days.length === 0) {
                     return {
                         isValid: false,
                         errors: [{
@@ -388,8 +387,9 @@ export class ExcelValidationService {
                     };
                 }
 
+
                 // Sprawdzenie, czy wszystkie dni mają posiłki
-                const emptyDays = parsedData
+                const emptyDays = parsedData.days
                     .filter(day => !day.meals || day.meals.length === 0)
                     .map(day => day.date);
 
@@ -402,11 +402,20 @@ export class ExcelValidationService {
                     });
                 }
 
+                if (!parsedData.shoppingList || parsedData.shoppingList.length === 0) {
+                    allWarnings.push({
+                        row: 0,
+                        column: 'file',
+                        message: 'Brak listy zakupów w pliku',
+                        type: "warning"
+                    });
+                }
+
                 return {
                     isValid: true,
                     errors: [],
                     warnings: allWarnings,
-                    data: parsedData
+                    data: parsedData.days
                 };
             } catch (error) {
                 console.error('Error parsing Excel data:', error);

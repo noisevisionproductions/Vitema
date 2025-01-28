@@ -1,19 +1,28 @@
 import {Timestamp} from 'firebase/firestore';
 
-// Kolekcja przepisów (recipes collection)
 export interface Recipe {
     id: string;
-    name: string;           // Nazwa przepisu
-    instructions: string;   // Sposób przygotowania
+    name: string;
+    instructions: string;
+    createdAt: Timestamp;
+    photos: string[];
     nutritionalValues: {
         calories: number;
         protein: number;
         fat: number;
         carbs: number;
     };
+    parentRecipeId: string | null;
 }
 
-// Kolekcja diet (diets collection)
+export interface RecipeReference {
+    recipeId: string;
+    dietId: string;
+    userId: string;
+    mealType: MealType;
+    addedAt: Timestamp;
+}
+
 export interface Diet {
     id: string;
     userId: string;
@@ -27,18 +36,48 @@ export interface Diet {
     }
 }
 
-// Struktura dnia z posiłkami
 export interface Day {
-    date: string;           // Format: "YYYY-MM-DD"
-    meals: DayMeal[];      // Lista posiłków w danym dniu
+    date: string;
+    meals: DayMeal[];
 }
 
-// Posiłek w kontekście dnia
 export interface DayMeal {
-    recipeId: string;      // Referencja do przepisu
-    mealType: MealType;    // Typ posiłku określony na podstawie godziny
-    time: string;          // Godzina posiłku
-    ingredients: string[]; // Lista zakupów dla konkretnego posiłku
+    recipeId: string;
+    mealType: MealType;
+    time: string;
+}
+
+export interface ParsedMeal {
+    name: string;
+    instructions: string;
+    nutritionalValues: {
+        calories: number;
+        protein: number;
+        fat: number;
+        carbs: number;
+    };
+    mealType: MealType;
+    time: string;
+}
+
+export interface ParsedDay {
+    date: string;
+    meals: ParsedMeal[];
+}
+
+export interface ParsedDietData {
+    days: ParsedDay[];
+    shoppingList: string[];
+}
+
+export interface ShoppingList {
+    id: string;
+    userId: string;
+    dietId: string;
+    items: string[];
+    createdAt: Timestamp;
+    startDate: string;
+    endDate: string;
 }
 
 export enum MealType {

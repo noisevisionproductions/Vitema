@@ -1,6 +1,8 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {User} from "../../types/user";
 import LoadingSpinner from "../common/LoadingSpinner";
+import {useDietInfo} from "../../hooks/useDietInfo";
+import {formatDate} from "../../utils/dateFormatters";
 
 interface UserSelectorTableProps {
     users: User[];
@@ -15,12 +17,39 @@ const UserSelectorTable: React.FC<UserSelectorTableProps> = ({
                                                                  onUserSelect,
                                                                  loading
                                                              }) => {
-    if (loading) {
+    const userIds = useMemo(() => users.map(user => user.id), [users]);
+    const { dietInfo, loading: dietLoading } = useDietInfo(userIds);
+
+    if (loading || dietLoading) {
         return (
             <div className="flex justify-center p-4">
-                <LoadingSpinner />
+                <LoadingSpinner/>
             </div>
         );
+    }
+
+    const renderDietStatus = (userId: string) => {
+        const info = dietInfo[userId];
+        if (!info || !info.hasDiet) {
+            return (
+                <span className="text-gray-500 text-sm">
+                    Brak przypisanej diety
+                </span>
+            );
+        }
+
+        return (
+            <div className="text-sm">
+                <div className="text-green-600 font-medium">
+                    Dieta przypisana
+                </div>
+                {info.startDate && info.endDate && (
+                    <div className="text-gray-500">
+                        {formatDate(info.startDate)} - {formatDate(info.endDate)}
+                    </div>
+                )}
+            </div>
+        )
     }
 
     return (
@@ -34,7 +63,10 @@ const UserSelectorTable: React.FC<UserSelectorTableProps> = ({
                     Email/Nick
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    Status profilu
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status diety
                 </th>
             </tr>
             </thead>
@@ -71,6 +103,9 @@ const UserSelectorTable: React.FC<UserSelectorTableProps> = ({
                             }`}>
                                 {user.profileCompleted ? 'Kompletny' : 'Niekompletny'}
                             </span>
+                    </td>
+                    <td className="px-6 py-4">
+                        {renderDietStatus(user.id)}
                     </td>
                 </tr>
             ))}

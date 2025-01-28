@@ -11,6 +11,7 @@ import {
 } from "../ui/sheet"
 import {X} from "lucide-react";
 import LoadingSpinner from "../common/LoadingSpinner";
+import {useShoppingList} from "../../hooks/useShoppingList";
 
 interface DietViewProps {
     diet: Diet;
@@ -20,6 +21,7 @@ interface DietViewProps {
 const DietView: React.FC<DietViewProps> = ({diet, onClose}) => {
     const [recipes, setRecipes] = useState<{ [key: string]: Recipe }>({});
     const [loading, setLoading] = useState(true);
+    const {shoppingList, loading: shoppingListLoading} = useShoppingList(diet.id);
 
     useEffect(() => {
         const fetchRecipes = async () => {
@@ -69,6 +71,36 @@ const DietView: React.FC<DietViewProps> = ({diet, onClose}) => {
         };
         return labels[mealType];
     };
+
+    const renderShoppingList = () => {
+        if (shoppingListLoading) {
+            return (
+                <div className="flex justify-center py-4">
+                    <LoadingSpinner/>
+                </div>
+            );
+        }
+
+        if (!shoppingList) {
+            return null;
+        }
+
+        return (
+            <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-medium">Lista zakupów</h3>
+                    <div className="text-sm text-gray-600">
+                        {shoppingList.startDate} - {shoppingList.endDate}
+                    </div>
+                </div>
+                <ul className="list-disc list-inside space-y-1">
+                    {shoppingList.items.map((item, index) => (
+                        <li key={index} className="text-gray-700">{item}</li>
+                    ))}
+                </ul>
+            </div>
+        );
+    }
 
     const renderMetadata = () => {
         if (!diet.metadata) return null;
@@ -152,16 +184,6 @@ const DietView: React.FC<DietViewProps> = ({diet, onClose}) => {
                                             Węglowodany: {recipe.nutritionalValues?.carbs || 0}g
                                         </p>
                                     </div>
-                                    {meal.ingredients && meal.ingredients.length > 0 && (
-                                        <div className="text-sm">
-                                            <p className="font-medium">Lista zakupów:</p>
-                                            <ul className="list-disc list-inside">
-                                                {meal.ingredients.map((ingredient, i) => (
-                                                    <li key={i}>{ingredient}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         );
@@ -188,6 +210,7 @@ const DietView: React.FC<DietViewProps> = ({diet, onClose}) => {
 
                 <div className="mt-6 space-y-6">
                     {renderMetadata()}
+                    {renderShoppingList()}
                     {renderContent()}
                 </div>
             </SheetContent>

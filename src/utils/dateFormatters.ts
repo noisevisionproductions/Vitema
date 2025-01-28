@@ -1,10 +1,20 @@
-export const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('pl-PL', {
+export const formatDate = (date: number | string) => {
+    if (typeof date === 'string') {
+        const [day, month, year] = date.split('.').map(Number);
+        return new Date(year, month - 1, day).toLocaleDateString('pl-PL', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+
+    return new Date(date).toLocaleDateString('pl-PL', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
 };
+
 
 export const calculateAge = (birthDate: number | null): number => {
     if (!birthDate) return 0;

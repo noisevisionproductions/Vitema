@@ -1,1 +1,1 @@
-export type TabName = 'upload' | 'data' | 'users' | 'settings';
+export type TabName = 'upload' | 'data' | 'users' | 'stats';

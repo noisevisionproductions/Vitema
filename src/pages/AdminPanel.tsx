@@ -4,6 +4,7 @@ import {TabName} from '../types/navigation';
 import ExcelUpload from "../components/upload/ExcelUpload";
 import UsersManagement from "../components/users/UsersManagement";
 import DietManagement from "../components/diet/DietManagement";
+import StatsPanel from "../components/stats/StatsPanel";
 
 const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabName>('upload');
@@ -26,8 +27,8 @@ const AdminPanel: React.FC = () => {
                 );
             case 'users':
                 return <UsersManagement/>
-            case 'settings':
-                return <h2 className="text-2xl font-bold mb-4">Ustawienia</h2>;
+            case 'stats':
+                return <StatsPanel />;
             default:
                 return null;
         }
