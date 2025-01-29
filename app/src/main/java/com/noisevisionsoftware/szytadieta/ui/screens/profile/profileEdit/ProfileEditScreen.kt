@@ -48,7 +48,6 @@ import com.noisevisionsoftware.szytadieta.ui.screens.profile.components.ProfileD
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import com.noisevisionsoftware.szytadieta.utils.formatDate
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileEditScreen(
     viewModel: ProfileEditViewModel = hiltViewModel(),

@@ -1,16 +1,19 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.profile.profileEdit
 
+import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.UserRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
+import com.noisevisionsoftware.szytadieta.ui.base.AppEvent
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,6 +44,9 @@ class ProfileEditViewModel @Inject constructor(
             userRepository.updateUserData(updatedUser)
                 .getOrThrow()
             showSuccess("Profil został zaktualizowany")
+            viewModelScope.launch {
+                eventBus.emit(AppEvent.RefreshData)
+            }
             updatedUser
         }
     }

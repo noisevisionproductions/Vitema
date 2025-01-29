@@ -133,14 +133,13 @@ private fun WeightContent(
         }, label = ""
     ) { state ->
         when (state) {
-            is ViewModelState.Loading -> LoadingOverlay()
+            is ViewModelState.Loading,
+            ViewModelState.Initial -> LoadingOverlay()
             is ViewModelState.Success -> WeightList(
                 bodyMeasurements = state.data,
                 onDeleteClick = onDeleteClick
             )
-
             is ViewModelState.Error -> WeightError(state.message)
-            ViewModelState.Initial -> Unit
         }
     }
 }

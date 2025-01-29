@@ -2,6 +2,7 @@ package com.noisevisionsoftware.szytadieta.ui.screens.shoppingList
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.firestore.ListenerRegistration
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DatePeriod
@@ -19,6 +20,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,6 +34,8 @@ class ShoppingListViewModel @Inject constructor(
     alertManager: AlertManager,
     eventBus: EventBus
 ) : BaseViewModel(networkManager, alertManager, eventBus) {
+
+    private var observerRegistration: ListenerRegistration? = null
 
     private val _shoppingListState =
         MutableStateFlow<ViewModelState<ShoppingList>>(ViewModelState.Initial)
@@ -152,14 +156,27 @@ class ShoppingListViewModel @Inject constructor(
     }
 
     private fun observeDietChanges() {
+        // Najpierw wyczyść poprzednią subskrypcję, jeśli istnieje
+        observerRegistration?.remove()
+        observerRegistration = null
+
         viewModelScope.launch {
             try {
                 authRepository.withAuthenticatedUser { userId ->
+                    // Korzystamy z callbackFlow aby móc zarządzać subskrypcją
                     shoppingListRepository.observeShoppingLists(userId)
+                        .onStart {
+                            // Zapisz referencję do subskrypcji gdy się rozpocznie
+                            observerRegistration =
+                                shoppingListRepository.addSnapshotListener { /* listener */ }
+                        }
                         .catch { e ->
-                            Log.e("ShoppingListViewModel", "Error observing lists", e)
-                            _shoppingListState.value =
-                                ViewModelState.Error("Błąd podczas ładowania list zakupów")
+                            // Sprawdź czy użytkownik jest nadal zalogowany przed zgłoszeniem błędu
+                            if (authRepository.getCurrentUser() != null) {
+                                Log.e("ShoppingListViewModel", "Error observing lists", e)
+                                _shoppingListState.value =
+                                    ViewModelState.Error("Błąd podczas ładowania list zakupów")
+                            }
                         }
                         .collect { lists ->
                             if (lists.isEmpty()) {
@@ -175,7 +192,10 @@ class ShoppingListViewModel @Inject constructor(
         }
     }
 
+
     override fun onUserLoggedOut() {
+        observerRegistration?.remove()
+        observerRegistration = null
         _shoppingListState.value = ViewModelState.Initial
     }
 

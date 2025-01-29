@@ -1,7 +1,9 @@
 package com.noisevisionsoftware.szytadieta.domain.repository.dietRepository
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DatePeriod
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.ShoppingList
 import kotlinx.coroutines.channels.awaitClose
@@ -81,5 +83,12 @@ class ShoppingListRepository @Inject constructor(
             }
 
         awaitClose { subscription.remove() }
+    }
+
+    fun addSnapshotListener(listener: (QuerySnapshot?) -> Unit): ListenerRegistration {
+        return firestore.collection("shopping_lists")
+            .addSnapshotListener { snapshot, _ ->
+                listener(snapshot)
+            }
     }
 }
