@@ -14,7 +14,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import com.noisevisionsoftware.szytadieta.domain.model.AppStatistics
+import com.noisevisionsoftware.szytadieta.domain.model.app.AppStatistics
 
 @Composable
 fun MeasurementsTimelineChart(

@@ -3,6 +3,7 @@ package com.noisevisionsoftware.szytadieta.domain.localPreferences
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -23,11 +24,25 @@ class PreferencesManager @Inject constructor(
 
     companion object {
         private const val CHECKED_PRODUCTS_KEY_PREFIX = "checked_products_"
-        private const val SEPARATOR = "|"
         private const val CUSTOM_WATER_AMOUNT = "custom_water_amount"
         private const val CUSTOM_WATER_LABEL = "custom_water_label"
+        private const val VERSION_CHECK_ENABLED = "version_check_enabled"
+        private const val SEPARATOR = "|"
     }
 
+    // Version Check Preferences
+    val isVersionCheckEnabled: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[booleanPreferencesKey(VERSION_CHECK_ENABLED)] ?: true
+        }
+
+    suspend fun setVersionCheckEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[booleanPreferencesKey(VERSION_CHECK_ENABLED)] = enabled
+        }
+    }
+
+    // Shopping List Preferences
     suspend fun saveCheckedProducts(userId: String, checkedProducts: Set<String>) {
         val key = getCheckedProductsKey(userId)
         dataStore.edit { preferences ->
@@ -44,21 +59,22 @@ class PreferencesManager @Inject constructor(
 
     suspend fun clearCheckedProducts(userId: String) {
         dataStore.edit { preferences ->
-            preferences.remove(stringPreferencesKey("${CHECKED_PRODUCTS_KEY_PREFIX}$userId"))
+            preferences.remove(getCheckedProductsKey(userId))
         }
     }
 
-    suspend fun saveCustomWaterAmount(userId: String, amount:  CustomWaterAmount) {
-        context.dataStore.edit { preferences ->
-            preferences[intPreferencesKey("${userId}_${CUSTOM_WATER_AMOUNT}")] = amount.amount
-            preferences[stringPreferencesKey("${userId}_${CUSTOM_WATER_LABEL}")] = amount.label
+    // Water Amount Preferences
+    suspend fun saveCustomWaterAmount(userId: String, amount: CustomWaterAmount) {
+        dataStore.edit { preferences ->
+            preferences[getWaterAmountKey(userId)] = amount.amount
+            preferences[getWaterLabelKey(userId)] = amount.label
         }
     }
 
     fun getCustomWaterAmount(userId: String): Flow<CustomWaterAmount?> {
-        return context.dataStore.data.map { preferences ->
-            val amount = preferences[intPreferencesKey("${userId}_custom_water_amount")]
-            val label = preferences[stringPreferencesKey("${userId}_custom_water_label")]
+        return dataStore.data.map { preferences ->
+            val amount = preferences[getWaterAmountKey(userId)]
+            val label = preferences[getWaterLabelKey(userId)]
             if (amount != null && label != null) {
                 CustomWaterAmount(amount, label)
             } else {
@@ -67,14 +83,23 @@ class PreferencesManager @Inject constructor(
         }
     }
 
+    // Data Management
     suspend fun clearAllUserData(userId: String) {
-        val key = getCheckedProductsKey(userId)
         dataStore.edit { preferences ->
-            preferences.remove(key)
+            preferences.remove(getCheckedProductsKey(userId))
+            preferences.remove(getWaterAmountKey(userId))
+            preferences.remove(getWaterLabelKey(userId))
+            // Note: We don't clear version check setting as it's not user-specific
         }
     }
 
-    private fun getCheckedProductsKey(userId: String): Preferences.Key<String> {
-        return stringPreferencesKey("${CHECKED_PRODUCTS_KEY_PREFIX}$userId")
-    }
+    // Private Key Generators
+    private fun getCheckedProductsKey(userId: String): Preferences.Key<String> =
+        stringPreferencesKey("${CHECKED_PRODUCTS_KEY_PREFIX}$userId")
+
+    private fun getWaterAmountKey(userId: String): Preferences.Key<Int> =
+        intPreferencesKey("${userId}_${CUSTOM_WATER_AMOUNT}")
+
+    private fun getWaterLabelKey(userId: String): Preferences.Key<String> =
+        stringPreferencesKey("${userId}_${CUSTOM_WATER_LABEL}")
 }

@@ -7,8 +7,9 @@ import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Meal
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DayMeal
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.toMeal
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserRole
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
@@ -65,7 +66,7 @@ class DashboardViewModel @Inject constructor(
         MutableStateFlow<ViewModelState<List<BodyMeasurements>>>(ViewModelState.Initial)
     val measurementsHistory = _measurementsHistory.asStateFlow()
 
-    private val _todayMeals = MutableStateFlow<ViewModelState<List<Meal>>>(ViewModelState.Initial)
+    private val _todayMeals = MutableStateFlow<ViewModelState<List<DayMeal>>>(ViewModelState.Initial)
     val todayMeals = _todayMeals.asStateFlow()
 
     private val _recipes = MutableStateFlow<Map<String, Recipe>>(emptyMap())
@@ -199,21 +200,23 @@ class DashboardViewModel @Inject constructor(
                 val calendar = Calendar.getInstance()
                 val today = calendar.timeInMillis
 
-                val meals = dietRepository.getUserDietForDate(today)
+                val dayMeals = dietRepository.getUserDietForDate(today)
                     .getOrNull()
                     ?.days
                     ?.firstOrNull { it.date == formatDate(today) }
                     ?.meals
                     ?: emptyList()
 
-                if (meals.isNotEmpty()) {
-                    recipeRepository.getRecipesForMeals(meals)
+                val meals = dayMeals.map { it.toMeal() }
+
+                if (dayMeals.isNotEmpty()) {
+                    recipeRepository.getRecipesForMeals(dayMeals)
                         .onSuccess { recipes ->
                             _recipes.value = recipes
                         }
                 }
 
-                meals
+                dayMeals
             }
         }
     }

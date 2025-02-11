@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.domain.model
+package com.noisevisionsoftware.szytadieta.domain.model.app
 
 import com.noisevisionsoftware.szytadieta.domain.model.user.Gender
 import com.noisevisionsoftware.szytadieta.utils.DateUtils

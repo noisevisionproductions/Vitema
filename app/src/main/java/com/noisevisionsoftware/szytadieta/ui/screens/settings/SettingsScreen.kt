@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -55,6 +56,7 @@ fun SettingsScreen(
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     val settingsState by viewModel.settingsState.collectAsState()
     val passwordUpdateState by viewModel.passwordUpdateState.collectAsState()
+    val isVersionCheckEnabled by viewModel.isVersionCheckEnabled.collectAsState(initial = false)
 
     LaunchedEffect(passwordUpdateState) {
         when (passwordUpdateState) {
@@ -96,6 +98,7 @@ fun SettingsScreen(
                     SettingsContent(
                         settingsData = state.data,
                         viewModel = viewModel,
+                        isVersionCheckEnabled = isVersionCheckEnabled,
                         onDarkModeChange = viewModel::updateSettings,
                         onChangePasswordClick = { showChangePasswordDialog = true },
                         onDeleteAccountClick = { showDeleteAccountDialog = true },
@@ -133,6 +136,7 @@ fun SettingsScreen(
 private fun SettingsContent(
     settingsData: SettingsViewModel.SettingsData,
     viewModel: SettingsViewModel,
+    isVersionCheckEnabled: Boolean,
     onDarkModeChange: (Boolean) -> Unit,
     onChangePasswordClick: () -> Unit,
     onDeleteAccountClick: () -> Unit,
@@ -175,6 +179,14 @@ private fun SettingsContent(
             icon = Icons.Default.WaterDrop,
             checked = waterNotificationsEnabled,
             onCheckedChange = viewModel::setWaterNotificationsEnabled
+        )
+
+        SettingsSwitchItem(
+            title = "Sprawdź aktualizacje",
+            description = "Otrzymój powiadomienia o nowej wersji aplikacji",
+            icon = Icons.Default.Update,
+            checked = isVersionCheckEnabled,
+            onCheckedChange = viewModel::setVersionCheckEnabled
         )
     }
 

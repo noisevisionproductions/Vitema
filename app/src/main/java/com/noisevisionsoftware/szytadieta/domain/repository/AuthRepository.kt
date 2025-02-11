@@ -93,6 +93,7 @@ class AuthRepository @Inject constructor(
             Result.success(user)
         } ?: Result.failure(Exception("Błąd podczas tworzenia konta"))
     } catch (e: Exception) {
+        Log.e("Register", "User register error", e)
         Result.failure(e)
     }
 

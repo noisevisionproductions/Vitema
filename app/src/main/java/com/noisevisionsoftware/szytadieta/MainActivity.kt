@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,12 +23,15 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.noisevisionsoftware.szytadieta.domain.alert.Alert
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
+import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.navigation.NavigationManager
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationHelper
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationScheduler
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationType
 import com.noisevisionsoftware.szytadieta.ui.common.AlertHandler
+import com.noisevisionsoftware.szytadieta.ui.common.appVersion.AppVersionViewModel
+import com.noisevisionsoftware.szytadieta.ui.common.appVersion.UpdateDialog
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.MainScreen
 import com.noisevisionsoftware.szytadieta.ui.theme.FitApplicationTheme
@@ -40,14 +44,23 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var alertManager: AlertManager
+
     @Inject
     lateinit var settingsManager: SettingsManager
+
     @Inject
     lateinit var navigationManager: NavigationManager
+
     @Inject
     lateinit var notificationScheduler: NotificationScheduler
+
     @Inject
     lateinit var notificationHelper: NotificationHelper
+
+    @Inject
+    lateinit var preferencesManager: PreferencesManager
+
+    private val appVersionViewModel: AppVersionViewModel by viewModels()
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -58,6 +71,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         if (savedInstanceState == null) {
+            appVersionViewModel.checkAppVersion()
             checkNotificationPermission()
         }
 
@@ -76,6 +90,7 @@ class MainActivity : ComponentActivity() {
         val isDarkMode by settingsManager.isDarkMode.collectAsState(initial = isSystemInDarkTheme())
         val destination = intent.getStringExtra("destination")
         val dietId = intent.getStringExtra("diet_id")
+        val updateDialogState by appVersionViewModel.updateDialogState.collectAsState()
 
         LaunchedEffect(destination) {
             if (destination == NotificationHelper.EXTRA_DESTINATION) {
@@ -86,6 +101,24 @@ class MainActivity : ComponentActivity() {
                     NavigationDestination.AuthenticatedDestination.MealPlan
                 )
             }
+        }
+
+        when (val state = updateDialogState) {
+            is AppVersionViewModel.UpdateDialogState.Visible -> {
+                UpdateDialog(
+                    currentVersion = state.currentVersion,
+                    requiredVersion = state.requiredVersion,
+                    updateMessage = state.updateMessage,
+                    isForceUpdate = state.isForceUpdate,
+                    onUpdate = { appVersionViewModel.openPlayStore() },
+                    onDismiss = {
+                        if (!state.isForceUpdate) {
+                            appVersionViewModel.dismissUpdateDialog()
+                        }
+                    }
+                )
+            }
+            else -> Unit
         }
 
         FitApplicationTheme(darkTheme = isDarkMode) {
@@ -122,6 +155,7 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+
             NotificationType.DIET_UPDATE.name -> {
                 val dietId = intent.getStringExtra("diet_id")
                 if (dietId != null) {

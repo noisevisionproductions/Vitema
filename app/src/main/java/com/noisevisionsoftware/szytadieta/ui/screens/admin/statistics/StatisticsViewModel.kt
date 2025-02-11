@@ -1,7 +1,7 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.admin.statistics
 
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.model.AppStatistics
+import com.noisevisionsoftware.szytadieta.domain.model.app.AppStatistics
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.StatisticsRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState

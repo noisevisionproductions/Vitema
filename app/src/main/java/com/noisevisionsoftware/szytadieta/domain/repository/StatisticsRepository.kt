@@ -2,7 +2,7 @@ package com.noisevisionsoftware.szytadieta.domain.repository
 
 import android.icu.util.Calendar
 import com.google.firebase.firestore.FirebaseFirestore
-import com.noisevisionsoftware.szytadieta.domain.model.AppStatistics
+import com.noisevisionsoftware.szytadieta.domain.model.app.AppStatistics
 import com.noisevisionsoftware.szytadieta.domain.model.user.Gender
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.utils.DateUtils

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -99,124 +100,132 @@ fun AddMeasurementsDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.8f),
+                .fillMaxHeight(0.65f)
+                .verticalScroll(rememberScrollState()),
             shape = MaterialTheme.shapes.large,
             tonalElevation = AlertDialogDefaults.TonalElevation,
             color = MaterialTheme.colorScheme.surface
         ) {
             Column(
                 modifier = Modifier
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
             ) {
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Dodaj pomiary",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-
-                    IconButton(
-                        onClick = onDismiss
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Zamknij",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                // Header
+                Column(
                     modifier = Modifier
-                        .clickable(onClick = {
-                            scope.launch {
-                                viewModel.getLastMeasurements()?.let { lastMeasurements ->
-                                    measurements = lastMeasurements.toInputState()
-                                }
-                            }
-                        })
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
                 ) {
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                viewModel.getLastMeasurements()?.let { lastMeasurements ->
-                                    measurements = lastMeasurements.toInputState()
-                                }
-                            }
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.RestartAlt,
-                            contentDescription = "Wypełnij ostatnimi pomiarami",
-                            modifier = Modifier.size(24.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Dodaj pomiary",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+
+                            IconButton(
+                                modifier = Modifier.size(30.dp),
+                                onClick = {
+                                    scope.launch {
+                                        viewModel.getLastMeasurements()?.let { lastMeasurements ->
+                                            measurements = lastMeasurements.toInputState()
+                                        }
+                                    }
+                                },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.RestartAlt,
+                                    contentDescription = "Wypełnij ostatnimi pomiarami",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Zamknij"
+                            )
+                        }
                     }
 
-                    Text(
-                        text = "Wypełnij ostatnimi pomiarami",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
+                    // Page indicators
+                    PageIndicators(
+                        pagerState = pagerState,
+                        hasBasicErrors = hasBasicErrors,
+                        hasUpperBodyErrors = hasUpperBodyErrors,
+                        hasLowerBodyErrors = hasLowerBodyErrors,
+                        scope = scope,
+                        modifier = Modifier.padding(vertical = 16.dp)
                     )
                 }
 
-                PageIndicators(
-                    pagerState = pagerState,
-                    hasBasicErrors = hasBasicErrors,
-                    hasUpperBodyErrors = hasUpperBodyErrors,
-                    hasLowerBodyErrors = hasLowerBodyErrors,
-                    scope = scope,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
-
+                // Content
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f)
                 ) { page ->
                     when (page) {
                         0 -> BasicMeasurementsSection(
                             measurements,
                             onMeasurementsChange = { measurements = it },
-                            isVisible = currentPage == 0
+                            isVisible = currentPage == 0,
+                            modifier = Modifier.fillMaxHeight()
                         )
 
                         1 -> UpperBodyMeasurementsSection(
                             measurements,
                             onMeasurementsChange = { measurements = it },
-                            isVisible = currentPage == 1
+                            isVisible = currentPage == 1,
+                            modifier = Modifier.fillMaxHeight()
                         )
 
                         2 -> LowerBodyMeasurementsSection(
                             measurements,
                             onMeasurementsChange = { measurements = it },
-                            isVisible = currentPage == 2
+                            isVisible = currentPage == 2,
+                            modifier = Modifier.fillMaxHeight()
                         )
                     }
                 }
 
+                // Navigation buttons
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .imePadding(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Anuluj")
+                        Text(
+                            text = "Anuluj",
+                            style = MaterialTheme.typography.labelMedium
+                        )
                     }
 
                     Row {
                         if (pagerState.currentPage > 0) {
                             TextButton(onClick = {
-                                scope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+                                scope.launch {
+                                    pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                                }
                             }) {
-                                Text("Wstecz")
+                                Text(
+                                    text = "Wstecz",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
                             }
                         }
 
@@ -237,7 +246,10 @@ fun AddMeasurementsDialog(
                                     )
                                 }
                             ) {
-                                Text("Dalej")
+                                Text(
+                                    text = "Dalej",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
                             }
                         } else {
                             TextButton(
@@ -253,7 +265,10 @@ fun AddMeasurementsDialog(
                                     )
                                 }
                             ) {
-                                Text("Dodaj")
+                                Text(
+                                    text = "Dodaj",
+                                    style = MaterialTheme.typography.labelMedium
+                                )
                             }
                         }
                     }
@@ -347,7 +362,8 @@ private fun PageIndicator(
 private fun BasicMeasurementsSection(
     measurements: MeasurementsInputState,
     onMeasurementsChange: (MeasurementsInputState) -> Unit,
-    isVisible: Boolean = false
+    isVisible: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
     val weightFieldFocusRequester = remember { FocusRequester() }
@@ -361,14 +377,14 @@ private fun BasicMeasurementsSection(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
             text = "Podstawowe pomiary",
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleSmall
         )
 
         MeasurementField(
@@ -460,7 +476,8 @@ private fun BasicMeasurementsSection(
 private fun UpperBodyMeasurementsSection(
     measurements: MeasurementsInputState,
     onMeasurementsChange: (MeasurementsInputState) -> Unit,
-    isVisible: Boolean = false
+    isVisible: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
     val neckFocusRequester = remember { FocusRequester() }
@@ -475,7 +492,7 @@ private fun UpperBodyMeasurementsSection(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .verticalScroll(rememberScrollState())
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -566,7 +583,8 @@ private fun UpperBodyMeasurementsSection(
 private fun LowerBodyMeasurementsSection(
     measurements: MeasurementsInputState,
     onMeasurementsChange: (MeasurementsInputState) -> Unit,
-    isVisible: Boolean = false
+    isVisible: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
     val waistFocusRequester = remember { FocusRequester() }
@@ -581,7 +599,7 @@ private fun LowerBodyMeasurementsSection(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .verticalScroll(rememberScrollState())
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -685,7 +703,7 @@ private fun MeasurementField(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = if (errorMessage != null)
                 MaterialTheme.colorScheme.error
             else
@@ -695,10 +713,10 @@ private fun MeasurementField(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(40.dp)
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -711,7 +729,7 @@ private fun MeasurementField(
                         onValueChange(newValue.copy(selection = TextRange(newValue.text.length)))
                     }
                 },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onSurface
                 ),
                 keyboardOptions = KeyboardOptions(
@@ -732,7 +750,7 @@ private fun MeasurementField(
                         if (value.text.isEmpty()) {
                             Text(
                                 text = "0",
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
                         }
@@ -743,7 +761,7 @@ private fun MeasurementField(
 
             Text(
                 text = unit,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DayMeal
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Meal
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.RecipeReference
@@ -68,7 +69,7 @@ class RecipeRepository @Inject constructor(
     }
 
 
-    suspend fun getRecipesForMeals(meals: List<Meal>): Result<Map<String, Recipe>> = runCatching {
+    suspend fun getRecipesForMeals(meals: List<DayMeal>): Result<Map<String, Recipe>> = runCatching {
         val recipeIds = meals.map { it.recipeId }.distinct()
 
         if (recipeIds.isEmpty()) return@runCatching emptyMap()

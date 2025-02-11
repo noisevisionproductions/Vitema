@@ -28,15 +28,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DayMeal
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Meal
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.toMeal
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import java.util.Calendar
 
 @Composable
 fun MealPlanCard(
     onClick: () -> Unit,
-    todayMeals: ViewModelState<List<Meal>>,
+    todayMeals: ViewModelState<List<DayMeal>>,
     recipes: Map<String, Recipe>,
     modifier: Modifier = Modifier
 ) {
@@ -90,7 +92,7 @@ fun MealPlanCard(
 
 @Composable
 private fun TodayMealsPreview(
-    todayMeals: ViewModelState<List<Meal>>,
+    todayMeals: ViewModelState<List<DayMeal>>,
     recipes: Map<String, Recipe>
 ) {
     when (todayMeals) {
@@ -103,11 +105,11 @@ private fun TodayMealsPreview(
                 ) {
                     MealsProgress(
                         meals = todayMeals.data,
-                        currentMeal = nextMeal
+                        currentMeal = nextMeal.toMeal()
                     )
 
                     NextMealInfo(
-                        meal = nextMeal,
+                        meal = nextMeal.toMeal(),
                         recipes = recipes
                     )
 
@@ -177,18 +179,21 @@ private fun NextMealInfo(
         )
 
         recipes[meal.recipeId]?.nutritionalValues?.let { nutritionalValues ->
-            Text(
-                text = "${nutritionalValues.calories} kcal",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
-            )
+            if (nutritionalValues.calories > 0) {
+                val kcalFormatted = nutritionalValues.calories.toInt().toString()
+                Text(
+                    text = "$kcalFormatted kcal",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun MealsProgress(
-    meals: List<Meal>,
+    meals: List<DayMeal>,
     currentMeal: Meal
 ) {
     Column(
@@ -203,9 +208,9 @@ private fun MealsProgress(
         ) {
             meals.forEach { meal ->
                 MealProgressItem(
-                    meal = meal,
-                    isActive = meal == currentMeal,
-                    isPast = isMealInPast(meal),
+                    meal = meal.toMeal(),
+                    isActive = meal.toMeal() == currentMeal,
+                    isPast = isMealInPast(meal.toMeal()),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -320,7 +325,7 @@ private fun LoadingContent() {
     }
 }
 
-private fun findNextMeal(meals: List<Meal>): Meal {
+private fun findNextMeal(meals: List<DayMeal>): DayMeal {
     val calendar = Calendar.getInstance()
     val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
     val currentMinute = calendar.get(Calendar.MINUTE)

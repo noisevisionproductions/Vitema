@@ -51,9 +51,8 @@ class DietRepository @Inject constructor(
             snapshot.documents
                 .mapNotNull { it.toObject(Diet::class.java) }
                 .flatMap { diet ->
-                    diet.days.mapNotNull { day ->
-                        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-                            .parse(day.date)?.time
+                    diet.days.map { day ->
+                        day.timestamp.seconds * 1000
                     }
                 }
                 .distinct()
@@ -78,7 +77,7 @@ class DietRepository @Inject constructor(
         }
     }
 
-    suspend fun observeDietChanges(userId: String): Flow<List<Diet>> = callbackFlow {
+    fun observeDietChanges(userId: String): Flow<List<Diet>> = callbackFlow {
         val subscription = firestore.collection("diets")
             .whereEqualTo("userId", userId)
             .addSnapshotListener { snapshot, error ->

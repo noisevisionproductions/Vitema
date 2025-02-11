@@ -35,6 +35,7 @@ import com.noisevisionsoftware.szytadieta.ui.screens.bodyMeasurements.BodyMeasur
 import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.DashboardScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.documents.PrivacyPolicyScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.documents.RegulationsScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.guide.DietGuideScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.AuthViewModel
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.ForgotPassword
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.LoginScreen
@@ -227,6 +228,12 @@ private fun AuthenticatedContent(
                             )
                         }
                     }
+
+                    NavigationDestination.AuthenticatedDestination.DietGuide -> {
+                        DietGuideScreen(
+                            onNavigate = onNavigate
+                        )
+                    }
                 }
             }
         }
@@ -335,6 +342,7 @@ private fun HandleBackButton(
             NavigationDestination.AuthenticatedDestination.Profile,
             NavigationDestination.AuthenticatedDestination.MealPlan,
             NavigationDestination.AuthenticatedDestination.WaterIntake,
+            NavigationDestination.AuthenticatedDestination.DietGuide,
             NavigationDestination.AuthenticatedDestination.ShoppingList -> {
                 onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
             }

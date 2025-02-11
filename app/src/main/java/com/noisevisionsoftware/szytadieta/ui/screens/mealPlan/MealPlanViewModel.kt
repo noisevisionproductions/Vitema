@@ -56,9 +56,9 @@ class MealPlanViewModel @Inject constructor(
                 val result = dietRepository.getUserDietForDate(date)
                 val diet = result.getOrNull()
 
+                val timestampForDate = DateUtils.longToTimestamp(date)
                 val dietDay = diet?.days?.firstOrNull { formatDate(date) == it.date }
-                    ?: DietDay(date = formatDate(date))
-
+                    ?: DietDay(timestamp = timestampForDate)
 
                 if (dietDay.meals.isNotEmpty()) {
                     val recipesResult = recipeRepository.getRecipesForMeals(dietDay.meals)

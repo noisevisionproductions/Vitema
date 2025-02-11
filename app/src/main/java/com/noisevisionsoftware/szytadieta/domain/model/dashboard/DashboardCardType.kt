@@ -5,7 +5,8 @@ enum class DashboardCardType {
     SHOPPING_LIST,
     WATER_TRACKING,
     MEASUREMENTS,
-    WEIGHT;
+    WEIGHT,
+    DIET_GUIDE;
 
     val displayName: String
         get() = when (this) {
@@ -14,5 +15,6 @@ enum class DashboardCardType {
             WATER_TRACKING -> "Śledzenie wody"
             MEASUREMENTS -> "Pomiary ciała"
             WEIGHT -> "Waga"
+            DIET_GUIDE -> "Poradnik dietetyczny"
         }
 }

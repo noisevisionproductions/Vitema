@@ -1,26 +1,34 @@
-package com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components
+package com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.grouping
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -28,76 +36,99 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.noisevisionsoftware.szytadieta.domain.model.shopping.ShoppingListProductContext
 
 @Composable
-fun ProductList(
-    products: List<String>,
+fun ProductListForGrouping(
+    products: List<ShoppingListProductContext>,
     checkedProducts: Set<String>,
     onProductCheckedChange: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val validProducts = remember(products) {
-        products.filter { it.isNotBlank() }
+        products.filter { it.name.isNotBlank() }
     }
 
     val uncheckedProducts = remember(validProducts, checkedProducts) {
-        validProducts.filter { !checkedProducts.contains(it) }
+        validProducts.filter { !checkedProducts.contains(it.productId) }
     }
 
     val checkedProductsList = remember(validProducts, checkedProducts) {
-        validProducts.filter { checkedProducts.contains(it) }
+        validProducts.filter { checkedProducts.contains(it.productId) }
     }
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        state = rememberLazyListState()
+    var isCheckedProductsExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(
-            items = uncheckedProducts,
-            key = { "${it}_unchecked" }
-        ) { product ->
+        uncheckedProducts.forEach { product ->
             ProductItem(
                 product = product,
-                isChecked = checkedProducts.contains(product),
+                isChecked = checkedProducts.contains(product.productId),
                 onCheckedChange = { checked ->
-                    onProductCheckedChange(product, checked)
+                    onProductCheckedChange(product.productId, checked)
                 }
             )
         }
 
         if (checkedProductsList.isNotEmpty()) {
-            item(key = "header") {
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isCheckedProductsExpanded = !isCheckedProductsExpanded },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                )
+            ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Zaznaczone produkty",
+                        text = "Zaznaczone produkty (${checkedProductsList.size})",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    Icon(
+                        imageVector = if (isCheckedProductsExpanded)
+                            Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = if (isCheckedProductsExpanded)
+                            "Zwiń zaznaczone" else "Rozwiń zaznaczone",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-
-
-                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            items(
-                items = checkedProductsList,
-                key = { "${it}_checked" }
-            ) { product ->
-                ProductItem(
-                    product = product,
-                    isChecked = true,
-                    onCheckedChange = { checked ->
-                        onProductCheckedChange(product, checked)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            AnimatedVisibility(
+                visible = isCheckedProductsExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    checkedProductsList.forEach { product ->
+                        ProductItem(
+                            product = product,
+                            isChecked = checkedProducts.contains(product.productId),
+                            onCheckedChange = { checked ->
+                                onProductCheckedChange(product.productId, checked)
+                            }
+                        )
                     }
-                )
+                }
             }
         }
     }
@@ -105,7 +136,7 @@ fun ProductList(
 
 @Composable
 private fun ProductItem(
-    product: String,
+    product: ShoppingListProductContext,
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
@@ -141,7 +172,7 @@ private fun ProductItem(
         ) {
             Checkbox(
                 checked = isChecked,
-                onCheckedChange = { onCheckedChange(it) },
+                onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
                     checkedColor = MaterialTheme.colorScheme.primary,
                     uncheckedColor = MaterialTheme.colorScheme.outline,
@@ -151,7 +182,7 @@ private fun ProductItem(
             )
 
             Text(
-                text = product,
+                text = product.name,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = if (isChecked) FontWeight.Normal else FontWeight.Medium
                 ),

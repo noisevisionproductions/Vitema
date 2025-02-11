@@ -75,6 +75,7 @@ fun CustomTopAppBar(
                 }
             },
             actions = {
+                additionalActions?.invoke(this)
                 if (showSearchIcon) {
                     IconButton(onClick = onSearchClick) {
                         Icon(
@@ -102,7 +103,6 @@ fun CustomTopAppBar(
                         )
                     }
                 }
-                additionalActions?.invoke(this)
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,

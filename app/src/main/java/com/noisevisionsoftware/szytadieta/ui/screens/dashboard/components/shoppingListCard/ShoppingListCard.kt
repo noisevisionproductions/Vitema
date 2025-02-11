@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -21,16 +23,20 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.noisevisionsoftware.szytadieta.domain.model.shopping.ProductCategory
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
+import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.components.toIcon
 
 @Composable
 fun ShoppingListCard(
@@ -41,6 +47,7 @@ fun ShoppingListCard(
     val weeklyShoppingList by viewModel.weeklyShoppingList.collectAsState()
     val remainingItems by viewModel.remainingItems.collectAsState()
     val checkedProducts by viewModel.checkedProducts.collectAsState()
+    val categoryProgress by viewModel.categoryProgress.collectAsState()
 
     Card(
         modifier = modifier
@@ -91,15 +98,15 @@ fun ShoppingListCard(
                 is ViewModelState.Success -> {
                     val shoppingList = (weeklyShoppingList as ViewModelState.Success).data
                     if (shoppingList != null) {
-                        if (shoppingList.items.isEmpty()) {
+                        val products = shoppingList.allProducts
+                        if (products.isEmpty()) {
                             EmptyShoppingList()
                         } else {
-                            val progress = checkedProducts.size.toFloat() / shoppingList.items.size
-                            ShoppingListProgress(
-                                progress = progress,
+                            ShoppingListSummary(
+                                categoryProgress = categoryProgress,
                                 remainingItems = when (remainingItems) {
                                     is ViewModelState.Success -> (remainingItems as ViewModelState.Success).data
-                                    else -> shoppingList.items.size - checkedProducts.size // fallback
+                                    else -> products.size - checkedProducts.size
                                 }
                             )
                         }
@@ -143,16 +150,20 @@ fun ShoppingListCard(
 }
 
 @Composable
-private fun ShoppingListProgress(
-    progress: Float,
+private fun ShoppingListSummary(
+    categoryProgress: Map<ProductCategory, Pair<Int, Int>>,
     remainingItems: Int
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        val totalChecked = categoryProgress.values.sumOf { it.first }
+        val totalItems = categoryProgress.values.sumOf { it.second }
+        val totalProgress = if (totalItems > 0) totalChecked.toFloat() / totalItems else 0f
+
         LinearProgressIndicator(
-            progress = { progress },
+            progress = { totalProgress },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp),
@@ -168,6 +179,56 @@ private fun ShoppingListProgress(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
         )
+
+        val topCategories = categoryProgress.entries
+            .sortedByDescending { it.value.second }
+            .take(3)
+
+        if (topCategories.isNotEmpty()) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(topCategories) { (category, progress) ->
+                    CategoryProgressBadge(
+                        category = category,
+                        checked = progress.first,
+                        total = progress.second
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryProgressBadge(
+    category: ProductCategory,
+    checked: Int,
+    total: Int,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = Color(android.graphics.Color.parseColor(category.color)).copy(alpha = 0.1f),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = category.icon.toIcon(),
+                contentDescription = null,
+                tint = Color(android.graphics.Color.parseColor(category.color)),
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = "$checked/$total",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
     }
 }
 

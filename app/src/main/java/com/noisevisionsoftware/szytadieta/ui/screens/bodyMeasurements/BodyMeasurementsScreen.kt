@@ -137,11 +137,13 @@ private fun MeasurementsContent(
         when (currentState) {
             is ViewModelState.Initial,
             is ViewModelState.Loading -> LoadingOverlay()
+
             is ViewModelState.Success ->
                 MeasurementsList(
                     measurements = currentState.data,
                     onDeleteClick = onDeleteClick
                 )
+
             is ViewModelState.Error -> ErrorMessage(message = (state as ViewModelState.Error).message)
         }
     }

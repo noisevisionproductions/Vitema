@@ -95,7 +95,10 @@ fun ProfileDatePicker(
             TextButton(onClick = onDismiss) {
                 Text("Anuluj")
             }
-        }
+        },
+        colors = DatePickerDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         DatePicker(
             state = datePickerState,

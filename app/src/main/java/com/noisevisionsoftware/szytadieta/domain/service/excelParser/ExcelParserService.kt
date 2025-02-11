@@ -1,9 +1,7 @@
 package com.noisevisionsoftware.szytadieta.domain.service.excelParser
 
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Diet
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.ShoppingList
-import org.apache.poi.ss.usermodel.WorkbookFactory
-import java.io.InputStream
+import com.noisevisionsoftware.szytadieta.domain.model.shopping.ShoppingList
 import javax.inject.Inject
 
 class ExcelParserService @Inject constructor(

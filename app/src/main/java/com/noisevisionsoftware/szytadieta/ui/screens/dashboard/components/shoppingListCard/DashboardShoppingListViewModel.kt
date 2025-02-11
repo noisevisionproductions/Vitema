@@ -4,7 +4,8 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.ShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.shopping.CategorizedShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.shopping.ProductCategory
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
@@ -32,7 +33,7 @@ class DashboardShoppingListViewModel @Inject constructor(
 ) : BaseViewModel(networkManager, alertManager, eventBus) {
 
     private val _weeklyShoppingList =
-        MutableStateFlow<ViewModelState<ShoppingList?>>(ViewModelState.Initial)
+        MutableStateFlow<ViewModelState<CategorizedShoppingList?>>(ViewModelState.Initial)
     val weeklyShoppingList = _weeklyShoppingList.asStateFlow()
 
     private val _remainingItems = MutableStateFlow<ViewModelState<Int>>(ViewModelState.Initial)
@@ -40,6 +41,10 @@ class DashboardShoppingListViewModel @Inject constructor(
 
     private val _checkedProducts = MutableStateFlow<Set<String>>(emptySet())
     val checkedProducts = _checkedProducts.asStateFlow()
+
+    private val _categoryProgress =
+        MutableStateFlow<Map<ProductCategory, Pair<Int, Int>>>(emptyMap())
+    val categoryProgress = _categoryProgress.asStateFlow()
 
     init {
         loadCurrentWeekShoppingList()
@@ -58,11 +63,21 @@ class DashboardShoppingListViewModel @Inject constructor(
                             .getOrNull()
                     shoppingList?.also {
                         calculateRemainingItems(it)
+                        updateCategoryProgress(it)
                     }
                     shoppingList
                 }
             }
         }
+    }
+
+    private fun updateCategoryProgress(shoppingList: CategorizedShoppingList) {
+        _categoryProgress.value = shoppingList.items.mapNotNull { (categoryId, items) ->
+            ProductCategory.fromId(categoryId).let { category ->
+                val checked = items.count { item -> _checkedProducts.value.contains(item.name) }
+                category to (checked to items.size)
+            }
+        }.toMap()
     }
 
     private fun loadCheckedProducts() {
@@ -73,6 +88,7 @@ class DashboardShoppingListViewModel @Inject constructor(
                         _checkedProducts.value = savedProducts
                         (_weeklyShoppingList.value as? ViewModelState.Success)?.data?.let {
                             calculateRemainingItems(it)
+                            updateCategoryProgress(it)
                         }
                     }
                 }
@@ -82,11 +98,30 @@ class DashboardShoppingListViewModel @Inject constructor(
         }
     }
 
-    private fun calculateRemainingItems(shoppingList: ShoppingList) {
+    private fun calculateRemainingItems(shoppingList: CategorizedShoppingList) {
         viewModelScope.launch {
-            val totalItems = shoppingList.items.size
+            val totalItems = shoppingList.allProducts.size
             val checkedItems = _checkedProducts.value.size
             _remainingItems.value = ViewModelState.Success(totalItems - checkedItems)
+        }
+    }
+
+    private suspend fun synchronizeCheckedProducts(userId: String) {
+        val currentList = (_weeklyShoppingList.value as? ViewModelState.Success)?.data
+        if (currentList != null) {
+            val allValidProducts = currentList.allProducts.map { it.name }.toSet()
+
+            val currentCheckedProducts = _checkedProducts.value
+            val updatedCheckedProducts = currentCheckedProducts.filter { productId ->
+                productId in allValidProducts
+            }.toSet()
+
+            if (updatedCheckedProducts != currentCheckedProducts) {
+                _checkedProducts.value = updatedCheckedProducts
+                preferencesManager.saveCheckedProducts(userId, updatedCheckedProducts)
+                calculateRemainingItems(currentList)
+                updateCategoryProgress(currentList)
+            }
         }
     }
 
@@ -113,26 +148,9 @@ class DashboardShoppingListViewModel @Inject constructor(
     private suspend fun clearShoppingListData(userId: String) {
         _weeklyShoppingList.value = ViewModelState.Success(null)
         _remainingItems.value = ViewModelState.Success(0)
+        _categoryProgress.value = emptyMap()
         preferencesManager.clearCheckedProducts(userId)
         _checkedProducts.value = emptySet()
-    }
-
-    private suspend fun synchronizeCheckedProducts(userId: String) {
-        val currentList = (_weeklyShoppingList.value as? ViewModelState.Success)?.data
-        if (currentList != null) {
-            val allCurrentProducts = currentList.items.toSet()
-            val currentCheckedProducts = _checkedProducts.value
-
-            val updatedCheckedProducts =
-                currentCheckedProducts.filter { it in allCurrentProducts }.toSet()
-
-
-            if (updatedCheckedProducts != currentCheckedProducts) {
-                _checkedProducts.value = updatedCheckedProducts
-                preferencesManager.saveCheckedProducts(userId, updatedCheckedProducts)
-                calculateRemainingItems(currentList)
-            }
-        }
     }
 
     fun refreshShoppingList() {
@@ -147,5 +165,6 @@ class DashboardShoppingListViewModel @Inject constructor(
     override fun onUserLoggedOut() {
         _weeklyShoppingList.value = ViewModelState.Initial
         _remainingItems.value = ViewModelState.Initial
+        _categoryProgress.value = emptyMap()
     }
 }

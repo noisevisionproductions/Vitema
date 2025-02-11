@@ -38,6 +38,7 @@ import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.TopBar
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.ErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.AnimatedSpotlightOverlay
+import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.DietGuideCard
 import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.DraggableCard
 import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.MealPlanCard
 import com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.MeasurementsCard
@@ -191,6 +192,10 @@ fun DashboardScreen(
                                             latestWeight = latestWeight,
                                             weightHistory = weightHistory,
                                             onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.Weight) }
+                                        )
+
+                                        DashboardCardType.DIET_GUIDE -> DietGuideCard(
+                                            onClick = {onNavigate(NavigationDestination.AuthenticatedDestination.DietGuide)}
                                         )
                                     }
                                 }

@@ -14,5 +14,6 @@ data class Recipe(
 
     val photos: List<String> = emptyList(),
     val nutritionalValues: NutritionalValues = NutritionalValues(),
+    val ingredients: List<String> = emptyList(),
     val parentRecipeId: String? = null
 )

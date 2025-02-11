@@ -50,6 +50,7 @@ import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Diet
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Meal
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.MealType
 import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
+import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.toMeal
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.CustomErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
@@ -145,7 +146,7 @@ private fun DayMealList(
             key = { meal -> "${meal.recipeId}_${meal.time}" }
         ) { meal ->
             MealCard(
-                meal = meal,
+                meal = meal.toMeal(),
                 recipe = recipes[meal.recipeId],
                 onRecipeClick = onRecipeClick
             )

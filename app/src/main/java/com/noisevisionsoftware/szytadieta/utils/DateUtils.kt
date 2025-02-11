@@ -1,5 +1,6 @@
 package com.noisevisionsoftware.szytadieta.utils
 
+import com.google.firebase.Timestamp
 import java.util.Calendar
 
 object DateUtils {
@@ -53,6 +54,10 @@ object DateUtils {
             set(Calendar.SECOND, 59)
             set(Calendar.MILLISECOND, 999)
         }.timeInMillis
+    }
+
+    fun longToTimestamp(timestamp: Long): Timestamp {
+        return Timestamp(timestamp / 1000, 0)
     }
 
     fun calculateAge(birthDate: Long): Int {

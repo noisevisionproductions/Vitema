@@ -55,7 +55,6 @@ fun DraggableCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-
             .offset { IntOffset(0, animatedOffset.roundToInt()) }
             .graphicsLayer {
                 if (isDragged) {

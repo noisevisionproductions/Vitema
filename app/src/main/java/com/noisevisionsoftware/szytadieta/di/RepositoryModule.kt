@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.noisevisionsoftware.szytadieta.data.FCMTokenRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.AppVersionRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.FileRepository
@@ -121,4 +122,10 @@ object RepositoryModule {
         firestore: FirebaseFirestore,
         storage: FirebaseStorage
     ): RecipeRepository = RecipeRepository(firestore, storage)
+
+    @Provides
+    @Singleton
+    fun provideAppVersionRepository(
+        firestore: FirebaseFirestore
+    ): AppVersionRepository = AppVersionRepository(firestore)
 }

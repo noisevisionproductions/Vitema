@@ -47,6 +47,8 @@ class SettingsViewModel @Inject constructor(
         MutableStateFlow<ViewModelState<PasswordUpdateData>>(ViewModelState.Initial)
     val passwordUpdateState = _passwordUpdateState.asStateFlow()
 
+    val isVersionCheckEnabled = preferencesManager.isVersionCheckEnabled
+
     val waterNotificationsEnabled = notificationManager.waterNotificationsEnabled.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -142,6 +144,12 @@ class SettingsViewModel @Inject constructor(
     fun setWaterNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             notificationManager.setWaterNotificationsEnabled(enabled)
+        }
+    }
+
+    fun setVersionCheckEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferencesManager.setVersionCheckEnabled(enabled)
         }
     }
 

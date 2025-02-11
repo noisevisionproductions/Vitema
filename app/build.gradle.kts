@@ -33,8 +33,8 @@ android {
     defaultConfig {
         version = Version(
             major = 1,
-            minor = 2,
-            patch = 0
+            minor = 3,
+            patch = 3
         )
 
         applicationId = "com.noisevisionsoftware.szytadieta"
@@ -71,6 +71,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
             signingConfig = signingConfigs.getByName("release")
         }
         debug {

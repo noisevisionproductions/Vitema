@@ -10,7 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.noisevisionsoftware.szytadieta.domain.model.AppStatistics
+import com.noisevisionsoftware.szytadieta.domain.model.app.AppStatistics
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

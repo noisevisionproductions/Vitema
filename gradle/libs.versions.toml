@@ -140,8 +140,6 @@ log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "lo
 log4j-slf4j2-impl = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4jSlf4j2Impl" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
-poi = { module = "org.apache.poi:poi", version.ref = "poiVersion" }
-poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poiOoxmlVersion" }
 poi-ooxml-v523 = { module = "org.apache.poi:poi-ooxml", version.ref = "apachePoiOoxml" }
 poi-v523 = { module = "org.apache.poi:poi", version.ref = "apachePoi" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }

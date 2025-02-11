@@ -1,15 +1,19 @@
 package com.noisevisionsoftware.szytadieta.domain.repository.dietRepository
 
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DatePeriod
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.ShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.shopping.CategorizedShoppingList
+import com.noisevisionsoftware.szytadieta.domain.model.shopping.DatePeriod
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 class ShoppingListRepository @Inject constructor(
@@ -22,30 +26,31 @@ class ShoppingListRepository @Inject constructor(
     suspend fun getShoppingListForDate(
         userId: String,
         date: String
-    ): Result<ShoppingList> = runCatching {
+    ): Result<CategorizedShoppingList> = runCatching {
         val snapshot = firestore.collection(SHOPPING_LIST_COLLECTION)
             .whereEqualTo("userId", userId)
-            .whereLessThanOrEqualTo("startDate", date)
-            .whereGreaterThanOrEqualTo("endDate", date)
             .get()
             .await()
 
-        snapshot.documents.firstOrNull()
-            ?.toObject(ShoppingList::class.java)
-            ?.copy(id = snapshot.documents.first().id)
-            ?: throw Exception("Nie znaleziono listy zakupów dla wybranej daty")
-    }
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        val targetDate = dateFormat.parse(date)?.time
+            ?: throw IllegalArgumentException("Nieprawidłowy format daty")
 
-    suspend fun getAllShoppingLists(userId: String): Result<List<ShoppingList>> = runCatching {
-        val snapshot = firestore.collection(SHOPPING_LIST_COLLECTION)
-            .whereEqualTo("userId", userId)
-            .orderBy("startDate", Query.Direction.DESCENDING)
-            .get()
-            .await()
+        val matchingList = snapshot.documents.firstNotNullOfOrNull { doc ->
+            val list = doc.toObject(CategorizedShoppingList::class.java)?.copy(id = doc.id)
+            if (list != null) {
+                val startDate = dateFormat.format(Date(list.startTimestamp.seconds * 1000))
+                val endDate = dateFormat.format(Date(list.endTimestamp.seconds * 1000))
+                val targetDateStr = dateFormat.format(Date(targetDate))
 
-        snapshot.documents.mapNotNull { doc ->
-            doc.toObject(ShoppingList::class.java)?.copy(id = doc.id)
-        }
+                val isInRange = targetDateStr in startDate..endDate
+
+                list.takeIf { isInRange }
+            } else null
+        } ?: throw Exception("Nie znaleziono listy zakupów dla wybranej daty")
+
+        Log.d("ShoppingListRepo", "Found matching list: $matchingList")
+        matchingList
     }
 
     suspend fun getAvailablePeriods(userId: String): Result<List<DatePeriod>> = runCatching {
@@ -56,16 +61,16 @@ class ShoppingListRepository @Inject constructor(
             .await()
 
         snapshot.documents.mapNotNull { doc ->
-            doc.toObject(ShoppingList::class.java)?.let { list ->
+            doc.toObject(CategorizedShoppingList::class.java)?.let { list ->
                 DatePeriod(
-                    startDate = list.startDate,
-                    endDate = list.endDate
+                    startTimestamp = list.startTimestamp,
+                    endTimestamp = list.endTimestamp
                 )
             }
         }.distinct()
     }
 
-    fun observeShoppingLists(userId: String): Flow<List<ShoppingList>> = callbackFlow {
+    fun observeShoppingLists(userId: String): Flow<List<CategorizedShoppingList>> = callbackFlow {
         val subscription = firestore.collection(SHOPPING_LIST_COLLECTION)
             .whereEqualTo("userId", userId)
             .orderBy("startDate", Query.Direction.DESCENDING)
@@ -76,7 +81,7 @@ class ShoppingListRepository @Inject constructor(
                 }
 
                 val lists = snapshot?.documents?.mapNotNull { doc ->
-                    doc.toObject(ShoppingList::class.java)?.copy(id = doc.id)
+                    doc.toObject(CategorizedShoppingList::class.java)?.copy(id = doc.id)
                 } ?: emptyList()
 
                 trySend(lists)

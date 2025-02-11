@@ -1,15 +1,19 @@
 package com.noisevisionsoftware.szytadieta.ui.theme
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -38,6 +42,25 @@ fun PatternBackground(
         )
     }
 }
+
+@Composable
+fun Modifier.themedShadow(
+    elevation: Dp = 4.dp,
+    shape: Shape = RoundedCornerShape(0.dp)
+): Modifier = this.then(
+    Modifier.shadow(
+        elevation = elevation,
+        shape = shape,
+        spotColor = when {
+            isSystemInDarkTheme() -> Color.Black.copy(alpha = 0.5f)
+            else -> Color.Black.copy(alpha = 0.2f)
+        },
+        ambientColor = when {
+            isSystemInDarkTheme() -> Color.Black.copy(alpha = 0.5f)
+            else -> Color.Black.copy(alpha = 0.2f)
+        }
+    )
+)
 
 fun Modifier.topShadow(
     color: Color = Color.Black.copy(alpha = 0.1f),
