@@ -19,7 +19,7 @@ type DropItem = {
 export const DroppableTabsTrigger = React.forwardRef<
     React.ElementRef<typeof TabsTrigger>,
     DroppableTabsTriggerProps
->(({onDrop, categoryColor, children, className, ...props}) => {
+>(({onDrop, categoryColor, children, className, ...props}, ref) => {
     const [{isOver}, drop] = useDrop<DropItem, void, { isOver: boolean }>(() => ({
         accept: 'PRODUCT',
         drop: (item) => {
@@ -35,6 +35,7 @@ export const DroppableTabsTrigger = React.forwardRef<
     return (
         <div ref={drop}>
             <TabsTrigger
+                ref={ref}
                 {...props}
                 className={`
                     ${className}

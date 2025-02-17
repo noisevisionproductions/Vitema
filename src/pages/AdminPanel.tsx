@@ -6,6 +6,7 @@ import UsersManagement from "../components/users/UsersManagement";
 import DietManagement from "../components/diet/DietManagement";
 import StatsPanel from "../components/stats/StatsPanel";
 import DietGuide from "../components/guide/GuideSection";
+import Changelog from "../components/changelog/Changelog";
 
 const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<TabName>('upload');
@@ -32,6 +33,8 @@ const AdminPanel: React.FC = () => {
                 return <StatsPanel/>
             case "guide":
                 return <DietGuide/>
+            case "changelog":
+                return <Changelog/>
             default:
                 return null;
         }

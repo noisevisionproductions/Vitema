@@ -1,11 +1,22 @@
 import {TabName} from "../../types/navigation";
-import {BarChart3, ChevronLeft, ChevronRight, FileSpreadsheet, HelpCircle, LogOut, Upload, Users} from "lucide-react";
+import {
+    BarChart3,
+    ChevronLeft,
+    ChevronRight,
+    ClipboardList,
+    FileSpreadsheet,
+    HelpCircle,
+    LogOut,
+    Upload,
+    Users
+} from "lucide-react";
 import NavButton from "./NavButton";
 import React, {useState} from "react";
 import {cn} from "../../utils/cs";
 import {useAuth} from "../../contexts/AuthContext";
 import {useNavigate} from "react-router-dom";
 import {toast} from "sonner";
+import {useChangeLog} from "../../hooks/useChangeLog";
 
 interface SidebarProps {
     activeTab: TabName;
@@ -17,12 +28,14 @@ const navigationItems = [
     {id: 'data', label: 'Zarządzanie Dietami', icon: FileSpreadsheet},
     {id: 'users', label: 'Użytkownicy', icon: Users},
     {id: 'stats', label: 'Statystyki', icon: BarChart3},
-    {id: 'guide', label: 'Przewodnik', icon: HelpCircle}
+    {id: 'guide', label: 'Przewodnik', icon: HelpCircle},
+    {id: 'changelog', label: 'Historia zmian', icon: ClipboardList}
 ] as const;
 
 const Sidebar: React.FC<SidebarProps> = ({activeTab, onTabChange}) => {
     const [isCollapsed, setIsCollapsed] = useState(true);
     const {logout} = useAuth();
+    const {hasUnread} = useChangeLog();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -72,6 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({activeTab, onTabChange}) => {
                         isActive={activeTab === item.id}
                         onClick={() => onTabChange(item.id as TabName)}
                         isCollapsed={isCollapsed}
+                        showNotification={item.id === 'changelog' && hasUnread}
                     />
                 ))}
             </nav>

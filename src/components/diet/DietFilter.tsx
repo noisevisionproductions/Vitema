@@ -3,6 +3,8 @@ import SearchInput from '../common/SearchInput';
 import {User} from '../../types/user';
 import {XCircle} from 'lucide-react';
 
+export type SortOption = 'newest' | 'oldest' | 'name';
+
 interface DietFilterProps {
     activeUsers: User[];
     selectedUserId: string | null;
@@ -10,6 +12,8 @@ interface DietFilterProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
     onReset: () => void;
+    sortBy: SortOption;
+    onSortChange: (sort: SortOption) => void;
 }
 
 const DietFilter: React.FC<DietFilterProps> = ({
@@ -18,9 +22,11 @@ const DietFilter: React.FC<DietFilterProps> = ({
                                                    onUserSelect,
                                                    searchQuery,
                                                    onSearchChange,
-                                                   onReset
+                                                   onReset,
+                                                   sortBy,
+                                                   onSortChange
                                                }) => {
-    const hasActiveFilters = selectedUserId !== null || searchQuery !== '';
+    const hasActiveFilters = selectedUserId !== null || searchQuery !== '' || sortBy !== 'newest';
 
     return (
         <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
@@ -32,15 +38,32 @@ const DietFilter: React.FC<DietFilterProps> = ({
                         placeholder="Szukaj diet..."
                     />
                 </div>
-                {hasActiveFilters && (
-                    <button
-                        onClick={onReset}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                <div className="flex items-center gap-2">
+                    <select
+                        value={sortBy}
+                        onChange={(e) => onSortChange(e.target.value as SortOption)}
+                        className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
                     >
-                        <XCircle className="w-4 h-4" />
-                        Wyczyść filtry
-                    </button>
-                )}
+                        <option value="newest">
+                            Najnowsze
+                        </option>
+                        <option value="oldest">
+                            Najstarsze
+                        </option>
+                        <option value="name">
+                            Nazwa pliku
+                        </option>
+                    </select>
+                    {hasActiveFilters && (
+                        <button
+                            onClick={onReset}
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                            <XCircle className="w-4 h-4"/>
+                            Wyczyść filtry
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="flex flex-wrap gap-2">

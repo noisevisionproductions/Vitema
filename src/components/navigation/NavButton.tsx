@@ -9,6 +9,7 @@ interface NavButtonProps {
     onClick: () => void;
     className?: string;
     isCollapsed?: boolean;
+    showNotification?: boolean;
 }
 
 const NavButton: React.FC<NavButtonProps> = ({
@@ -17,7 +18,8 @@ const NavButton: React.FC<NavButtonProps> = ({
                                                  isActive,
                                                  onClick,
                                                  className = '',
-                                                 isCollapsed = false
+                                                 isCollapsed = false,
+                                                 showNotification
                                              }) => {
     return (
         <button
@@ -30,10 +32,15 @@ const NavButton: React.FC<NavButtonProps> = ({
                 className
             )}
         >
-            <Icon className={cn(
-                "w-5 h-5",
-                isCollapsed ? "mr-0" : "mr-3"
-            )}/>
+            <div className="relative">
+                <Icon className={cn(
+                    "w-5 h-5",
+                    isCollapsed ? "mr-0" : "mr-3"
+                )}/>
+                {showNotification && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"/>
+                )}
+            </div>
             {!isCollapsed && (
                 <span className="transition-opacity duration-200">
                     {label}
