@@ -22,12 +22,25 @@ repositories {
 	mavenCentral()
 }
 
+test {
+	jvmArgs = [
+			'-XX:+EnableDynamicAgentLoading',
+			'-Djdk.instrument.traceUsage=false',
+			'--add-opens=java.base/java.lang=ALL-UNNAMED',
+			'--add-opens=java.base/java.util=ALL-UNNAMED'
+	]
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	implementation 'com.google.firebase:firebase-admin:9.4.3'
+
+	// Cache
+	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

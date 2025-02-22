@@ -17,22 +17,48 @@ export const formatDate = (date: string | Timestamp) => {
     });
 };
 
-export const formatTimestamp = (timestamp: number | Date | Timestamp) => {
-    let date: Date;
 
-    if (timestamp instanceof Date) {
-        date = timestamp;
-    } else if (typeof timestamp === 'number') {
-        date = new Date(timestamp);
-    } else {
-        date = timestamp.toDate();
+export const formatTimestamp = (timestamp: any): string => {
+    try {
+        let date: Date;
+
+        if (!timestamp) {
+            return 'Brak daty';
+        }
+
+        // Obsługa obiektu timestamp z backendu
+        if (timestamp.seconds !== undefined) {
+            date = new Date(timestamp.seconds * 1000);
+        }
+        // Obsługa Firestore Timestamp
+        else if (timestamp instanceof Timestamp) {
+            date = timestamp.toDate();
+        }
+        // Obsługa zwykłej daty
+        else if (timestamp instanceof Date) {
+            date = timestamp;
+        }
+        // Obsługa timestampa jako liczby
+        else if (typeof timestamp === 'number') {
+            date = new Date(timestamp);
+        }
+        // Obsługa daty jako stringa
+        else if (typeof timestamp === 'string') {
+            date = new Date(timestamp);
+        }
+        else {
+            return 'Nieprawidłowy format daty';
+        }
+
+        return date.toLocaleDateString('pl-PL', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    } catch (error) {
+        console.error('Error formatting timestamp:', error);
+        return 'Błąd formatu daty';
     }
-
-    return date.toLocaleDateString('pl-PL', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
 };
 
 export const convertTimestampToMillis = (timestamp: any): number | null => {
@@ -58,7 +84,6 @@ export const stringToTimestamp = (dateString: string) => {
     const date = new Date(dateString);
     return Timestamp.fromDate(date);
 };
-
 
 export const calculateAge = (birthDate: number | null): number => {
     if (!birthDate) return 0;

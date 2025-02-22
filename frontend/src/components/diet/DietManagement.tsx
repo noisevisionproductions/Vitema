@@ -7,6 +7,8 @@ import useUsers from "../../hooks/useUsers";
 import DietFilter, {SortOption} from "./DietFilter";
 import {Diet} from "../../types";
 import {useDiets} from "../../hooks/useDiets";
+import {toast} from "sonner";
+import {getTimestamp} from "../../utils/dateUtils";
 
 interface DietWithUser extends Diet {
     userEmail?: string;
@@ -14,7 +16,13 @@ interface DietWithUser extends Diet {
 
 const DietManagement: React.FC = () => {
     const {users, loading: usersLoading} = useUsers();
-    const {diets, loading: dietsLoading} = useDiets(users, usersLoading);
+    const {
+        diets,
+        loading: dietsLoading,
+        deleteDiet,
+        updateDiet,
+        refreshDiets
+    } = useDiets(users, usersLoading);
 
     const [selectedDiet, setSelectedDiet] = useState<DietWithUser | null>(null);
     const [editingDiet, setEditingDiet] = useState<DietWithUser | null>(null);
@@ -33,9 +41,9 @@ const DietManagement: React.FC = () => {
         return result.sort((a, b) => {
             switch (sortBy) {
                 case "newest":
-                    return b.createdAt.toMillis() - a.createdAt.toMillis();
+                    return getTimestamp(b.createdAt) - getTimestamp(a.createdAt);
                 case "oldest":
-                    return a.createdAt.toMillis() - b.createdAt.toMillis();
+                    return getTimestamp(a.createdAt) - getTimestamp(b.createdAt);
                 case "name":
                     return (a.metadata?.fileName || '').localeCompare(b.metadata?.fileName || '');
                 default:
@@ -50,13 +58,27 @@ const DietManagement: React.FC = () => {
         setSortBy('newest');
     };
 
-    const handleDietUpdate = () => {
-        setEditingDiet(null);
+    const handleDietUpdate = async (diet: Diet) => {
+        try {
+            await updateDiet(diet.id, diet);
+            setEditingDiet(null);
+            await refreshDiets();
+            toast.success('Dieta została zaktualizowana');
+        } catch (error) {
+            toast.error('Błąd podczas aktualizacji diety');
+        }
     };
 
-    const handleDietDelete = () => {
-        setSelectedDiet(null);
-        setEditingDiet(null);
+    const handleDietDelete = async (dietId: string) => {
+        try {
+            await deleteDiet(dietId);
+            setSelectedDiet(null);
+            setEditingDiet(null);
+            await refreshDiets();
+            toast.success('Dieta została usunięta');
+        } catch (error) {
+            toast.error('Błąd podczas usuwania diety');
+        }
     };
 
     const activeUsers = React.useMemo(() => {
@@ -114,7 +136,7 @@ const DietManagement: React.FC = () => {
                 <DietEditModal
                     diet={editingDiet}
                     onClose={() => setEditingDiet(null)}
-                    onUpdate={handleDietUpdate}
+                    onUpdate={async (updatedDiet) => await handleDietUpdate(updatedDiet)}
                 />
             )}
         </div>

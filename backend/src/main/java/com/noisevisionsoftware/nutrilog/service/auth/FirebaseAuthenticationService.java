@@ -4,8 +4,8 @@ import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
-import com.noisevisionsoftware.nutrilog.security.model.UserRole;
 import com.noisevisionsoftware.nutrilog.security.model.FirebaseUser;
+import com.noisevisionsoftware.nutrilog.security.model.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,9 +25,7 @@ public class FirebaseAuthenticationService {
 
     public Authentication getAuthentication(String token) {
         try {
-            FirebaseToken decodedToken = firebaseAuth.verifyIdToken(token);
-            FirebaseUser user = buildFirebaseUser(decodedToken);
-
+            FirebaseUser user = verifyToken(token);
             if (user != null) {
                 return new UsernamePasswordAuthenticationToken(
                         user,
@@ -35,7 +33,6 @@ public class FirebaseAuthenticationService {
                         Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
                 );
             }
-
         } catch (Exception e) {
             log.error("Failed to verify Firebase token", e);
         }
@@ -68,19 +65,5 @@ public class FirebaseAuthenticationService {
             log.error("Failed to verify Firebase token", e);
             return null;
         }
-    }
-
-    private FirebaseUser buildFirebaseUser(FirebaseToken decodedToken) {
-        return FirebaseUser.builder()
-                .uid(decodedToken.getUid())
-                .email(decodedToken.getEmail())
-                .role(determineUserRole(decodedToken))
-                .build();
-    }
-
-    private String determineUserRole(FirebaseToken decodedToken) {
-        // Tu możesz dodać logikę określania roli na podstawie custom claims
-        // lub innych atrybutów użytkownika
-        return decodedToken.getClaims().containsKey("admin") ? "ADMIN" : "USER";
     }
 }

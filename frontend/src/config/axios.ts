@@ -1,15 +1,14 @@
-// src/api/axios.ts
 import axios from 'axios';
-import { auth } from './firebase';
+import {auth} from './firebase';
+import {toast} from "sonner";
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
     headers: {
         'Content-Type': 'application/json'
     }
 });
 
-// Dodaj interceptor dla zapytań
 api.interceptors.request.use(async (config) => {
     const user = auth.currentUser;
     if (user) {
@@ -17,16 +16,18 @@ api.interceptors.request.use(async (config) => {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-}, (error) => {
-    return Promise.reject(error);
 });
 
-// Dodaj interceptor dla odpowiedzi
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (axios.isAxiosError(error)) {
-            console.error('Axios error:', error.response?.data);
+        if (error.response?.status === 401) {
+            // Można tutaj dodać logikę wylogowania
+            toast.error('Sesja wygasła. Zaloguj się ponownie.');
+        } else if (error.response?.status === 403) {
+            toast.error('Brak uprawnień do wykonania tej operacji.');
+        } else {
+            toast.error(error.response?.data?.message || 'Wystąpił błąd');
         }
         return Promise.reject(error);
     }

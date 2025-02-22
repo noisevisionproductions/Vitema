@@ -1,0 +1,11 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  security:
+    filter:
+      order: 10
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.noisevisionsoftware.nutrilog: DEBUG

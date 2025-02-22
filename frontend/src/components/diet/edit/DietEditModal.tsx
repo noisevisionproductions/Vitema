@@ -8,7 +8,7 @@ import LoadingSpinner from "../../common/LoadingSpinner";
 interface DietEditModalProps {
     diet: Diet;
     onClose: () => void;
-    onUpdate: () => void;
+    onUpdate: (diet: Diet) => Promise<void>;
 }
 
 const DietEditModal: React.FC<DietEditModalProps> = ({
@@ -36,7 +36,7 @@ const DietEditModal: React.FC<DietEditModalProps> = ({
 
                 {loading ? (
                     <div className="flex justify-center items-center h-[400px]">
-                        <LoadingSpinner />
+                        <LoadingSpinner/>
                     </div>
                 ) : editableDiet && (
                     <div className="mt-4">
@@ -46,7 +46,7 @@ const DietEditModal: React.FC<DietEditModalProps> = ({
                             shoppingList={shoppingList}
                             onUpdate={async (updatedData) => {
                                 await updateDiet(updatedData);
-                                onUpdate();
+                                await onUpdate(updatedData);
                             }}
                         />
                     </div>
