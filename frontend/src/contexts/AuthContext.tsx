@@ -2,7 +2,9 @@ import {onAuthStateChanged, signInWithEmailAndPassword, signOut, User as Firebas
 import {doc, getDoc} from 'firebase/firestore';
 import React, {createContext, useContext, useEffect, useState} from "react";
 import {auth, db} from '../config/firebase';
-import {User, UserRole} from '../types/user';
+import {User} from '../types/user';
+import api from "../config/axios";
+import axios from 'axios';
 
 interface AuthContextType {
     currentUser: FirebaseUser | null;
@@ -43,22 +45,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
     }, []);
 
     const login = async (email: string, password: string) => {
-        const credential = await signInWithEmailAndPassword(auth, email, password);
-        const userDoc = await getDoc(doc(db, 'users', credential.user.uid));
-        if (!userDoc.exists()) {
-            throw new Error('Użytkownik nie istnieje w bazie danych');
-        }
-        const userData = userDoc.data() as User;
-        if (userData.role !== UserRole.ADMIN) {
+        try {
+            const credential = await signInWithEmailAndPassword(auth, email, password);
+            const token = await credential.user.getIdToken();
+
+            const response = await api.post('/auth/login',
+                {email, password},
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            );
+
+            const userData = response.data;
+            setUserData(userData);
+            return userData;
+        } catch (error) {
+            console.error('Authentication failed:', error);
             await logout();
-            throw new Error('Brak uprawnień administratora');
+
+            if (axios.isAxiosError(error)) {
+                throw new Error(error.response?.data?.message || 'Błąd uwierzytelniania');
+            }
+
+            throw error;
         }
-        setUserData(userData);
-        return userData;
     };
 
-    const logout = () => {
-        return signOut(auth);
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            setCurrentUser(null);
+            setUserData(null);
+        } catch (error) {
+            console.error('Logout error:', error);
+            throw error;
+        }
     };
 
     const value = {

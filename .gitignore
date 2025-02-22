@@ -69,6 +69,7 @@ lerna-debug.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.firebaserc
 
 # Firebase
 firebase-debug.log*
@@ -90,3 +91,5 @@ ui-debug.log*
 # Testy
 coverage
 .vitest/
+
+/out
