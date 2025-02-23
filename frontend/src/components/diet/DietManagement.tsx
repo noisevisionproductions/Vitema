@@ -71,12 +71,15 @@ const DietManagement: React.FC = () => {
 
     const handleDietDelete = async (dietId: string) => {
         try {
+            console.log('Starting diet deletion process for:', dietId);
             await deleteDiet(dietId);
+            console.log('Diet deletion successful');
+
             setSelectedDiet(null);
             setEditingDiet(null);
             await refreshDiets();
-            toast.success('Dieta została usunięta');
         } catch (error) {
+            console.error('Diet deletion failed:', error);
             toast.error('Błąd podczas usuwania diety');
         }
     };

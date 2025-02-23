@@ -21,6 +21,16 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        console.error('API Error:', {
+            status: error.response?.status,
+            data: error.response?.data,
+            config: {
+                method: error.config?.method,
+                url: error.config?.url,
+                data: error.config?.data
+            }
+        });
+
         if (error.response?.status === 401) {
             // Można tutaj dodać logikę wylogowania
             toast.error('Sesja wygasła. Zaloguj się ponownie.');

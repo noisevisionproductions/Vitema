@@ -2,7 +2,7 @@ package com.noisevisionsoftware.nutrilog.repository;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
-import com.noisevisionsoftware.nutrilog.mapper.diet.FirestoreMapper;
+import com.noisevisionsoftware.nutrilog.mapper.diet.FirestoreDietMapper;
 import com.noisevisionsoftware.nutrilog.model.diet.Diet;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +19,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DietRepository {
     private final Firestore firestore;
-    private final FirestoreMapper firestoreMapper;
+    private final FirestoreDietMapper firestoreDietMapper;
     private static final String COLLECTION_NAME = "diets";
 
     public Diet save(Diet diet) {
         try {
             DocumentReference docRef = firestore.collection(COLLECTION_NAME).document();
-            Map<String, Object> data = firestoreMapper.toFirestoreMap(diet);
+            Map<String, Object> data = firestoreDietMapper.toFirestoreMap(diet);
             ApiFuture<WriteResult> result = docRef.set(data);
             result.get();
             diet.setId(docRef.getId());
@@ -39,7 +39,7 @@ public class DietRepository {
         try {
             DocumentReference docRef = firestore.collection(COLLECTION_NAME).document(id);
             DocumentSnapshot document = docRef.get().get();
-            return Optional.ofNullable(firestoreMapper.toDiet(document));
+            return Optional.ofNullable(firestoreDietMapper.toDiet(document));
         } catch (Exception e) {
             throw new RuntimeException("Failed to fetch diet", e);
         }
@@ -52,7 +52,7 @@ public class DietRepository {
             QuerySnapshot querySnapshot = query.get().get();
 
             return querySnapshot.getDocuments().stream()
-                    .map(firestoreMapper::toDiet)
+                    .map(firestoreDietMapper::toDiet)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -75,7 +75,7 @@ public class DietRepository {
             QuerySnapshot snapshot = future.get();
 
             return snapshot.getDocuments().stream()
-                    .map(firestoreMapper::toDiet)
+                    .map(firestoreDietMapper::toDiet)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (Exception e) {
@@ -93,7 +93,7 @@ public class DietRepository {
             QuerySnapshot querySnapshot = query.get().get();
 
             return querySnapshot.getDocuments().stream()
-                    .map(firestoreMapper::toDiet)
+                    .map(firestoreDietMapper::toDiet)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (Exception e) {

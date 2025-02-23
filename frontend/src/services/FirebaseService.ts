@@ -1,13 +1,11 @@
 import {
     addDoc,
     collection,
-    doc,
     getDocs,
     query,
     Timestamp,
     updateDoc,
-    where,
-    writeBatch
+    where
 } from 'firebase/firestore';
 import {getDownloadURL, ref, uploadBytes} from 'firebase/storage';
 import {db, storage} from '../config/firebase';
@@ -21,6 +19,7 @@ export class FirebaseService {
         await uploadBytes(storageRef, file);
         return await getDownloadURL(storageRef);
     }
+/*
 
     static async deleteDietWithRelatedData(dietId: string) {
         const batch = writeBatch(db);
@@ -50,6 +49,7 @@ export class FirebaseService {
 
         await batch.commit();
     }
+*/
 
     static async saveDietWithShoppingList(
         parsedData: ParsedDietData,

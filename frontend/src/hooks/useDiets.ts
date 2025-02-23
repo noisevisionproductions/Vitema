@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Diet } from '../types';
-import { toast } from 'sonner';
-import { User } from '../types/user';
-import api from '../config/axios';
+import {useState, useEffect} from 'react';
+import {Diet} from '../types';
+import {toast} from 'sonner';
+import {User} from '../types/user';
+import {DietService} from "../services/DietService";
 
 export interface DietWithUser extends Diet {
     userEmail?: string;
@@ -16,14 +16,11 @@ export const useDiets = (_users: User[], usersLoading: boolean) => {
 
     const fetchDiets = async () => {
         try {
+            console.log('Fetching diets...');
             setLoading(true);
-            const response = await api.get('/diets', {
-                params: {
-                    page,
-                    size
-                }
-            });
-            setDiets(response.data);
+            const response = await DietService.getDiets();
+            console.log('Fetched diets:', response);
+            setDiets(response);
         } catch (error) {
             console.error('Error fetching diets:', error);
             toast.error('Błąd podczas pobierania diet');
@@ -37,20 +34,32 @@ export const useDiets = (_users: User[], usersLoading: boolean) => {
         fetchDiets().catch(console.error);
     }, [usersLoading, page, size]);
 
+
     const deleteDiet = async (id: string) => {
         try {
-            await api.delete(`/diets/${id}`);
-            toast.success('Dieta została usunięta');
+            console.log('Starting diet deletion, ID:', id);
+
+            // Natychmiastowa aktualizacja UI
+            setDiets(prevDiets => prevDiets.filter(diet => diet.id !== id));
+
+            // Wywołanie API
+            await DietService.deleteDiet(id);
+            console.log('Diet deleted successfully, ID:', id);
+
+            // Odśwież dane z serwera
             await fetchDiets();
+
+            toast.success('Dieta została usunięta');
         } catch (error) {
-            console.error('Error deleting diet:', error);
-            toast.error('Błąd podczas usuwania diety');
+            console.error('Diet deletion failed:', error);
+            // Przywróć poprzedni stan w przypadku błędu
+            await fetchDiets();
+            throw error;
         }
     };
-
     const updateDiet = async (id: string, dietData: Partial<Diet>) => {
         try {
-            await api.put(`/diets/${id}`, dietData);
+            await DietService.updateDiet(id, dietData);
             toast.success('Dieta została zaktualizowana');
             await fetchDiets();
         } catch (error) {
@@ -61,10 +70,10 @@ export const useDiets = (_users: User[], usersLoading: boolean) => {
 
     const createDiet = async (dietData: Omit<Diet, 'id'>) => {
         try {
-            const response = await api.post('/diets', dietData);
+            const response = await DietService.createDiet(dietData);
             toast.success('Dieta została utworzona');
             await fetchDiets();
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Error creating diet:', error);
             toast.error('Błąd podczas tworzenia diety');

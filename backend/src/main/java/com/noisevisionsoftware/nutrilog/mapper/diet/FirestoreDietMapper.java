@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class FirestoreMapper {
+public class FirestoreDietMapper {
 
     public Map<String, Object> toFirestoreMap(Diet diet) {
         Map<String, Object> data = new HashMap<>();

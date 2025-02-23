@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -26,8 +27,12 @@ class DietServiceTest {
     @Mock
     private DietRepository dietRepository;
 
+    @Mock
+    private FirestoreService firestoreService;
+
     @InjectMocks
     private DietService dietService;
+
 
     private Diet testDiet;
     private static final String TEST_ID = "test123";
@@ -40,7 +45,7 @@ class DietServiceTest {
                 .userId(TEST_USER_ID)
                 .createdAt(Timestamp.now())
                 .updatedAt(Timestamp.now())
-                .days(List.of())
+                .days(new ArrayList<>())
                 .metadata(DietMetadata.builder().build())
                 .build();
     }
@@ -121,6 +126,7 @@ class DietServiceTest {
         Diet dietToUpdate = Diet.builder()
                 .id(TEST_ID)
                 .userId(TEST_USER_ID)
+                .days(new ArrayList<>())
                 .build();
 
         when(dietRepository.findById(TEST_ID)).thenReturn(Optional.of(testDiet));
@@ -136,6 +142,7 @@ class DietServiceTest {
         assertEquals(testDiet.getCreatedAt(), dietToUpdate.getCreatedAt());
         assertNotNull(dietToUpdate.getUpdatedAt());
     }
+
 
     @Test
     void updateDiet_WhenDietDoesNotExist_ShouldThrowNotFoundException() {
@@ -157,13 +164,16 @@ class DietServiceTest {
     void deleteDiet_ShouldDeleteDiet() {
         // Arrange
         doNothing().when(dietRepository).delete(TEST_ID);
+        doNothing().when(firestoreService).deleteRelatedData(TEST_ID);
 
         // Act
         dietService.deleteDiet(TEST_ID);
 
         // Assert
         verify(dietRepository).delete(TEST_ID);
+        verify(firestoreService).deleteRelatedData(TEST_ID);
     }
+
 
     @Test
     void createDiet_ShouldSetCurrentTimestamps() {
@@ -172,9 +182,7 @@ class DietServiceTest {
                 .userId(TEST_USER_ID)
                 .build();
 
-        when(dietRepository.save(any(Diet.class))).thenAnswer(invocation -> {
-            return invocation.<Diet>getArgument(0);
-        });
+        when(dietRepository.save(any(Diet.class))).thenAnswer(invocation -> invocation.<Diet>getArgument(0));
 
         // Act
         Diet createdDiet = dietService.createDiet(dietToCreate);
@@ -195,12 +203,12 @@ class DietServiceTest {
         Diet dietToUpdate = Diet.builder()
                 .id(TEST_ID)
                 .userId(TEST_USER_ID)
+                .days(new ArrayList<>())
                 .build();
 
         when(dietRepository.findById(TEST_ID)).thenReturn(Optional.of(testDiet));
-        when(dietRepository.save(any(Diet.class))).thenAnswer(invocation -> {
-            return invocation.<Diet>getArgument(0);
-        });
+        when(dietRepository.save(any(Diet.class))).thenAnswer(invocation ->
+                invocation.<Diet>getArgument(0));
 
         // Act
         Diet updatedDiet = dietService.updateDiet(dietToUpdate);

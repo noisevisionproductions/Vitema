@@ -84,8 +84,10 @@ class DietMapperTest {
                 .build();
 
         DayRequest dayRequest = DayRequest.builder()
+                .date(LocalDateTime.now().toString())
                 .meals(Collections.singletonList(mealRequest))
                 .build();
+
 
         DietMetadataRequest metadataRequest = DietMetadataRequest.builder()
                 .totalDays(7)

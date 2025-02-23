@@ -1,15 +1,13 @@
 import React, {useEffect, useState} from "react";
 import {CategorizedShoppingListItem, Diet, ShoppingListV3} from "../../../../../types";
 import {Calendar, Info} from "lucide-react";
-import {formatDate} from "../../../../../utils/dateFormatters";
+import {formatTimestamp} from "../../../../../utils/dateFormatters";
 import {useConfirmation} from "../../../../../hooks/useConfirmation";
-import {doc, updateDoc} from "firebase/firestore";
-import {db} from "../../../../../config/firebase";
-import {toast} from "sonner";
 import ConfirmationDialog from "../../../../common/ConfirmationDialog";
 import {getCategoryLabel} from "../../../../../utils/productUtils";
 import CategoryItemEditor from "../../CategoryItemEditor";
 import AddProductButton from "./AddProductButton";
+import { useShoppingList} from "../../../../../hooks/useShoppingList";
 
 interface DietShoppingListEditorProps {
     diet: Diet;
@@ -20,7 +18,8 @@ interface DietShoppingListEditorProps {
 const DietShoppingListEditor: React.FC<DietShoppingListEditorProps> = ({
                                                                            shoppingList: initialShoppingList
                                                                        }) => {
-    const [shoppingList, setShoppingList] = useState(initialShoppingList)
+    const [shoppingList, setShoppingList] = useState(initialShoppingList);
+    const { updateItems, removeItem, addItem } = useShoppingList(shoppingList?.dietId || '');
 
     const {
         isConfirmationOpen,
@@ -46,82 +45,33 @@ const DietShoppingListEditor: React.FC<DietShoppingListEditorProps> = ({
         index: number,
         updatedItem: CategorizedShoppingListItem
     ) => {
-        if (!shoppingList?.id) return;
+        if (!shoppingList) return;
 
         try {
             const newItems = {...shoppingList.items};
             newItems[categoryId][index] = updatedItem;
-
-            const shoppingListRef = doc(db, 'shopping_lists', shoppingList.id);
-            await updateDoc(shoppingListRef, {items: newItems});
-
-            setShoppingList(prev => prev ? {
-                ...prev,
-                items: newItems
-            } as ShoppingListV3 : null);
-
-            toast.success('Pozycja została zaktualizowana');
+            await updateItems(newItems);
         } catch (error) {
             console.error('Error updating item:', error);
-            toast.error('Błąd podczas aktualizacji pozycji');
         }
     };
 
     const handleDeleteItem = async (categoryId: string, index: number) => {
-        if (!shoppingList?.id) return;
-
         try {
-            const newItems = {...shoppingList.items};
-            newItems[categoryId] = [
-                ...newItems[categoryId].slice(0, index),
-                ...newItems[categoryId].slice(index + 1)
-            ];
-
-            if (newItems[categoryId].length === 0) {
-                delete newItems[categoryId];
-            }
-
-            const shoppingListRef = doc(db, 'shopping_lists', shoppingList.id);
-            await updateDoc(shoppingListRef, {items: newItems});
-
-            setShoppingList(prev => prev ? {
-                ...prev,
-                items: newItems
-            } as ShoppingListV3 : null);
-
-            toast.success('Produkt został usunięty');
+            await removeItem(categoryId, index);
             closeConfirmation();
         } catch (error) {
             console.error('Error deleting item:', error);
-            toast.error('Błąd podczas usuwania produktu');
         }
     };
 
     const handleAddItem = async (categoryId: string, newItem: CategorizedShoppingListItem) => {
-        if (!shoppingList?.id) return;
-
         try {
-            const newItems = { ...shoppingList.items };
-            if (!newItems[categoryId]) {
-                newItems[categoryId] = [];
-            }
-            newItems[categoryId] = [...newItems[categoryId], newItem];
-
-            const shoppingListRef = doc(db, 'shopping_lists', shoppingList.id);
-            await updateDoc(shoppingListRef, { items: newItems });
-
-            setShoppingList(prev => prev ? {
-                ...prev,
-                items: newItems
-            } as ShoppingListV3 : null);
-
-            toast.success('Produkt został dodany');
+            await addItem(categoryId, newItem);
         } catch (error) {
             console.error('Error adding item:', error);
-            toast.error('Błąd podczas dodawania produktu');
         }
     };
-
 
     return (
         <div className="space-y-6">
@@ -130,7 +80,7 @@ const DietShoppingListEditor: React.FC<DietShoppingListEditorProps> = ({
                     <h3 className="text-lg font-medium">Lista zakupów</h3>
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Calendar className="h-4 w-4"/>
-                        {formatDate(shoppingList.startDate)} - {formatDate(shoppingList.endDate)}
+                        {formatTimestamp(shoppingList.startDate)} - {formatTimestamp(shoppingList.endDate)}
                     </div>
                 </div>
 

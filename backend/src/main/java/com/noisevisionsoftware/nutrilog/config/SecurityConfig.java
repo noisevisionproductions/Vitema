@@ -38,6 +38,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/diets/**").permitAll()
+                        .requestMatchers("/api/shopping-lists/**").permitAll()
+                        .requestMatchers("/api/recipes/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Diet} from "../../../../types";
 import UserSelector from "../../upload/UserSelector";
-import {formatDate} from "../../../../utils/dateFormatters";
+import {formatTimestamp} from "../../../../utils/dateFormatters";
 import useUsers from "../../../../hooks/useUsers";
 import {User} from "src/types/user";
 import {useConfirmation} from "../../../../hooks/useConfirmation";
@@ -103,7 +103,7 @@ const DietGeneralInfoEditor: React.FC<DietGeneralInfoProps> = ({diet, onUpdate})
                             Data utworzenia diety
                         </label>
                         <div className="text-gray-900">
-                            {formatDate(diet.createdAt)}
+                            {formatTimestamp(diet.createdAt)}
                         </div>
                     </div>
 
@@ -112,7 +112,7 @@ const DietGeneralInfoEditor: React.FC<DietGeneralInfoProps> = ({diet, onUpdate})
                             Ostatnia aktualizacja diety
                         </label>
                         <div className="text-gray-900">
-                            {formatDate(diet.updatedAt)}
+                            {formatTimestamp(diet.updatedAt)}
                         </div>
                     </div>
                 </div>

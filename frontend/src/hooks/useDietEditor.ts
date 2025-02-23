@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import {doc, getDoc, Timestamp, updateDoc} from 'firebase/firestore';
-import { db } from '../config/firebase';
 import {Diet, Recipe, ShoppingListV3} from '../types';
 import { toast } from 'sonner';
 import { useRecipes } from './useRecipes';
 import { useShoppingList } from './useShoppingList';
+import {DietService} from "../services/DietService";
 
 interface UseDietEditorReturn {
     diet: Diet | null;
@@ -27,19 +26,7 @@ export const useDietEditor = (dietId: string): UseDietEditorReturn => {
         const fetchDiet = async () => {
             try {
                 setLoading(true);
-                const dietDoc = await getDoc(doc(db, 'diets', dietId));
-
-                if (!dietDoc.exists()) {
-                    setError(new Error('Dieta nie istnieje'));
-                    toast.error('Dieta nie istnieje');
-                    return;
-                }
-
-                const dietData = {
-                    id: dietDoc.id,
-                    ...dietDoc.data(),
-                } as Diet;
-
+                const dietData = await DietService.getDietById(dietId);
                 setDiet(dietData);
             } catch (err) {
                 console.error('Błąd podczas pobierania diety:', err);
@@ -62,16 +49,12 @@ export const useDietEditor = (dietId: string): UseDietEditorReturn => {
                 return;
             }
 
-            const dietRef = doc(db, 'diets', diet.id);
-            const updatedData = {
+            const updatedData = await DietService.updateDiet(diet.id, {
                 ...diet,
-                ...updatedDiet,
-                updatedAt: Timestamp.fromDate(new Date())
-            };
+                ...updatedDiet
+            });
 
-
-            await updateDoc(dietRef, updatedData);
-            setDiet(updatedData as Diet);
+            setDiet(updatedData);
             toast.success('Dieta została zaktualizowana');
         } catch (err) {
             console.error('Błąd podczas aktualizacji diety:', err);

@@ -1,14 +1,14 @@
-import React, {useState} from "react";
-import {Diet, DietTemplate, Recipe, ShoppingList} from "../../../../../types";
-import {toast} from "sonner";
-import {useMealConfiguration} from "../../../../../hooks/useMealConfiguration";
-import {doc, Timestamp, updateDoc} from "firebase/firestore";
-import {useConfirmation} from "../../../../../hooks/useConfirmation";
+import React, { useState, useCallback } from "react";
+import { Diet, DietTemplate, Recipe, ShoppingList } from "../../../../../types";
+import { toast } from "sonner";
+import { useMealConfiguration } from "../../../../../hooks/useMealConfiguration";
+import { useConfirmation } from "../../../../../hooks/useConfirmation";
 import ConfirmationDialog from "../../../../common/ConfirmationDialog";
-import {db} from "../../../../../config/firebase";
 import MealConfigSection from "./MealConfiguration";
 import DietStartDateSection from "./DietStartDateSection";
 import DietDayItem from "./DietDayItem";
+import { ShoppingListService} from "../../../../../services/categorization/ShoppingListService";
+import { toFirestoreTimestamp} from "../../../../../utils/dateFormatters";
 
 interface DietDaysEditorProps {
     diet: Diet;
@@ -76,17 +76,17 @@ const DietDaysEditor: React.FC<DietDaysEditorProps> = ({
         closeConfirmation: closeDateChangeConfirmation
     } = useConfirmation<DateChangeData>();
 
-    const handleApplyConfiguration = async () => {
+    const handleApplyConfiguration = useCallback(async () => {
         try {
             const updatedDays = applyMealConfiguration(diet.days);
-            openConfigurationConfirmation({updatedDays});
+            openConfigurationConfirmation({ updatedDays });
         } catch (error) {
             toast.error('Błąd podczas przygotowywania konfiguracji');
             console.error('Error preparing configuration:', error);
         }
-    };
+    }, [diet.days, applyMealConfiguration, openConfigurationConfirmation]);
 
-    const handleConfirmConfiguration = async () => {
+    const handleConfirmConfiguration = useCallback(async () => {
         if (!configurationChangeData) return;
 
         try {
@@ -100,21 +100,21 @@ const DietDaysEditor: React.FC<DietDaysEditorProps> = ({
             toast.error('Błąd podczas aktualizacji konfiguracji');
             console.error('Error applying configuration:', error);
         }
-    };
+    }, [configurationChangeData, diet, onUpdate, closeConfigurationConfirmation]);
 
-    const toggleDay = (dayIndex: number) => {
+    const toggleDay = useCallback((dayIndex: number) => {
         setExpandedDays(prev =>
             prev.includes(dayIndex)
                 ? prev.filter(i => i !== dayIndex)
                 : [...prev, dayIndex]
         );
-    };
+    }, []);
 
-    const handleTimeChange = (dayIndex: number, mealIndex: number, newTime: string) => {
-        openTimeChangeConfirmation({dayIndex, mealIndex, newTime});
-    };
+    const handleTimeChange = useCallback((dayIndex: number, mealIndex: number, newTime: string) => {
+        openTimeChangeConfirmation({ dayIndex, mealIndex, newTime });
+    }, [openTimeChangeConfirmation]);
 
-    const handleConfirmTimeChange = async () => {
+    const handleConfirmTimeChange = useCallback(async () => {
         if (!timeChangeData) return;
 
         try {
@@ -130,13 +130,13 @@ const DietDaysEditor: React.FC<DietDaysEditorProps> = ({
             toast.error('Błąd podczas aktualizacji czasu posiłku');
             console.error('Error changing time:', error);
         }
-    };
+    }, [timeChangeData, diet, onUpdate, closeTimeChangeConfirmation]);
 
-    const handleStartDateChange = (newDateStr: string) => {
-        openDateChangeConfirmation({newDateStr});
-    };
+    const handleStartDateChange = useCallback((newDateStr: string) => {
+        openDateChangeConfirmation({ newDateStr });
+    }, [openDateChangeConfirmation]);
 
-    const handleConfirmDateChange = async () => {
+    const handleConfirmDateChange = useCallback(async () => {
         if (!dateChangeData) return;
 
         try {
@@ -146,7 +146,7 @@ const DietDaysEditor: React.FC<DietDaysEditorProps> = ({
                 newDate.setDate(startDate.getDate() + index);
                 return {
                     ...day,
-                    date: Timestamp.fromDate(newDate)
+                    date: toFirestoreTimestamp(newDate)
                 };
             });
 
@@ -159,11 +159,11 @@ const DietDaysEditor: React.FC<DietDaysEditorProps> = ({
             });
 
             if (shoppingList?.id) {
-                const shoppingListRef = doc(db, 'shopping_lists', shoppingList.id);
-                await updateDoc(shoppingListRef, {
-                    startDate: Timestamp.fromDate(startDate),
-                    endDate: Timestamp.fromDate(endDate)
-                });
+                await ShoppingListService.updateDates(
+                    shoppingList.id,
+                    toFirestoreTimestamp(startDate),
+                    toFirestoreTimestamp(endDate)
+                );
                 toast.success('Daty zostały zaktualizowane w diecie i liście zakupów');
             } else {
                 toast.success('Daty zostały zaktualizowane');
@@ -174,7 +174,7 @@ const DietDaysEditor: React.FC<DietDaysEditorProps> = ({
             console.error('Error updating dates:', error);
             toast.error('Błąd podczas aktualizacji dat');
         }
-    };
+    }, [dateChangeData, diet, shoppingList, onUpdate, closeDateChangeConfirmation]);
 
     return (
         <div className="space-y-6">

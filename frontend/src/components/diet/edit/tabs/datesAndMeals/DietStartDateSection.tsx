@@ -1,6 +1,6 @@
 import React from "react";
 import {Timestamp} from "firebase/firestore";
-import {dateToString} from "../../../../../utils/dateFormatters";
+import {toISODate} from "../../../../../utils/dateFormatters";
 
 interface DietStartDateSectionProps {
     currentDate: Timestamp;
@@ -19,7 +19,7 @@ const DietStartDateSection: React.FC<DietStartDateSectionProps> = ({
             <div className="flex items-center gap-4">
                 <input
                     type="date"
-                    value={dateToString(currentDate)}
+                    value={toISODate(currentDate)}
                     onChange={(e) => onDateChange(e.target.value)}
                     className="border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />

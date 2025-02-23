@@ -1,7 +1,7 @@
 import React from "react";
 import {getMealTypeLabel} from "../../../utils/mealTypeUtils";
 import {DietTemplate, MealType} from "../../../types";
-import {dateToString, stringToTimestamp} from "../../../utils/dateFormatters";
+import {stringToTimestamp, toISODate} from "../../../utils/dateFormatters";
 
 interface DietTemplateConfigProps {
     template: DietTemplate;
@@ -77,7 +77,7 @@ const DietTemplateConfig: React.FC<DietTemplateConfigProps> = ({
                         id="startDate"
                         min={1}
                         max={90}
-                        value={dateToString(template.startDate)}
+                        value={toISODate(template.startDate)}
                         onChange={(e) =>
                             onTemplateChange({
                                 ...template,
@@ -112,7 +112,7 @@ const DietTemplateConfig: React.FC<DietTemplateConfigProps> = ({
             <div className="space-y-6">
                 <h4 className="text-lg font-semibold">Konfiguracja posiłków</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {Array.from({ length: template.mealsPerDay }).map((_, index) => (
+                    {Array.from({length: template.mealsPerDay}).map((_, index) => (
                         <div key={index} className="bg-gray-50 p-4 rounded-lg space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">

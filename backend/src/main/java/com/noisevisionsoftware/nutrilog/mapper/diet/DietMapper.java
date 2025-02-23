@@ -15,14 +15,17 @@ import com.noisevisionsoftware.nutrilog.model.diet.Diet;
 import com.noisevisionsoftware.nutrilog.model.diet.DietMetadata;
 import com.noisevisionsoftware.nutrilog.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DietMapper {
     private final UserService userService;
 
@@ -67,7 +70,9 @@ public class DietMapper {
 
     private Day toDay(DayRequest request) {
         return Day.builder()
-                .date(Timestamp.now()) // Tu możesz dodać parsowanie daty z request
+                .date(request.getDate() != null ?
+                        convertToFirebaseTimestamp(request.getDate()) :
+                        Timestamp.now())
                 .meals(request.getMeals().stream()
                         .map(this::toMeal)
                         .collect(Collectors.toList()))
@@ -107,8 +112,18 @@ public class DietMapper {
     }
 
     LocalDateTime timestampToLocalDateTime(Timestamp timestamp) {
-        return timestamp.toDate().toInstant()
+        return timestamp.toDate()
+                .toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
+    }
+
+    private Timestamp convertToFirebaseTimestamp(String dateStr) {
+        try {
+            LocalDateTime dateTime = LocalDateTime.parse(dateStr);
+            return Timestamp.of(Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant()));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid date format: " + dateStr);
+        }
     }
 }

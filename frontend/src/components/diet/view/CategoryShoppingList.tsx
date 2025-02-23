@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { formatDate} from "../../../utils/dateFormatters";
+import {formatTimestamp} from "../../../utils/dateFormatters";
 import { ShoppingListV3, CategorizedShoppingListItem} from "../../../types";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import { getCategoryLabel} from "../../../utils/productUtils";
@@ -42,7 +42,7 @@ const CategoryShoppingList: React.FC<CategoryShoppingListProps> = ({
                     )}
                 </h3>
                 <div className="text-sm text-gray-600">
-                    {formatDate(shoppingList.startDate)} - {formatDate(shoppingList.endDate)}
+                    {formatTimestamp(shoppingList.startDate)} - {formatTimestamp(shoppingList.endDate)}
                     <ChevronDown
                         className={`ml-2 inline-block transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                         size={16}

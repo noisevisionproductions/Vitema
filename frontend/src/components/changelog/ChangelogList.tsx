@@ -1,7 +1,7 @@
 import React from "react";
 import {ChangelogEntry} from "../../types/changeLog";
 import {Bug, Lightbulb, Sparkles} from "lucide-react";
-import {formatDate} from "../../utils/dateFormatters";
+import {formatTimestamp} from "../../utils/dateFormatters";
 
 interface ChangelogListProps {
     entries: ChangelogEntry[];
@@ -44,7 +44,7 @@ const ChangelogList: React.FC<ChangelogListProps> = ({ entries}) => {
                                     {entry.title}
                                 </h3>
                                 <span className="text-sm text-gray-500">
-                                    {formatDate(entry.createdAt)}
+                                    {formatTimestamp(entry.createdAt)}
                                 </span>
                             </div>
                             <span className="inline-block px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 mt-1">

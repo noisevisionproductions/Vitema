@@ -16,10 +16,10 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-class FirestoreMapperTest {
+class FirestoreDietMapperTest {
 
     @InjectMocks
-    private FirestoreMapper firestoreMapper;
+    private FirestoreDietMapper firestoreDietMapper;
 
     @Mock
     private DocumentSnapshot documentSnapshot;
@@ -66,7 +66,7 @@ class FirestoreMapperTest {
     @SuppressWarnings("unchecked")
     void toFirestoreMap_ShouldMapDietToMap() {
         // Act
-        Map<String, Object> result = firestoreMapper.toFirestoreMap(testDiet);
+        Map<String, Object> result = firestoreDietMapper.toFirestoreMap(testDiet);
 
         // Assert
         assertNotNull(result);
@@ -116,7 +116,7 @@ class FirestoreMapperTest {
         when(documentSnapshot.getId()).thenReturn(TEST_ID);
 
         // Act
-        Diet result = firestoreMapper.toDiet(documentSnapshot);
+        Diet result = firestoreDietMapper.toDiet(documentSnapshot);
 
         // Assert
         assertNotNull(result);
@@ -142,7 +142,7 @@ class FirestoreMapperTest {
         when(documentSnapshot.exists()).thenReturn(false);
 
         // Act
-        Diet result = firestoreMapper.toDiet(documentSnapshot);
+        Diet result = firestoreDietMapper.toDiet(documentSnapshot);
 
         // Assert
         assertNull(result);
@@ -155,7 +155,7 @@ class FirestoreMapperTest {
         when(documentSnapshot.getData()).thenReturn(null);
 
         // Act
-        Diet result = firestoreMapper.toDiet(documentSnapshot);
+        Diet result = firestoreDietMapper.toDiet(documentSnapshot);
 
         // Assert
         assertNull(result);
@@ -167,7 +167,7 @@ class FirestoreMapperTest {
         testDiet.setMetadata(null);
 
         // Act
-        Map<String, Object> result = firestoreMapper.toFirestoreMap(testDiet);
+        Map<String, Object> result = firestoreDietMapper.toFirestoreMap(testDiet);
 
         // Assert
         assertNotNull(result);
@@ -193,7 +193,7 @@ class FirestoreMapperTest {
         when(documentSnapshot.getData()).thenReturn(documentData);
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> firestoreMapper.toDiet(documentSnapshot));
+        assertThrows(IllegalArgumentException.class, () -> firestoreDietMapper.toDiet(documentSnapshot));
     }
 
     @Test
@@ -203,7 +203,7 @@ class FirestoreMapperTest {
         testDiet.setDays(new ArrayList<>());
 
         // Act
-        Map<String, Object> result = firestoreMapper.toFirestoreMap(testDiet);
+        Map<String, Object> result = firestoreDietMapper.toFirestoreMap(testDiet);
 
         // Assert
         assertNotNull(result);
@@ -225,7 +225,7 @@ class FirestoreMapperTest {
         when(documentSnapshot.getId()).thenReturn(TEST_ID);
 
         // Act
-        Diet result = firestoreMapper.toDiet(documentSnapshot);
+        Diet result = firestoreDietMapper.toDiet(documentSnapshot);
 
         // Assert
         assertNotNull(result);

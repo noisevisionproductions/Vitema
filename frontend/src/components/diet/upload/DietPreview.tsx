@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {getMealTypeLabel} from "../../../utils/mealTypeUtils";
-import {formatDate} from "../../../utils/dateFormatters";
+import {formatTimestamp} from "../../../utils/dateFormatters";
 import {ParsedDietData} from "../../../types";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
@@ -191,7 +191,7 @@ const DietPreview: React.FC<DietPreviewProps> = ({
                 {parsedData.days.map((day, dayIndex) => (
                     <div key={dayIndex} className="border rounded-lg p-4">
                         <h3 className="text-lg font-semibold mb-4">
-                            Dzień {dayIndex + 1} - {formatDate(day.date)}
+                            Dzień {dayIndex + 1} - {formatTimestamp(day.date)}
                         </h3>
                         <div className="space-y-4">
                             {day.meals.map((meal, mealIndex) => (

@@ -1,19 +1,18 @@
-import React, {useEffect, useState} from "react";
-import {toast} from "sonner";
+import React from "react";
 import {
     Sheet,
     SheetContent,
     SheetHeader,
     SheetTitle,
 } from "../../ui/sheet"
-import { X} from "lucide-react";
+import { X } from "lucide-react";
 import LoadingSpinner from "../../common/LoadingSpinner";
-import {useShoppingList} from "../../../hooks/useShoppingList";
-import {doc, getDoc} from "firebase/firestore";
-import {db} from "../../../config/firebase";
-import {formatDate, formatTimestamp} from "../../../utils/dateFormatters";
-import {Diet, MealType, Recipe, ShoppingListV3} from "../../../types";
+import { useShoppingList } from "../../../hooks/useShoppingList";
+import { formatTimestamp } from "../../../utils/dateFormatters";
+import {Diet, Recipe, ShoppingListV3} from "../../../types";
 import CategoryShoppingList from "./CategoryShoppingList";
+import { useRecipes } from "../../../hooks/useRecipes";
+import { getMealTypeLabel } from "../../../utils/mealTypeUtils";
 
 interface DietViewProps {
     diet: Diet;
@@ -21,63 +20,15 @@ interface DietViewProps {
     onDelete: (dietId: string) => void;
 }
 
-const DietView: React.FC<DietViewProps> = ({diet, onClose}) => {
-    const [recipes, setRecipes] = useState<{ [key: string]: Recipe }>({});
-    const [loading, setLoading] = useState(true);
-    const {shoppingList, loading: shoppingListLoading} = useShoppingList(diet.id);
-
-    useEffect(() => {
-        const fetchRecipes = async () => {
-            try {
-                if (!diet.days || diet.days.length === 0) {
-                    setLoading(false);
-                    return;
-                }
-
-                const recipeIds = new Set(
-                    diet.days.flatMap((day) => day.meals.map((meal) => meal.recipeId))
-                );
-
-                const recipesData: { [key: string]: Recipe } = {};
-                for (const recipeId of recipeIds) {
-                    if (!recipeId) continue;
-
-                    const recipeDoc = await getDoc(doc(db, "recipes", recipeId));
-                    if (recipeDoc.exists()) {
-                        recipesData[recipeId] = {
-                            id: recipeDoc.id,
-                            ...recipeDoc.data(),
-                        } as Recipe;
-                    }
-                }
-                setRecipes(recipesData);
-            } catch (error) {
-                console.error("Error fetching recipes:", error);
-                toast.error("Błąd podczas pobierania przepisów");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchRecipes().catch();
-    }, [diet]);
-
-    const getMealTypeLabel = (mealType: MealType) => {
-        const labels: { [key in MealType]: string } = {
-            [MealType.BREAKFAST]: 'Śniadanie',
-            [MealType.SECOND_BREAKFAST]: 'Drugie śniadanie',
-            [MealType.LUNCH]: 'Obiad',
-            [MealType.SNACK]: 'Przekąska',
-            [MealType.DINNER]: 'Kolacja'
-        };
-        return labels[mealType];
-    };
+const DietView: React.FC<DietViewProps> = ({ diet, onClose }) => {
+    const { recipes, isLoadingRecipes } = useRecipes(diet.days);
+    const { shoppingList, loading: shoppingListLoading } = useShoppingList(diet.id);
 
     const renderShoppingList = () => {
         if (shoppingListLoading) {
             return (
                 <div className="flex justify-center py-4">
-                    <LoadingSpinner/>
+                    <LoadingSpinner />
                 </div>
             );
         }
@@ -128,11 +79,56 @@ const DietView: React.FC<DietViewProps> = ({diet, onClose}) => {
         );
     };
 
+    const renderRecipeDetails = (recipe: Recipe) => (
+        <div className="space-y-2">
+            <p className="font-medium">{recipe.name}</p>
+            <p className="text-sm text-gray-600">
+                {recipe.instructions}
+            </p>
+            <div className="text-sm">
+                <p className="font-medium">Wartości odżywcze:</p>
+                <p>
+                    Kalorie: {recipe.nutritionalValues?.calories || 0} kcal,{' '}
+                    Białko: {recipe.nutritionalValues?.protein || 0}g,{' '}
+                    Tłuszcze: {recipe.nutritionalValues?.fat || 0}g,{' '}
+                    Węglowodany: {recipe.nutritionalValues?.carbs || 0}g
+                </p>
+            </div>
+        </div>
+    );
+
+    const renderMeal = (meal: Diet['days'][0]['meals'][0], mealIndex: number) => {
+        const recipe = recipes[meal.recipeId];
+        if (!recipe) return null;
+
+        return (
+            <div key={mealIndex} className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between mb-2">
+                    <span className="font-medium">
+                        {getMealTypeLabel(meal.mealType)} - {meal.time}
+                    </span>
+                </div>
+                {renderRecipeDetails(recipe)}
+            </div>
+        );
+    };
+
+    const renderDay = (day: Diet['days'][0], index: number) => (
+        <div key={index} className="border-b pb-6 last:border-b-0">
+            <h3 className="text-lg font-medium mb-4">
+                Dzień {index + 1} - {formatTimestamp(day.date)}
+            </h3>
+            <div className="space-y-4">
+                {day.meals?.map((meal, mealIndex) => renderMeal(meal, mealIndex))}
+            </div>
+        </div>
+    );
+
     const renderContent = () => {
-        if (loading) {
+        if (isLoadingRecipes) {
             return (
                 <div className="flex justify-center py-8">
-                    <LoadingSpinner/>
+                    <LoadingSpinner />
                 </div>
             );
         }
@@ -145,44 +141,7 @@ const DietView: React.FC<DietViewProps> = ({diet, onClose}) => {
             );
         }
 
-        return diet.days.map((day, index) => (
-            <div key={index} className="border-b pb-6 last:border-b-0">
-                <h3 className="text-lg font-medium mb-4">
-                    Dzień {index + 1} - {formatDate(day.date)}
-                </h3>
-                <div className="space-y-4">
-                    {day.meals?.map((meal, mealIndex) => {
-                        const recipe = recipes[meal.recipeId];
-                        if (!recipe) return null;
-
-                        return (
-                            <div key={mealIndex} className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex justify-between mb-2">
-                                    <span className="font-medium">
-                                        {getMealTypeLabel(meal.mealType)} - {meal.time}
-                                    </span>
-                                </div>
-                                <div className="space-y-2">
-                                    <p className="font-medium">{recipe.name}</p>
-                                    <p className="text-sm text-gray-600">
-                                        {recipe.instructions}
-                                    </p>
-                                    <div className="text-sm">
-                                        <p className="font-medium">Wartości odżywcze:</p>
-                                        <p>
-                                            Kalorie: {recipe.nutritionalValues?.calories || 0} kcal,{' '}
-                                            Białko: {recipe.nutritionalValues?.protein || 0}g,{' '}
-                                            Tłuszcze: {recipe.nutritionalValues?.fat || 0}g,{' '}
-                                            Węglowodany: {recipe.nutritionalValues?.carbs || 0}g
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        ));
+        return diet.days.map((day, index) => renderDay(day, index));
     };
 
     return (
@@ -195,7 +154,7 @@ const DietView: React.FC<DietViewProps> = ({diet, onClose}) => {
                             onClick={onClose}
                             className="text-gray-400 hover:text-gray-500"
                         >
-                            <X className="h-6 w-6"/>
+                            <X className="h-6 w-6" />
                         </button>
                     </div>
                 </SheetHeader>
@@ -209,6 +168,5 @@ const DietView: React.FC<DietViewProps> = ({diet, onClose}) => {
         </Sheet>
     );
 };
-
 
 export default DietView;

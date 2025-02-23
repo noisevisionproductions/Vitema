@@ -2,7 +2,7 @@ import React, {useMemo} from "react";
 import {User} from "../../types/user";
 import LoadingSpinner from "../common/LoadingSpinner";
 import {useDietInfo} from "../../hooks/useDietInfo";
-import {formatDate} from "../../utils/dateFormatters";
+import {formatTimestamp} from "../../utils/dateFormatters";
 import {StickyNote} from "lucide-react";
 
 interface UserSelectorTableProps {
@@ -46,7 +46,7 @@ const UserSelectorTable: React.FC<UserSelectorTableProps> = ({
                 </div>
                 {info.startDate && info.endDate && (
                     <div className="text-gray-500 text-xs">
-                        {formatDate(info.startDate)} - {formatDate(info.endDate)}
+                        {formatTimestamp(info.startDate)} - {formatTimestamp(info.endDate)}
                     </div>
                 )}
             </div>

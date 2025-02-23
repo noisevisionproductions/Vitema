@@ -1,6 +1,6 @@
 import React from 'react';
 import {Diet} from '../../../../types';
-import {formatDate} from '../../../../utils/dateFormatters';
+import {formatTimestamp} from '../../../../utils/dateFormatters';
 import {FileText, Link as LinkIcon} from 'lucide-react';
 
 interface DietMetadataEditorProps {
@@ -59,8 +59,8 @@ const DietMetadataEditor: React.FC<DietMetadataEditorProps> = ({
 
                     <div className="mt-6 pt-6 border-t">
                         <div className="text-sm text-gray-500">
-                            <div>Utworzono: {formatDate(diet.createdAt)}</div>
-                            <div>Ostatnia modyfikacja: {formatDate(diet.updatedAt)}</div>
+                            <div>Utworzono: {formatTimestamp(diet.createdAt)}</div>
+                            <div>Ostatnia modyfikacja: {formatTimestamp(diet.updatedAt)}</div>
                         </div>
                     </div>
                 </div>

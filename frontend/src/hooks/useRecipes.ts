@@ -1,8 +1,7 @@
-import {useState, useEffect} from 'react';
-import {doc, getDoc} from 'firebase/firestore';
-import {db} from '../config/firebase';
-import {toast} from 'sonner';
-import {Diet, Recipe} from "../types";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { Diet, Recipe } from "../types";
+import { RecipeService } from "../services/RecipeService";
 
 export const useRecipes = (days: Diet['days']) => {
     const [recipes, setRecipes] = useState<{ [key: string]: Recipe }>({});
@@ -16,20 +15,22 @@ export const useRecipes = (days: Diet['days']) => {
                     return;
                 }
 
-                const recipeIds = new Set(
-                    days.flatMap((day: { meals: any[]; }) => day.meals?.map(meal => meal.recipeId) || [])
-                );
+                const recipeIds = Array.from(new Set(
+                    days.flatMap(day => day.meals?.map(meal => meal.recipeId) || [])
+                )).filter(Boolean);
 
-                const recipesData: { [key: string]: Recipe } = {};
-                for (const id of recipeIds) {
-                    if (!id) continue;
-
-                    const docs = await getDoc(doc(db, 'recipes', id));
-                    if (docs.exists()) {
-                        recipesData[id] = {id: docs.id, ...docs.data()} as Recipe;
-                    }
+                if (recipeIds.length === 0) {
+                    setIsLoadingRecipes(false);
+                    return;
                 }
-                setRecipes(recipesData);
+
+                const recipesData = await RecipeService.getRecipesByIds(recipeIds);
+                const recipesMap = recipesData.reduce((acc, recipe) => {
+                    acc[recipe.id] = recipe;
+                    return acc;
+                }, {} as { [key: string]: Recipe });
+
+                setRecipes(recipesMap);
             } catch (error) {
                 console.error('Error fetching recipes:', error);
                 toast.error('Błąd podczas pobierania przepisów');
@@ -41,5 +42,34 @@ export const useRecipes = (days: Diet['days']) => {
         fetchRecipes().catch();
     }, [days]);
 
-    return {recipes, isLoadingRecipes};
+    const updateRecipe = async (id: string, data: {
+        name: string;
+        instructions: string;
+        nutritionalValues?: {
+            calories: number;
+            protein: number;
+            fat: number;
+            carbs: number;
+        };
+    }) => {
+        try {
+            const updatedRecipe = await RecipeService.updateRecipe(id, data);
+            setRecipes(prev => ({
+                ...prev,
+                [id]: updatedRecipe
+            }));
+            toast.success('Przepis został zaktualizowany');
+            return updatedRecipe;
+        } catch (error) {
+            console.error('Error updating recipe:', error);
+            toast.error('Błąd podczas aktualizacji przepisu');
+            throw error;
+        }
+    };
+
+    return {
+        recipes,
+        isLoadingRecipes,
+        updateRecipe
+    };
 };

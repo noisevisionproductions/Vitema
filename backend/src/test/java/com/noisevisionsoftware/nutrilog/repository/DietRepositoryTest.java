@@ -3,7 +3,7 @@ package com.noisevisionsoftware.nutrilog.repository;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
-import com.noisevisionsoftware.nutrilog.mapper.diet.FirestoreMapper;
+import com.noisevisionsoftware.nutrilog.mapper.diet.FirestoreDietMapper;
 import com.noisevisionsoftware.nutrilog.model.diet.Diet;
 import com.noisevisionsoftware.nutrilog.model.diet.DietMetadata;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +28,7 @@ class DietRepositoryTest {
     private Firestore firestore;
 
     @Mock
-    private FirestoreMapper firestoreMapper;
+    private FirestoreDietMapper firestoreDietMapper;
 
     @Mock
     private CollectionReference collectionReference;
@@ -81,7 +81,7 @@ class DietRepositoryTest {
         Map<String, Object> firestoreMap = new HashMap<>();
         when(firestore.collection(anyString())).thenReturn(collectionReference);
         when(collectionReference.document()).thenReturn(documentReference);
-        when(firestoreMapper.toFirestoreMap(any(Diet.class))).thenReturn(firestoreMap);
+        when(firestoreDietMapper.toFirestoreMap(any(Diet.class))).thenReturn(firestoreMap);
         when(documentReference.set(firestoreMap)).thenReturn(writeFuture);
         when(documentReference.getId()).thenReturn(TEST_ID);
 
@@ -101,7 +101,7 @@ class DietRepositoryTest {
         when(collectionReference.document(TEST_ID)).thenReturn(documentReference);
         when(documentReference.get()).thenReturn(documentFuture);
         when(documentFuture.get()).thenReturn(documentSnapshot);
-        when(firestoreMapper.toDiet(documentSnapshot)).thenReturn(testDiet);
+        when(firestoreDietMapper.toDiet(documentSnapshot)).thenReturn(testDiet);
 
         // Act
         Optional<Diet> result = dietRepository.findById(TEST_ID);
@@ -187,7 +187,7 @@ class DietRepositoryTest {
         // Arrange
         when(firestore.collection(anyString())).thenReturn(collectionReference);
         when(collectionReference.document()).thenReturn(documentReference);
-        when(firestoreMapper.toFirestoreMap(any(Diet.class))).thenThrow(new RuntimeException("Mapping failed"));
+        when(firestoreDietMapper.toFirestoreMap(any(Diet.class))).thenThrow(new RuntimeException("Mapping failed"));
 
         // Act & Assert
         assertThrows(RuntimeException.class, () -> dietRepository.save(testDiet));
@@ -200,7 +200,7 @@ class DietRepositoryTest {
         when(collectionReference.document(TEST_ID)).thenReturn(documentReference);
         when(documentReference.get()).thenReturn(documentFuture);
         when(documentFuture.get()).thenReturn(documentSnapshot);
-        when(firestoreMapper.toDiet(documentSnapshot)).thenReturn(null);
+        when(firestoreDietMapper.toDiet(documentSnapshot)).thenReturn(null);
 
         // Act
         Optional<Diet> result = dietRepository.findById(TEST_ID);

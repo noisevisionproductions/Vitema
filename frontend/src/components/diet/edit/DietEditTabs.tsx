@@ -14,8 +14,8 @@ import {useUndoableState} from "../../../hooks/useUndoableState";
 import {Redo2, Trash2, Undo2} from "lucide-react";
 import {useNavigate} from "react-router-dom";
 import {toast} from "sonner";
-import {FirebaseService} from "../../../services/FirebaseService";
 import ConfirmationDialog from "../../common/ConfirmationDialog";
+import {DietService} from "../../../services/DietService";
 
 interface DietEditTabsProps {
     diet: Diet;
@@ -51,7 +51,7 @@ const DietEditTabs: React.FC<DietEditTabsProps> = ({
     const handleDelete = async () => {
         try {
             setIsDeleting(true);
-            await FirebaseService.deleteDietWithRelatedData(diet.id);
+            await DietService.deleteDiet(diet.id);
             toast.success('Dieta została usunięta');
             navigate('/dashboard');
         } catch (error) {

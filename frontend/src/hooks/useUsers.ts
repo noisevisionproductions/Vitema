@@ -3,7 +3,7 @@ import {collection, doc, getDoc, getDocs} from "firebase/firestore";
 import {db} from "../config/firebase";
 import {toast} from "sonner";
 import {User} from "../types/user";
-import {convertTimestampToMillis} from "../utils/dateFormatters";
+import {formatTimestamp} from "../utils/dateFormatters";
 
 export default function useUsers() {
     const [users, setUsers] = useState<User[]>([]);
@@ -41,10 +41,10 @@ export default function useUsers() {
                 return {
                     id: userDoc.id,
                     ...userData,
-                    createdAt: convertTimestampToMillis(userData.createdAt),
-                    birthDate: convertTimestampToMillis(userData.birthDate),
+                    createdAt: formatTimestamp(userData.createdAt),
+                    birthDate: formatTimestamp(userData.birthDate),
                     note: userData.note || ''
-                } as User;
+                } as unknown as User;
             }
             return null;
         } catch (error) {
