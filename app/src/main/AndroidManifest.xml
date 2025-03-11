@@ -21,6 +21,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SzytaDieta"
         tools:targetApi="31">
+        <meta-data
+            android:name="google_analytics_default_allow_analytics_storage"
+            android:value="true" />
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
@@ -31,6 +35,16 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup" />
+        </provider>
+
         <receiver
             android:name=".domain.service.notifications.water.WaterReminderReceiver"
             android:exported="false" />
@@ -41,6 +55,19 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
+
+        <meta-data
+            android:name="google_analytics_default_allow_ad_personalization_signals"
+            android:value="false" />
+
+        <meta-data
+            android:name="google_analytics_default_allow_ad_storage"
+            android:value="false" />
+
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"

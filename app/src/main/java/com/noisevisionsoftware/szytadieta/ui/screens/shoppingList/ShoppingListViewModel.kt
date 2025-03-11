@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ListenerRegistration
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.domain.model.shopping.CategorizedShoppingList
 import com.noisevisionsoftware.szytadieta.domain.model.shopping.DatePeriod
 import com.noisevisionsoftware.szytadieta.domain.model.shopping.ProductCategory
@@ -72,6 +72,8 @@ class ShoppingListViewModel @Inject constructor(
                     val periods = shoppingListRepository.getAvailablePeriods(userId).getOrThrow()
                     _availablePeriods.value = periods
 
+                    Log.d("ShoppingListViewModel", "Available periods: $periods")
+
                     if (periods.isNotEmpty()) {
                         val currentDate = formatDate(DateUtils.getCurrentLocalDate())
                         val closestPeriod = periods.firstOrNull { period ->
@@ -81,6 +83,8 @@ class ShoppingListViewModel @Inject constructor(
                                 period.endDate
                             )
                         } ?: periods.first()
+
+                        Log.d("ShoppingListViewModel", "Selected closest period: $closestPeriod")
 
                         selectPeriod(closestPeriod)
                     } else {
@@ -93,6 +97,7 @@ class ShoppingListViewModel @Inject constructor(
             }
         }
     }
+
 
     private fun updatedCategoryStates(shoppingList: CategorizedShoppingList) {
         _activeCategories.value = shoppingList.items.keys
@@ -133,10 +138,13 @@ class ShoppingListViewModel @Inject constructor(
             authRepository.withAuthenticatedUser { userId ->
                 try {
                     val formattedDate = period.startDate
+                    Log.d("ShoppingListViewModel", "Loading shopping list for period: $period")
 
                     val shoppingList = shoppingListRepository
                         .getShoppingListForDate(userId, formattedDate)
                         .getOrThrow()
+
+                    Log.d("ShoppingListViewModel", "Loaded shopping list: $shoppingList")
 
                     updatedCategoryStates(shoppingList)
                     shoppingList

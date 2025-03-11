@@ -1,63 +1,32 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.mealPlan
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrunchDining
-import androidx.compose.material.icons.filled.DinnerDining
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.LunchDining
-import androidx.compose.material.icons.filled.Restaurant
-import androidx.compose.material.icons.filled.WbSunny
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DietDay
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Meal
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.MealType
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.toMeal
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.DietDay
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Recipe
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.toMeal
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.CustomErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
 import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationViewModel
+import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.DailyCaloriesSummary
 import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.DaySelectorForMealPlan
+import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.MealCard
 import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.NoMealPlanMessage
 
 @Composable
@@ -71,6 +40,7 @@ fun MealPlanScreen(
     val hasAnyMealPlans by viewModel.hasAnyMealPlans.collectAsState()
     val currentDate by viewModel.currentDate.collectAsState()
     val availableWeeks by viewModel.availableWeeks.collectAsState()
+    val eatenMeals by viewModel.eatenMeals.collectAsState()
 
     Column(
         modifier = Modifier
@@ -116,6 +86,10 @@ fun MealPlanScreen(
                         DayMealList(
                             dietDay = dietDay,
                             recipes = recipesState,
+                            eatenMeals = eatenMeals,
+                            onMealToggle = { recipeId ->
+                                viewModel.toggleMealEaten(recipeId)
+                            },
                             onRecipeClick = { recipeId ->
                                 navigationViewModel.setRecipeId(recipeId)
                                 onNavigate(NavigationDestination.AuthenticatedDestination.RecipeScreen)
@@ -132,6 +106,8 @@ fun MealPlanScreen(
 private fun DayMealList(
     dietDay: DietDay,
     recipes: Map<String, Recipe>,
+    eatenMeals: Set<String>,
+    onMealToggle: (String) -> Unit,
     onRecipeClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -141,6 +117,14 @@ private fun DayMealList(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        item {
+            DailyCaloriesSummary(
+                dietDay = dietDay,
+                recipes = recipes,
+                eatenMeals = eatenMeals
+            )
+        }
+
         items(
             items = dietDay.meals.sortedBy { it.mealType.ordinal },
             key = { meal -> "${meal.recipeId}_${meal.time}" }
@@ -148,127 +132,11 @@ private fun DayMealList(
             MealCard(
                 meal = meal.toMeal(),
                 recipe = recipes[meal.recipeId],
+                isEaten = meal.recipeId in eatenMeals,
+                onMealToggle = { onMealToggle(meal.recipeId) },
                 onRecipeClick = onRecipeClick
             )
 
-        }
-    }
-}
-
-@Composable
-private fun MealCard(
-    meal: Meal,
-    recipe: Recipe?,
-    onRecipeClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = !expanded },
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = when (meal.mealType) {
-                        MealType.BREAKFAST -> Icons.Default.WbSunny
-                        MealType.SECOND_BREAKFAST -> Icons.Default.BrunchDining
-                        MealType.LUNCH -> Icons.Default.LunchDining
-                        MealType.SNACK -> Icons.Default.Restaurant
-                        MealType.DINNER -> Icons.Default.DinnerDining
-                    },
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = meal.mealType.displayName,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = meal.time,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                AnimatedContent(
-                    targetState = expanded,
-                    transitionSpec = {
-                        fadeIn(animationSpec = tween(220, delayMillis = 90)) togetherWith
-                                fadeOut(animationSpec = tween(90))
-                    }, label = "Expand/Collapse Icon"
-                ) { isExpanded ->
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) "Zwiń" else "Rozwiń",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Column(
-                modifier = Modifier.padding(top = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                recipe?.let { recipeData ->
-                    Text(
-                        text = recipeData.name,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Medium
-                    )
-
-                } ?: Text(
-                    text = "Ładowanie przepisu...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column(
-                    modifier = Modifier.padding(top = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    recipe?.let { recipeData ->
-                        Text(
-                            text = recipeData.instructions,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Button(
-                            onClick = { onRecipeClick(recipe.id) },
-                            modifier = Modifier.align(Alignment.End)
-                        ) {
-                            Text("Zobacz szczegóły")
-                        }
-                    }
-                }
-            }
         }
     }
 }

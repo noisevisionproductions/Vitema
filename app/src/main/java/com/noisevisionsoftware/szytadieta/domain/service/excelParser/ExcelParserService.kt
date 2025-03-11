@@ -1,6 +1,6 @@
 package com.noisevisionsoftware.szytadieta.domain.service.excelParser
 
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Diet
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Diet
 import com.noisevisionsoftware.szytadieta.domain.model.shopping.ShoppingList
 import javax.inject.Inject
 

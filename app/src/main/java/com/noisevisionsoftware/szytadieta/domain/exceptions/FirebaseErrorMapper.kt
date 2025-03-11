@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.crashlytics.crashlytics
 
 object FirebaseErrorMapper {
+
     fun mapFirebaseAuthError(e: Exception): AppException {
         Firebase.crashlytics.apply {
             setCustomKey("error_type", "auth_error")

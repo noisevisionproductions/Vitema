@@ -1,6 +1,5 @@
 package com.noisevisionsoftware.szytadieta.domain.repository.dietRepository
 
-import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
@@ -12,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 
@@ -36,21 +35,18 @@ class ShoppingListRepository @Inject constructor(
         val targetDate = dateFormat.parse(date)?.time
             ?: throw IllegalArgumentException("Nieprawidłowy format daty")
 
+        val normalizedTargetDate = normalizeDate(targetDate)
+
         val matchingList = snapshot.documents.firstNotNullOfOrNull { doc ->
             val list = doc.toObject(CategorizedShoppingList::class.java)?.copy(id = doc.id)
-            if (list != null) {
-                val startDate = dateFormat.format(Date(list.startTimestamp.seconds * 1000))
-                val endDate = dateFormat.format(Date(list.endTimestamp.seconds * 1000))
-                val targetDateStr = dateFormat.format(Date(targetDate))
+            list?.takeIf {
+                val normalizedStartTimestamp = normalizeDate(list.startTimestamp.seconds * 1000)
+                val normalizedEndTimestamp = normalizeDate(list.endTimestamp.seconds * 1000)
+                normalizedTargetDate in normalizedStartTimestamp..normalizedEndTimestamp
+            }
+        }
 
-                val isInRange = targetDateStr in startDate..endDate
-
-                list.takeIf { isInRange }
-            } else null
-        } ?: throw Exception("Nie znaleziono listy zakupów dla wybranej daty")
-
-        Log.d("ShoppingListRepo", "Found matching list: $matchingList")
-        matchingList
+        matchingList ?: throw Exception("Nie znaleziono listy zakupów dla wybranej daty")
     }
 
     suspend fun getAvailablePeriods(userId: String): Result<List<DatePeriod>> = runCatching {
@@ -95,5 +91,16 @@ class ShoppingListRepository @Inject constructor(
             .addSnapshotListener { snapshot, _ ->
                 listener(snapshot)
             }
+    }
+
+    private fun normalizeDate(dateInMillis: Long): Long {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = dateInMillis
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return calendar.timeInMillis
     }
 }

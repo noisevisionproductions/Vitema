@@ -3,7 +3,7 @@ package com.noisevisionsoftware.szytadieta.ui.screens.dashboard.components.shopp
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.domain.model.shopping.CategorizedShoppingList
 import com.noisevisionsoftware.szytadieta.domain.model.shopping.ProductCategory
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager

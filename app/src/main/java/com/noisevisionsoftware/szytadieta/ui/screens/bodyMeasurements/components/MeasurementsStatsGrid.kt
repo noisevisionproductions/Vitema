@@ -31,26 +31,15 @@ fun MeasurementsStatsGrid(measurements: BodyMeasurements) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         MeasurementSection(
-            title = "Podstawowe pomiary",
+            title = "Waga",
             icon = Icons.Default.MonitorWeight
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                MeasurementCard(
-                    label = "Waga",
-                    value = "${measurements.weight}",
-                    unit = "kg",
-                    modifier = Modifier.weight(1f)
-                )
-                MeasurementCard(
-                    label = "Wzrost",
-                    value = "${measurements.height}",
-                    unit = "cm",
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            MeasurementCard(
+                label = "Waga",
+                value = "${measurements.weight}",
+                unit = "kg",
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         MeasurementSection(
@@ -137,7 +126,7 @@ private fun MeasurementGrid(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items.chunked(2).forEach { rowItems ->
+        items.chunked(3).forEach { rowItems ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -150,7 +139,7 @@ private fun MeasurementGrid(
                         modifier = Modifier.weight(1f)
                     )
                 }
-                if (rowItems.size == 1) {
+                repeat(3 - rowItems.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }

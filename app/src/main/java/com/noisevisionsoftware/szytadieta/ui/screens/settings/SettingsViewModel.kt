@@ -6,9 +6,9 @@ import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.exceptions.FirebaseErrorMapper
 import com.noisevisionsoftware.szytadieta.domain.exceptions.PasswordField
 import com.noisevisionsoftware.szytadieta.domain.exceptions.ValidationManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.PreferencesManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.SessionManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.UserRepository

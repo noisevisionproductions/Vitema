@@ -5,7 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.noisevisionsoftware.szytadieta.MainDispatcherRule
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository

@@ -12,9 +12,13 @@ import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementSourceType
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementType
+import com.noisevisionsoftware.szytadieta.domain.model.user.PrivacyConsent
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.pending.PendingUser
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -24,11 +28,11 @@ class AuthRepository @Inject constructor(
     private val fcmTokenRepository: FCMTokenRepository
 ) {
     suspend fun register(nickname: String, email: String, password: String): Result<User> = try {
-        val pendingUserSnapshot = firestore.collection("pendingUsers")
-            .document(email)
-            .get()
-            .await()
+        // 1. Najpierw sprawdzamy, czy istnieje pendingUser
+        val pendingUserDocRef = firestore.collection("pendingUsers").document(email)
+        val pendingUserSnapshot = pendingUserDocRef.get().await()
 
+        // 2. Tworzymy użytkownika przez Firebase Auth
         val authResult = auth.createUserWithEmailAndPassword(email, password).await()
 
         authResult.user?.let { firebaseUser ->
@@ -36,18 +40,26 @@ class AuthRepository @Inject constructor(
                 id = firebaseUser.uid,
                 email = email,
                 nickname = nickname,
-                createdAt = DateUtils.getCurrentLocalDate()
+                createdAt = DateUtils.getCurrentLocalDate(),
+                privacyConsent = PrivacyConsent(
+                    privacyPolicyAccepted = true,
+                    termsAccepted = true,
+                    timestamp = System.currentTimeMillis()
+                )
             )
 
+            // 3. Jeśli istnieje pendingUser, aktualizujemy dane użytkownika i zapisujemy pomiary
             if (pendingUserSnapshot.exists()) {
                 val pendingUser = pendingUserSnapshot.toObject<PendingUser>()
                 pendingUser?.let { pending ->
                     user = user.copy(
                         gender = pending.gender,
                         storedAge = pending.age,
+                        firstAndLastName = pending.firstAndLastName,
                         profileCompleted = true
                     )
 
+                    // Zapisujemy pomiary jeśli istnieją
                     pending.measurements?.forEach { measurement ->
                         val bodyMeasurement = BodyMeasurements(
                             userId = user.id,
@@ -73,13 +85,12 @@ class AuthRepository @Inject constructor(
                             .await()
                     }
 
-                    firestore.collection("pendingUsers")
-                        .document(email)
-                        .delete()
-                        .await()
+                    // Usuwamy pendingUser po przetworzeniu
+                    pendingUserDocRef.delete().await()
                 }
             }
 
+            // 4. Zapisujemy użytkownika w firestore
             firestore.collection("users")
                 .document(user.id)
                 .set(user)
@@ -171,8 +182,6 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    fun getCurrentUser(): FirebaseUser? = auth.currentUser
-
     suspend fun logout(): Result<Unit> = try {
         auth.currentUser?.uid?.let { userId ->
             fcmTokenRepository.deleteToken(userId)
@@ -226,9 +235,41 @@ class AuthRepository @Inject constructor(
         return action(currentUser.uid)
     }
 
+    fun getCurrentUser(): FirebaseUser? = auth.currentUser
+
+    fun getCurrentUserFlow(): Flow<User?> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            val currentUser = firebaseAuth.currentUser
+            if (currentUser != null) {
+                firestore.collection("users")
+                    .document(currentUser.uid)
+                    .get()
+                    .addOnSuccessListener { documentSnapshot ->
+                        val user = documentSnapshot.toObject(User::class.java)
+                        trySend(user)
+                    }
+                    .addOnFailureListener {
+                        trySend(null)
+                    }
+            } else {
+                trySend(null)
+            }
+        }
+
+        auth.addAuthStateListener(listener)
+
+        awaitClose {
+            auth.removeAuthStateListener(listener)
+        }
+    }
+
     private fun getWeekNumber(timestamp: Long): Int {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp
-        return calendar.get(Calendar.WEEK_OF_YEAR)
+        try {
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = timestamp
+            return calendar.get(Calendar.WEEK_OF_YEAR)
+        } catch (e: Exception) {
+            return 1
+        }
     }
 }

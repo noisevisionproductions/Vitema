@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationHelper
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationScheduler
 import dagger.assisted.Assisted

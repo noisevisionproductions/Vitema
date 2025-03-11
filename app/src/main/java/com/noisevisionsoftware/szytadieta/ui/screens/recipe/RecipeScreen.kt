@@ -42,7 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Recipe
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.common.CustomErrorMessage
 import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar

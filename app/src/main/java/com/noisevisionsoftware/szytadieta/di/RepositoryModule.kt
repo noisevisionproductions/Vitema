@@ -1,21 +1,27 @@
 package com.noisevisionsoftware.szytadieta.di
 
 import android.content.Context
+import androidx.work.WorkManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.noisevisionsoftware.szytadieta.data.FCMTokenRepository
+import com.noisevisionsoftware.szytadieta.data.localPreferences.LocalEatenMealsRepository
+import com.noisevisionsoftware.szytadieta.data.remote.RemoteEatenMealsRepository
+import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AdminRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AppVersionRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.FileRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.RecipeRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.meals.RecipeRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.StatisticsRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.WeightRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.ShoppingListRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.WaterRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.meals.EatenMealsRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.meals.EatenMealsRepositoryImpl
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.DietService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.FileMetadataService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.StorageService
@@ -26,6 +32,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import javax.inject.Singleton
 
 @Module
@@ -128,4 +135,22 @@ object RepositoryModule {
     fun provideAppVersionRepository(
         firestore: FirebaseFirestore
     ): AppVersionRepository = AppVersionRepository(firestore)
+
+    @Provides
+    @Singleton
+    fun provideEatenMealsRepository(
+        localRepository: LocalEatenMealsRepository,
+        remoteRepository: RemoteEatenMealsRepository,
+        networkManager: NetworkConnectivityManager,
+        workManager: WorkManager,
+        @ApplicationScope scope: CoroutineScope
+    ): EatenMealsRepository {
+        return EatenMealsRepositoryImpl(
+            localRepository = localRepository,
+            remoteRepository = remoteRepository,
+            networkManager = networkManager,
+            workManager = workManager,
+            scope = scope
+        )
+    }
 }

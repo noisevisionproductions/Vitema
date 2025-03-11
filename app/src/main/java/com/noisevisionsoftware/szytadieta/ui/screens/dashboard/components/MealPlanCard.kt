@@ -28,10 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DayMeal
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Meal
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.toMeal
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.DayMeal
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Meal
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Recipe
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.toMeal
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import java.util.Calendar
 

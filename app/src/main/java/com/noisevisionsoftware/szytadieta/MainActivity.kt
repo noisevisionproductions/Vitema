@@ -23,8 +23,8 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.noisevisionsoftware.szytadieta.domain.alert.Alert
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.PreferencesManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.navigation.NavigationManager
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationHelper
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationScheduler

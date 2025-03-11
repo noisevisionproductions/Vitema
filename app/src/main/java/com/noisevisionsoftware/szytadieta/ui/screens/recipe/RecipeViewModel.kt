@@ -2,9 +2,9 @@ package com.noisevisionsoftware.szytadieta.ui.screens.recipe
 
 import android.net.Uri
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Recipe
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
-import com.noisevisionsoftware.szytadieta.domain.repository.RecipeRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.meals.RecipeRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel

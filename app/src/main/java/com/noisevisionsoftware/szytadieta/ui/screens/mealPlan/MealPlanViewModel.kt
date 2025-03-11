@@ -4,19 +4,25 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.DietDay
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Recipe
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.DietDay
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Recipe
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
-import com.noisevisionsoftware.szytadieta.domain.repository.RecipeRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.meals.EatenMealsRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.meals.RecipeRepository
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import com.noisevisionsoftware.szytadieta.utils.formatDate
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,6 +30,8 @@ import javax.inject.Inject
 class MealPlanViewModel @Inject constructor(
     private val dietRepository: DietRepository,
     private val recipeRepository: RecipeRepository,
+    private val eatenMealsRepository: EatenMealsRepository,
+    private val authRepository: AuthRepository,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -44,10 +52,14 @@ class MealPlanViewModel @Inject constructor(
     private val _availableWeeks = MutableStateFlow<List<Long>>(emptyList())
     val availableWeeks = _availableWeeks.asStateFlow()
 
+    private val _eatenMeals = MutableStateFlow<Set<String>>(emptySet())
+    val eatenMeals = _eatenMeals.asStateFlow()
+
     init {
         loadMealPlan(_currentDate.value)
         loadAvailableWeeks()
         checkForAnyPlans()
+        observeEatenMeals()
     }
 
     private fun loadMealPlan(date: Long) {
@@ -103,6 +115,29 @@ class MealPlanViewModel @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeEatenMeals() {
+        viewModelScope.launch {
+            combine(
+                _currentDate,
+                authRepository.getCurrentUserFlow()
+            ) { date, user ->
+                if (user != null) {
+                    eatenMealsRepository.observeEatenMeals(
+                        userId = user.id,
+                        date = formatDate(date)
+                    )
+                } else {
+                    flowOf(emptySet())
+                }
+            }.flatMapLatest { flow ->
+                flow
+            }.collect { eatenMeals ->
+                _eatenMeals.value = eatenMeals
+            }
+        }
+    }
+
     fun navigateToClosestAvailableWeek() {
         viewModelScope.launch {
             try {
@@ -117,6 +152,34 @@ class MealPlanViewModel @Inject constructor(
         }
     }
 
+    fun toggleMealEaten(mealId: String) {
+        viewModelScope.launch {
+            try {
+                val user = authRepository.getCurrentUser() ?: return@launch
+                val date = formatDate(_currentDate.value)
+
+                // Sprawdź aktualny stan w Firestore przed zmianą
+                val currentEatenMeals = eatenMealsRepository.getEatenMeals(user.uid, date)
+
+                val newEatenMeals = if (mealId in currentEatenMeals) {
+                    // Jeśli posiłek już jest zjedzony, usuń go
+                    eatenMealsRepository.removeEatenMeal(user.uid, date, mealId)
+                    currentEatenMeals - mealId
+                } else {
+                    // Jeśli posiłek nie jest zjedzony, dodaj go
+                    eatenMealsRepository.saveEatenMeal(user.uid, date, mealId)
+                    currentEatenMeals + mealId
+                }
+
+                // Zaktualizuj lokalny stan
+                _eatenMeals.value = newEatenMeals
+            } catch (e: Exception) {
+                Log.e("MealPlanViewModel", "Error toggling meal", e)
+                showError("Wystąpił błąd podczas zmiany stanu posiłku: ${e.localizedMessage}")
+            }
+        }
+    }
+
     fun setCurrentDate(date: Long) {
         _currentDate.value = date
         loadMealPlan(_currentDate.value)
@@ -124,9 +187,19 @@ class MealPlanViewModel @Inject constructor(
 
     override fun onUserLoggedOut() {
         _mealPlanState.value = ViewModelState.Initial
+        _eatenMeals.value = emptySet()
     }
 
     fun refreshMealPlan() {
+        viewModelScope.launch {
+            val user = authRepository.getCurrentUser()
+            if (user != null) {
+                eatenMealsRepository.syncWithRemote(
+                    userId = user.uid,
+                    date = formatDate(_currentDate.value)
+                )
+            }
+        }
         loadMealPlan(_currentDate.value)
         loadAvailableWeeks()
         checkForAnyPlans()

@@ -11,6 +11,7 @@ data class User(
     val gender: Gender? = null,
     val birthDate: Long? = null,
     val storedAge: Int = 0,
+    val privacyConsent: PrivacyConsent = PrivacyConsent(),
     val profileCompleted: Boolean = false,
     val role: UserRole = UserRole.USER
 ) {

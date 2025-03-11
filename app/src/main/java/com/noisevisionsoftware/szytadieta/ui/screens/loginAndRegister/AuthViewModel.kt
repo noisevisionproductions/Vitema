@@ -1,11 +1,12 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.exceptions.FirebaseErrorMapper
 import com.noisevisionsoftware.szytadieta.domain.exceptions.ValidationManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SessionManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserRole
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
@@ -73,6 +74,7 @@ class AuthViewModel @Inject constructor(
                 result.onSuccess { user ->
                     handleSuccessfulAuth(user)
                 }.onFailure { throwable ->
+                    Log.e("LoginError", "Login failed", throwable)
                     handleAuthError(throwable)
                 }
             } catch (e: Exception) {
@@ -93,15 +95,16 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Loading
 
                 val result = authRepository.register(nickname, email, password)
+
                 result.onSuccess { user ->
                     handleSuccessfulAuth(user)
                     showSuccess("Konto zostało utworzone")
                 }.onFailure { throwable ->
+                    Log.e("RegistrationError", "Registration failed", throwable)
                     handleAuthError(throwable)
                 }
             } catch (e: Exception) {
                 handleAuthError(e)
-
             }
         }
     }

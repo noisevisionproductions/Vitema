@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.pager.HorizontalPager
@@ -30,8 +31,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,14 +58,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.noisevisionsoftware.szytadieta.domain.exceptions.MeasurementValidation
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
+import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementType
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementsInputState
 import com.noisevisionsoftware.szytadieta.ui.screens.bodyMeasurements.BodyMeasurementsViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -81,17 +86,27 @@ fun AddMeasurementsDialog(
     val scope = rememberCoroutineScope()
     val currentPage by remember { derivedStateOf { pagerState.currentPage } }
 
-    val hasBasicErrors = measurements.run {
-        validationState.weight != null || validationState.height != null
+    val hasFirstPageErrors = measurements.run {
+        validationState.weight != null || validationState.neck != null ||
+                validationState.biceps != null
     }
 
-    val hasUpperBodyErrors = measurements.run {
-        validationState.neck != null || validationState.biceps != null || validationState.chest != null ||
+    val hasSecondPageErrors = measurements.run {
+        validationState.chest != null || validationState.waist != null ||
                 validationState.belt != null
     }
-    val hasLowerBodyErrors = measurements.run {
-        validationState.waist != null || validationState.hips != null ||
-                validationState.thigh != null || validationState.calf != null
+
+    val hasThirdPageErrors = measurements.run {
+        validationState.hips != null || validationState.thigh != null ||
+                validationState.calf != null
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.getLastMeasurements()?.let { lastMeasurements ->
+            if (lastMeasurements.measurementType == MeasurementType.FULL_BODY) {
+                measurements = lastMeasurements.toInputState()
+            }
+        }
     }
 
     BasicAlertDialog(
@@ -109,7 +124,7 @@ fun AddMeasurementsDialog(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp),
             ) {
                 // Header
                 Column(
@@ -122,35 +137,11 @@ fun AddMeasurementsDialog(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "Dodaj pomiary",
-                                style = MaterialTheme.typography.titleMedium
-                            )
 
-                            IconButton(
-                                modifier = Modifier.size(30.dp),
-                                onClick = {
-                                    scope.launch {
-                                        viewModel.getLastMeasurements()?.let { lastMeasurements ->
-                                            measurements = lastMeasurements.toInputState()
-                                        }
-                                    }
-                                },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.RestartAlt,
-                                    contentDescription = "Wypełnij ostatnimi pomiarami",
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
+                        Text(
+                            text = "Dodaj pomiary",
+                            style = MaterialTheme.typography.titleMedium
+                        )
 
                         IconButton(onClick = onDismiss) {
                             Icon(
@@ -163,9 +154,9 @@ fun AddMeasurementsDialog(
                     // Page indicators
                     PageIndicators(
                         pagerState = pagerState,
-                        hasBasicErrors = hasBasicErrors,
-                        hasUpperBodyErrors = hasUpperBodyErrors,
-                        hasLowerBodyErrors = hasLowerBodyErrors,
+                        hasBasicErrors = hasFirstPageErrors,
+                        hasUpperBodyErrors = hasSecondPageErrors,
+                        hasLowerBodyErrors = hasThirdPageErrors,
                         scope = scope,
                         modifier = Modifier.padding(vertical = 16.dp)
                     )
@@ -177,21 +168,21 @@ fun AddMeasurementsDialog(
                     modifier = Modifier.weight(1f)
                 ) { page ->
                     when (page) {
-                        0 -> BasicMeasurementsSection(
+                        0 -> FirstMeasurementsSection(
                             measurements,
                             onMeasurementsChange = { measurements = it },
                             isVisible = currentPage == 0,
                             modifier = Modifier.fillMaxHeight()
                         )
 
-                        1 -> UpperBodyMeasurementsSection(
+                        1 -> SecondMeasurementsSection(
                             measurements,
                             onMeasurementsChange = { measurements = it },
                             isVisible = currentPage == 1,
                             modifier = Modifier.fillMaxHeight()
                         )
 
-                        2 -> LowerBodyMeasurementsSection(
+                        2 -> ThirdMeasurementsSection(
                             measurements,
                             onMeasurementsChange = { measurements = it },
                             isVisible = currentPage == 2,
@@ -359,7 +350,7 @@ private fun PageIndicator(
 }
 
 @Composable
-private fun BasicMeasurementsSection(
+private fun FirstMeasurementsSection(
     measurements: MeasurementsInputState,
     onMeasurementsChange: (MeasurementsInputState) -> Unit,
     isVisible: Boolean = false,
@@ -367,8 +358,8 @@ private fun BasicMeasurementsSection(
 ) {
     val focusManager = LocalFocusManager.current
     val weightFieldFocusRequester = remember { FocusRequester() }
-    val heightFieldFocusRequester = remember { FocusRequester() }
-    val noteFieldFocusRequester = remember { FocusRequester() }
+    val neckFocusRequester = remember { FocusRequester() }
+    val bicepsFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(isVisible) {
         if (isVisible) {
@@ -382,11 +373,6 @@ private fun BasicMeasurementsSection(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            text = "Podstawowe pomiary",
-            style = MaterialTheme.typography.titleSmall
-        )
-
         MeasurementField(
             label = "Waga",
             value = TextFieldValue(
@@ -400,94 +386,57 @@ private fun BasicMeasurementsSection(
             focusRequester = weightFieldFocusRequester,
             keyboardActions = KeyboardActions(
                 onNext = {
-                    heightFieldFocusRequester.requestFocus()
+                    neckFocusRequester.requestFocus()
                 }
             )
+        )
+
+
+        MeasurementField(
+            label = "Szyja",
+            value = TextFieldValue(
+                measurements.neck,
+                selection = TextRange(measurements.neck.length)
+            ),
+            onValueChange = { newValue -> onMeasurementsChange(measurements.copy(neck = newValue.text)) },
+            unit = "cm",
+            errorMessage = measurements.validationState.neck,
+            imeAction = ImeAction.Next,
+            focusRequester = neckFocusRequester,
+            keyboardActions = KeyboardActions(onNext = { bicepsFocusRequester.requestFocus() })
         )
 
         MeasurementField(
-            label = "Wzrost",
+            label = "Biceps",
             value = TextFieldValue(
-                measurements.height,
-                selection = TextRange(measurements.height.length)
+                measurements.biceps,
+                selection = TextRange(measurements.biceps.length)
             ),
-            onValueChange = { newValue -> onMeasurementsChange(measurements.copy(height = newValue.text)) },
+            onValueChange = { newValue -> onMeasurementsChange(measurements.copy(biceps = newValue.text)) },
             unit = "cm",
-            errorMessage = measurements.validationState.height,
+            errorMessage = measurements.validationState.biceps,
+            focusRequester = bicepsFocusRequester,
             imeAction = ImeAction.Done,
-            focusRequester = heightFieldFocusRequester,
-            keyboardActions = KeyboardActions(
-                onNext = { noteFieldFocusRequester.requestFocus() },
-                onDone = { focusManager.clearFocus() }
-            )
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
         )
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp)
-        ) {
-            Text(
-                text = "Notatka (opcjonalnie)",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            BasicTextField(
-                value = measurements.note,
-                onValueChange = { onMeasurementsChange(measurements.copy(note = it)) },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .height(80.dp)
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                    .padding(16.dp)
-                    .focusRequester(noteFieldFocusRequester),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { focusManager.clearFocus() }
-                ),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        if (measurements.note.isEmpty()) {
-                            Text(
-                                text = "Dodaj notatkę...",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            )
-        }
     }
 }
 
 @Composable
-private fun UpperBodyMeasurementsSection(
+private fun SecondMeasurementsSection(
     measurements: MeasurementsInputState,
     onMeasurementsChange: (MeasurementsInputState) -> Unit,
     isVisible: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
-    val neckFocusRequester = remember { FocusRequester() }
-    val bicepsFocusRequester = remember { FocusRequester() }
     val chestFocusRequester = remember { FocusRequester() }
+    val waistFocusRequester = remember { FocusRequester() }
     val beltFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(isVisible) {
         if (isVisible) {
-            neckFocusRequester.requestFocus()
+            chestFocusRequester.requestFocus()
         }
     }
 
@@ -497,104 +446,65 @@ private fun UpperBodyMeasurementsSection(
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Górna część ciała",
-            style = MaterialTheme.typography.titleMedium
+        MeasurementField(
+            label = "Klatka piersiowa",
+            value = TextFieldValue(
+                measurements.chest,
+                selection = TextRange(measurements.chest.length)
+            ),
+            onValueChange = { newValue -> onMeasurementsChange(measurements.copy(chest = newValue.text)) },
+            unit = "cm",
+            errorMessage = measurements.validationState.chest,
+            imeAction = ImeAction.Next,
+            focusRequester = chestFocusRequester,
+            keyboardActions = KeyboardActions(onNext = { waistFocusRequester.requestFocus() })
         )
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            MeasurementField(
-                label = "Szyja",
-                value = TextFieldValue(
-                    measurements.neck,
-                    selection = TextRange(measurements.neck.length)
-                ),
-                onValueChange = { newValue -> onMeasurementsChange(measurements.copy(neck = newValue.text)) },
-                unit = "cm",
-                errorMessage = measurements.validationState.neck,
-                imeAction = ImeAction.Next,
-                focusRequester = neckFocusRequester,
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        bicepsFocusRequester.requestFocus()
-                    }
-                )
-            )
+        MeasurementField(
+            label = "Talia",
+            value = TextFieldValue(
+                measurements.waist,
+                selection = TextRange(measurements.waist.length)
+            ),
+            onValueChange = { newValue -> onMeasurementsChange(measurements.copy(waist = newValue.text)) },
+            unit = "cm",
+            errorMessage = measurements.validationState.waist,
+            imeAction = ImeAction.Next,
+            focusRequester = waistFocusRequester,
+            keyboardActions = KeyboardActions(onNext = { beltFocusRequester.requestFocus() })
+        )
 
-            MeasurementField(
-                label = "Biceps",
-                value = TextFieldValue(
-                    measurements.biceps,
-                    selection = TextRange(measurements.biceps.length)
-                ),
-                onValueChange = { newValue -> onMeasurementsChange(measurements.copy(biceps = newValue.text)) },
-                unit = "cm",
-                errorMessage = measurements.validationState.biceps,
-                imeAction = ImeAction.Next,
-                focusRequester = bicepsFocusRequester,
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        chestFocusRequester.requestFocus()
-                    }
-                )
-            )
-
-            MeasurementField(
-                label = "Klatka piersiowa",
-                value = TextFieldValue(
-                    measurements.chest,
-                    selection = TextRange(measurements.chest.length)
-                ),
-                onValueChange = { newValue -> onMeasurementsChange(measurements.copy(chest = newValue.text)) },
-                unit = "cm",
-                errorMessage = measurements.validationState.chest,
-                imeAction = ImeAction.Next,
-                focusRequester = chestFocusRequester,
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        beltFocusRequester.requestFocus()
-                    }
-                )
-            )
-
-            MeasurementField(
-                label = "Pas",
-                value = TextFieldValue(
-                    measurements.belt,
-                    selection = TextRange(measurements.belt.length)
-                ),
-                onValueChange = { newValue -> onMeasurementsChange(measurements.copy(belt = newValue.text)) },
-                unit = "cm",
-                errorMessage = measurements.validationState.belt,
-                imeAction = ImeAction.Done,
-                focusRequester = beltFocusRequester,
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.clearFocus() },
-                    onDone = { focusManager.clearFocus() }
-                )
-            )
-        }
+        MeasurementField(
+            label = "Pas",
+            value = TextFieldValue(
+                measurements.belt,
+                selection = TextRange(measurements.belt.length)
+            ),
+            onValueChange = { newValue -> onMeasurementsChange(measurements.copy(belt = newValue.text)) },
+            unit = "cm",
+            errorMessage = measurements.validationState.belt,
+            focusRequester = beltFocusRequester,
+            imeAction = ImeAction.Done,
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+        )
     }
 }
 
 @Composable
-private fun LowerBodyMeasurementsSection(
+private fun ThirdMeasurementsSection(
     measurements: MeasurementsInputState,
     onMeasurementsChange: (MeasurementsInputState) -> Unit,
     isVisible: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
-    val waistFocusRequester = remember { FocusRequester() }
     val hipsFocusRequester = remember { FocusRequester() }
     val thighFocusRequester = remember { FocusRequester() }
     val calfFocusRequester = remember { FocusRequester() }
 
     LaunchedEffect(isVisible) {
         if (isVisible) {
-            waistFocusRequester.requestFocus()
+            hipsFocusRequester.requestFocus()
         }
     }
 
@@ -604,85 +514,47 @@ private fun LowerBodyMeasurementsSection(
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Dolna część ciała",
-            style = MaterialTheme.typography.titleMedium
+        MeasurementField(
+            label = "Biodra",
+            value = TextFieldValue(
+                measurements.hips,
+                selection = TextRange(measurements.hips.length)
+            ),
+            onValueChange = { newValue -> onMeasurementsChange(measurements.copy(hips = newValue.text)) },
+            unit = "cm",
+            errorMessage = measurements.validationState.hips,
+            imeAction = ImeAction.Next,
+            focusRequester = hipsFocusRequester,
+            keyboardActions = KeyboardActions(onNext = { thighFocusRequester.requestFocus() })
         )
 
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            MeasurementField(
-                label = "Talia",
-                value = TextFieldValue(
-                    measurements.waist,
-                    selection = TextRange(measurements.waist.length)
-                ),
-                onValueChange = { newValue -> onMeasurementsChange(measurements.copy(waist = newValue.text)) },
-                unit = "cm",
-                errorMessage = measurements.validationState.waist,
-                imeAction = ImeAction.Next,
-                focusRequester = waistFocusRequester,
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        hipsFocusRequester.requestFocus()
-                    }
-                )
-            )
+        MeasurementField(
+            label = "Uda",
+            value = TextFieldValue(
+                measurements.thigh,
+                selection = TextRange(measurements.thigh.length)
+            ),
+            onValueChange = { newValue -> onMeasurementsChange(measurements.copy(thigh = newValue.text)) },
+            unit = "cm",
+            errorMessage = measurements.validationState.thigh,
+            imeAction = ImeAction.Next,
+            focusRequester = thighFocusRequester,
+            keyboardActions = KeyboardActions(onNext = { calfFocusRequester.requestFocus() })
+        )
 
-            MeasurementField(
-                label = "Biodra",
-                value = TextFieldValue(
-                    measurements.hips,
-                    selection = TextRange(measurements.hips.length)
-                ),
-                onValueChange = { newValue -> onMeasurementsChange(measurements.copy(hips = newValue.text)) },
-                unit = "cm",
-                errorMessage = measurements.validationState.hips,
-                imeAction = ImeAction.Next,
-                focusRequester = hipsFocusRequester,
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        thighFocusRequester.requestFocus()
-                    }
-                )
-            )
-
-            MeasurementField(
-                label = "Uda",
-                value = TextFieldValue(
-                    measurements.thigh,
-                    selection = TextRange(measurements.thigh.length)
-                ),
-                onValueChange = { newValue -> onMeasurementsChange(measurements.copy(thigh = newValue.text)) },
-                unit = "cm",
-                errorMessage = measurements.validationState.thigh,
-                imeAction = ImeAction.Next,
-                focusRequester = thighFocusRequester,
-                keyboardActions = KeyboardActions(
-                    onNext = {
-                        calfFocusRequester.requestFocus()
-                    }
-                )
-            )
-
-            MeasurementField(
-                label = "Łydki",
-                value = TextFieldValue(
-                    measurements.calf,
-                    selection = TextRange(measurements.calf.length)
-                ),
-                onValueChange = { newValue -> onMeasurementsChange(measurements.copy(calf = newValue.text)) },
-                unit = "cm",
-                imeAction = ImeAction.Done,
-                errorMessage = measurements.validationState.calf,
-                focusRequester = calfFocusRequester,
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.clearFocus() },
-                    onDone = { focusManager.clearFocus() }
-                )
-            )
-        }
+        MeasurementField(
+            label = "Łydki",
+            value = TextFieldValue(
+                measurements.calf,
+                selection = TextRange(measurements.calf.length)
+            ),
+            onValueChange = { newValue -> onMeasurementsChange(measurements.copy(calf = newValue.text)) },
+            unit = "cm",
+            errorMessage = measurements.validationState.calf,
+            focusRequester = calfFocusRequester,
+            imeAction = ImeAction.Done,
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+        )
     }
 }
 
@@ -713,13 +585,36 @@ private fun MeasurementField(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(55.dp)
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(
+                onClick = {
+                    val currentValue = value.text.toIntOrNull() ?: 0
+                    if (currentValue > 0) {
+                        onValueChange(TextFieldValue((currentValue - 1).toString()))
+                    }
+                },
+                modifier = Modifier.size(40.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                ),
+                enabled = (value.text.toIntOrNull() ?: 0) > 0
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Remove,
+                    contentDescription = "Zmniejsz",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
             BasicTextField(
                 value = value,
                 onValueChange = { newValue ->
@@ -730,7 +625,8 @@ private fun MeasurementField(
                     }
                 },
                 textStyle = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,
@@ -745,7 +641,7 @@ private fun MeasurementField(
                 decorationBox = { innerTextField ->
                     Box(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.CenterStart
+                        contentAlignment = Alignment.Center
                     ) {
                         if (value.text.isEmpty()) {
                             Text(
@@ -759,11 +655,39 @@ private fun MeasurementField(
                 }
             )
 
-            Text(
-                text = unit,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            IconButton(
+                onClick = {
+                    val currentValue = value.text.toIntOrNull() ?: 0
+                    if (currentValue < 999) {
+                        onValueChange(TextFieldValue((currentValue + 1).toString()))
+                    }
+                },
+                modifier = Modifier.size(40.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                ),
+                enabled = (value.text.toIntOrNull() ?: 0) < 999
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Zwiększ",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Box(
+                modifier = Modifier.width(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = unit,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         if (errorMessage != null) {

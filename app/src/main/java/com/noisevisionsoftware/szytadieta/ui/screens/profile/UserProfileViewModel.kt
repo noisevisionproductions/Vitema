@@ -3,7 +3,7 @@ package com.noisevisionsoftware.szytadieta.ui.screens.profile
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository

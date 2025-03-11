@@ -34,7 +34,7 @@ android {
         version = Version(
             major = 1,
             minor = 3,
-            patch = 3
+            patch = 5
         )
 
         applicationId = "com.noisevisionsoftware.szytadieta"
@@ -150,10 +150,10 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)  // Change from ksp to kapt
+    kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
-    kapt(libs.androidx.hilt.compiler)  // Add this
+    kapt(libs.androidx.hilt.compiler)
 
     // Preferences
     implementation(libs.androidx.datastore.preferences)
@@ -193,7 +193,6 @@ dependencies {
     implementation(libs.poi.ooxml.v523)
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
-    implementation(libs.log4j.slf4j2.impl)
     implementation(libs.slf4j.api)
     implementation(libs.slf4j.simple)
 

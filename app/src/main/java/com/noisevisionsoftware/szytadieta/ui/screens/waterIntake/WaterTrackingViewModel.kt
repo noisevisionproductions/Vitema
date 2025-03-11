@@ -3,7 +3,7 @@ package com.noisevisionsoftware.szytadieta.ui.screens.waterIntake
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.domain.model.health.water.CustomWaterAmount
 import com.noisevisionsoftware.szytadieta.domain.model.health.water.WaterIntake
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserSettings

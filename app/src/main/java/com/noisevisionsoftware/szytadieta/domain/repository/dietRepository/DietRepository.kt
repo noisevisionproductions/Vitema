@@ -2,7 +2,7 @@ package com.noisevisionsoftware.szytadieta.domain.repository.dietRepository
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.Diet
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Diet
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
 import kotlinx.coroutines.channels.awaitClose

@@ -34,7 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.NutritionalValues
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.NutritionalValues
 
 @Composable
 fun NutritionalValuesCard(

@@ -3,7 +3,7 @@ package com.noisevisionsoftware.szytadieta.di
 import android.app.NotificationManager
 import android.content.Context
 import androidx.work.WorkManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.navigation.NavigationManager
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationHelper
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationScheduler
@@ -18,11 +18,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NotificationModule {
-
-    @Provides
-    @Singleton
-    fun provideWorkManager(@ApplicationContext context: Context): WorkManager =
-        WorkManager.getInstance(context)
 
     @Provides
     @Singleton

@@ -1,7 +1,7 @@
 package com.noisevisionsoftware.szytadieta.domain.service.notifications
 
 import android.app.NotificationManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.SettingsManager
 import javax.inject.Inject
 import javax.inject.Singleton
 

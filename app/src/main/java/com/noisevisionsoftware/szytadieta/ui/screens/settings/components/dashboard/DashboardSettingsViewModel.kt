@@ -2,7 +2,7 @@ package com.noisevisionsoftware.szytadieta.ui.screens.settings.components.dashbo
 
 import androidx.lifecycle.viewModelScope
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.SettingsManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.model.dashboard.DashboardCardType
 import com.noisevisionsoftware.szytadieta.domain.model.dashboard.DashboardConfig
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager

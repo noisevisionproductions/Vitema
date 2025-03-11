@@ -50,10 +50,11 @@ object MeasurementValidation {
     private fun validateMeasurements(measurements: BodyMeasurements): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
 
-        if (measurements.weight <= 40 || measurements.weight > 250) {
-            errors.add(ValidationError("weight", "Wprowadź prawidłową wagę (1-300 kg)"))
+        if (measurements.weight <= 40 || measurements.weight >= 250) {
+            errors.add(ValidationError("weight", "Wprowadź prawidłową wagę (40-250 kg)"))
         }
-        if (measurements.height <= 100 || measurements.height > 220) {
+
+        if (measurements.height <= 100 || measurements.height >= 220) {
             errors.add(ValidationError("height", "Wprowadź prawidłowy wzrost (100-220 cm)"))
         }
 
@@ -186,10 +187,10 @@ object MeasurementValidation {
     private fun validateBasicMeasurements(measurements: BodyMeasurements): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
 
-        if (measurements.weight <= 0 || measurements.weight > 300) {
-            errors.add(ValidationError("weight", "Wprowadź prawidłową wagę (1-300 kg)"))
+        if (measurements.weight <= 40 || measurements.weight >= 250) {
+            errors.add(ValidationError("weight", "Wprowadź prawidłową wagę (40-250 kg)"))
         }
-        if (measurements.height <= 0 || measurements.height > 250) {
+        if (measurements.height <= 100 || measurements.height >= 250) {
             errors.add(ValidationError("height", "Wprowadź prawidłowy wzrost (100-250 cm)"))
         }
 

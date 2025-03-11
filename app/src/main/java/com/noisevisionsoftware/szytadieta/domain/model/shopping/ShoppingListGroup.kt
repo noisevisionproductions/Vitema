@@ -1,6 +1,6 @@
 package com.noisevisionsoftware.szytadieta.domain.model.shopping
 
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.MealType
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.MealType
 
 sealed class ShoppingListGroup {
     data class ByRecipe(

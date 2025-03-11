@@ -107,8 +107,8 @@ class BodyMeasurementsViewModel @Inject constructor(
             authRepository.withAuthenticatedUser { userId ->
                 bodyMeasurementsRepository.getMeasurementsHistory(
                     userId = userId,
-                    limit = 1
-                ).getOrNull()?.firstOrNull()
+                    limit = 10
+                ).getOrNull()?.firstOrNull { it.measurementType == MeasurementType.FULL_BODY }
             }
         } catch (e: Exception) {
             Log.e("BodyMeasurementsVM", "Error getting last measurements", e)

@@ -3,7 +3,7 @@ package com.noisevisionsoftware.szytadieta.domain.model.shopping
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
-import com.noisevisionsoftware.szytadieta.domain.model.health.newDietModels.MealType
+import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.MealType
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate

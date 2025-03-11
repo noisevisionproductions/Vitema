@@ -8,7 +8,7 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.noisevisionsoftware.szytadieta.domain.localPreferences.PreferencesManager
+import com.noisevisionsoftware.szytadieta.data.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.domain.model.app.AppVersion
 import com.noisevisionsoftware.szytadieta.domain.repository.AppVersionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
