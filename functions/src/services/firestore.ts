@@ -63,6 +63,7 @@ export async function updateUserData(
     gender,
     storedAge,
     firstAndLastName,
+    surveyCompleted: true,
     lastUpdated: timestamp,
   };
 

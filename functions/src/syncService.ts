@@ -38,6 +38,21 @@ async function processRow(row: any[]) {
       gender
     );
 
+    if (userSnapshot && !userSnapshot.isPending) {
+        const usersSnapshot = await admin.firestore()
+            .collection("users")
+            .where("email", "==", email)
+            .get();
+
+        if (!usersSnapshot.empty) {
+            const userDoc = usersSnapshot.docs[0];
+            await userDoc.ref.update({
+                surveyCompleted: true
+            });
+            logger.info(`Oznaczono ankietę jako wypełnioną dla użytkownika: ${email}`);
+        }
+    }
+
     if (userSnapshot && (height || weight)) {
       const measurementDate = parseGoogleFormDate(timestamp);
 
