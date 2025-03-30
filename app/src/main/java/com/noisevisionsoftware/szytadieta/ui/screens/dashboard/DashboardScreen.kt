@@ -4,19 +4,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.DragIndicator
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -69,7 +75,6 @@ fun DashboardScreen(
     val todayMeals by viewModel.todayMeals.collectAsState()
     val recipes by viewModel.recipes.collectAsState()
     val isRefreshing by viewModel.isRefreshing.collectAsState()
-    val showTutorial by viewModel.showTutorial.collectAsState()
     var editButtonBounds by remember { mutableStateOf(Rect.Zero) }
     val scope = rememberCoroutineScope()
 
@@ -149,6 +154,39 @@ fun DashboardScreen(
                 )
             }
 
+            if (isEditMode) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.SwapVert,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+
+                            Text(
+                                text = "Przeciągnij karty w górę lub w dół, aby zmienić ich kolejność",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+            }
+
             when (dashboardConfig) {
                 is ViewModelState.Success -> {
                     val config = (dashboardConfig as ViewModelState.Success).data
@@ -195,7 +233,7 @@ fun DashboardScreen(
                                         )
 
                                         DashboardCardType.DIET_GUIDE -> DietGuideCard(
-                                            onClick = {onNavigate(NavigationDestination.AuthenticatedDestination.DietGuide)}
+                                            onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.DietGuide) }
                                         )
                                     }
                                 }
@@ -222,26 +260,26 @@ fun DashboardScreen(
             }
         }
 
-        AnimatedSpotlightOverlay(
-            visible = showTutorial,
-            targetBounds = editButtonBounds,
-            onDismiss = { viewModel.dismissTutorial() }
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                TutorialTooltip(
-                    visible = showTutorial,
-                    onDismiss = { viewModel.dismissTutorial() },
-                    modifier = Modifier
-                        .padding(horizontal = 32.dp)
-                        .padding(
-                            top = with(LocalDensity.current) {
-                                editButtonBounds.bottom.toDp() + 16.dp
-                            }
-                        )
-                        .align(Alignment.TopCenter)
-                )
-            }
-        }
+        /* AnimatedSpotlightOverlay(
+             visible = showTutorial,
+             targetBounds = editButtonBounds,
+             onDismiss = { viewModel.dismissTutorial() }
+         ) {
+             Box(modifier = Modifier.fillMaxSize()) {
+                 TutorialTooltip(
+                     visible = showTutorial,
+                     onDismiss = { viewModel.dismissTutorial() },
+                     modifier = Modifier
+                         .padding(horizontal = 32.dp)
+                         .padding(
+                             top = with(LocalDensity.current) {
+                                 editButtonBounds.bottom.toDp() + 16.dp
+                             }
+                         )
+                         .align(Alignment.TopCenter)
+                 )
+             }
+         }*/
 
         PullRefreshIndicator(
             refreshing = isRefreshing,

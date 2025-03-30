@@ -14,12 +14,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -36,8 +42,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.noisevisionsoftware.szytadieta.domain.model.user.auth.EmailVerificationState
 import com.noisevisionsoftware.szytadieta.domain.state.AuthState
 import com.noisevisionsoftware.szytadieta.ui.common.PasswordTextField
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
@@ -52,6 +61,12 @@ fun LoginScreen(
     val focusManager = LocalFocusManager.current
     val authState by viewModel.authState.collectAsState()
     val profileCompleted by viewModel.profileCompleted.collectAsState()
+    val emailVerificationState by viewModel.emailVerificationState.collectAsState()
+    val showVerificationDialog by viewModel.showVerificationDialog.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.checkEmailVerification()
+    }
 
     LaunchedEffect(authState, profileCompleted) {
         when {
@@ -63,6 +78,17 @@ fun LoginScreen(
                 onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
             }
         }
+    }
+
+    if (showVerificationDialog) {
+        VerificationNeededDialog(
+            email = email,
+            emailVerificationState = emailVerificationState,
+            onDismiss = { viewModel.setShowVerificationDialog(false) },
+            onResendEmail = {
+                viewModel.resendVerificationEmail()
+            }
+        )
     }
 
     Column(
@@ -191,6 +217,131 @@ fun LoginScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun VerificationNeededDialog(
+    email: String,
+    emailVerificationState: EmailVerificationState,
+    onDismiss: () -> Unit,
+    onResendEmail: () -> Unit
+) {
+    BasicAlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.VerifiedUser,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .padding(bottom = 16.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
+
+                Text(
+                    text = "Wymagana weryfikacja",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Text(
+                    text = when (emailVerificationState) {
+                        is EmailVerificationState.EmailSent ->
+                            "Link weryfikacyjny został wysłany ponownie na adres $email. Sprawdź swoją skrzynkę i kliknij w link, aby aktywować konto."
+
+                        is EmailVerificationState.Loading ->
+                            "Wysyłanie linku weryfikacyjnego..."
+
+                        else ->
+                            "Twój adres email $email nie został jeszcze zweryfikowany. Sprawdź swoją skrzynkę (również folder spam) i kliknij w link aktywacyjny."
+                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp)
+                    ) {
+                        Text(
+                            text = "Zamknij",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = onResendEmail,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            ),
+                            enabled = emailVerificationState !is EmailVerificationState.Loading &&
+                                    emailVerificationState !is EmailVerificationState.EmailSent
+                        ) {
+                            if (emailVerificationState is EmailVerificationState.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Text(
+                                    text = if (emailVerificationState is EmailVerificationState.EmailSent)
+                                        "Wysłany" else "Wyślij ponownie",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                        ) {
+                            Text(
+                                text = "Zamknij",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
+                }
             }
         }
     }

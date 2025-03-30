@@ -26,5 +26,6 @@ sealed class NavigationDestination {
         data object ForgotPassword : UnauthenticatedDestination()
         data object PrivacyPolicy : UnauthenticatedDestination()
         data object Regulations : UnauthenticatedDestination()
+        data object EmailVerified : UnauthenticatedDestination()
     }
 }

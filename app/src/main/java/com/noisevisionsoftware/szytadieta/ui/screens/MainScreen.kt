@@ -37,6 +37,7 @@ import com.noisevisionsoftware.szytadieta.ui.screens.documents.PrivacyPolicyScre
 import com.noisevisionsoftware.szytadieta.ui.screens.documents.RegulationsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.guide.DietGuideScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.AuthViewModel
+import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.EmailVerifiedScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.ForgotPassword
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.LoginScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.RegisterScreen
@@ -266,6 +267,9 @@ private fun UnauthenticatedContent(
                 onNavigate = onNavigate,
                 isAuthenticated = false
             )
+
+        NavigationDestination.UnauthenticatedDestination.EmailVerified ->
+            EmailVerifiedScreen(onNavigate = onNavigate)
     }
 }
 

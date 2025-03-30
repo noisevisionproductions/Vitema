@@ -35,8 +35,6 @@ class DietRepository @Inject constructor(
                 )
             }.firstOrNull { diet ->
                 diet.days.any { it.date == formattedDate }
-            }.also { diet ->
-                Log.d("DietRepository", "Found diet: ${diet?.id} for date: $formattedDate")
             }
         }
     }

@@ -52,5 +52,13 @@ data class ShoppingListItem(
     val quantity: Double = 0.0,
     val unit: String = "",
     val original: String = "",
-    val context: ShoppingListProductContext? = null
+    val context: ShoppingListProductContext? = null,
+
+    @field:JvmField
+    @PropertyName("hasCustomUnit")
+    val hasCustomUnit: Boolean = false,
+
+    @field:JvmField
+    @PropertyName("categoryId")
+    val categoryId: String = ""
 )

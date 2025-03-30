@@ -130,20 +130,24 @@ fun MealCard(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.LocalFireDepartment,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = "${it.nutritionalValues.calories.toInt()} kcal",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = if (isEaten)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                it.nutritionalValues?.calories?.let { it1 ->
+                                    if (it1 > 0) {
+                                        Icon(
+                                            imageVector = Icons.Default.LocalFireDepartment,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = "${it.nutritionalValues.calories.toInt()} kcal",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = if (isEaten)
+                                                MaterialTheme.colorScheme.primary
+                                            else
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -176,7 +180,7 @@ fun MealCard(
                                     Icons.Default.LocalDining,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
-                                tint =  if (isEaten)
+                                tint = if (isEaten)
                                     MaterialTheme.colorScheme.onPrimaryContainer
                                 else
                                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -184,7 +188,7 @@ fun MealCard(
                             Text(
                                 text = if (isEaten) "Zjedzone" else "Do zjedzenia",
                                 style = MaterialTheme.typography.labelMedium,
-                                color =  if (isEaten)
+                                color = if (isEaten)
                                     MaterialTheme.colorScheme.onPrimaryContainer
                                 else
                                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -227,18 +231,26 @@ fun MealCard(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        recipe?.let { recipeData ->
+                        if (recipe != null) {
                             Text(
-                                text = recipeData.name,
+                                text = recipe.name.ifEmpty { "Brak nazwy przepisu" },
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Medium
                             )
-                        } ?: Text(
-                            text = "Ładowanie przepisu...",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        } else if (meal.recipeId.isNotEmpty()) {
+                            Text(
+                                text = "Nie można załadować przepisu (ID: ${meal.recipeId.take(8)}...)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        } else {
+                            Text(
+                                text = "Brak informacji o przepisie",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
 
                     Icon(

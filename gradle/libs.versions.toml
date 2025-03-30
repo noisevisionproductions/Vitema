@@ -14,6 +14,7 @@ commonsCodec = "1.17.0"
 commonsCompress = "1.26.2"
 composeM3 = "2.0.0-beta.5"
 composeMarkdown = "0.5.6"
+converterGson = "2.9.0"
 core = "2.0.0-beta.5"
 coreKtx = "1.6.1"
 datastorePreferences = "1.1.1"
@@ -46,6 +47,7 @@ hiltNavigationCompose = "1.2.0"
 log4jApi = "2.23.1"
 log4jCore = "2.20.0"
 log4jSlf4j2Impl = "2.20.0"
+loggingInterceptor = "4.10.0"
 material = "1.12.0"
 
 # Coroutines
@@ -58,10 +60,12 @@ kotlinxCoroutinesCore = { version.ref = "coroutines" }
 # Testing
 materialVersion = "1.7.6"
 mpandroidchart = "v3.1.0"
+okhttp = "4.12.0"
 poi = "5.3.0"
 poiOoxml = "5.3.0"
 poiOoxmlVersion = "5.3.0"
 poiVersion = "5.3.0"
+retrofit = "2.9.0"
 robolectric = "4.10.3"
 shadowsFramework = "4.11.1"
 simpleOdf = "0.9.0"
@@ -79,7 +83,7 @@ truth = "1.4.4"
 turbine = "1.2.0"
 
 # Add Gradle plugin versions
-agp = "8.9.0"
+agp = "8.9.1"
 woodstoxCore = "7.0.0"
 woodstoxCoreAsl = "4.4.1"
 workRuntimeKtx = "2.10.0"
@@ -112,6 +116,7 @@ androidx-material = { module = "androidx.compose.material:material", version.ref
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 compose-markdown = { module = "com.github.jeziellago:compose-markdown", version.ref = "composeMarkdown" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtx" }
 dionsegijn-konfetti-compose = { module = "nl.dionsegijn:konfetti-compose", version.ref = "konfettiComposeVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
@@ -138,10 +143,13 @@ kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-cor
 log4j-api = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4jApi" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4jCore" }
 log4j-slf4j2-impl = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4jSlf4j2Impl" }
+logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
 mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 poi-ooxml-v523 = { module = "org.apache.poi:poi-ooxml", version.ref = "apachePoiOoxml" }
 poi-v523 = { module = "org.apache.poi:poi", version.ref = "apachePoi" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 shadows-framework = { module = "org.robolectric:shadows-framework", version.ref = "shadowsFramework" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

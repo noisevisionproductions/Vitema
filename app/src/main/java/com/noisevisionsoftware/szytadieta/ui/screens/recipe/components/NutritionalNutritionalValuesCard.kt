@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Grain
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Water
 import androidx.compose.material3.Card
@@ -33,12 +34,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.NutritionalValues
 
 @Composable
 fun NutritionalValuesCard(
-    nutritionalValues: NutritionalValues,
+    nutritionalValues: NutritionalValues?,
     modifier: Modifier = Modifier
 ) {
     var isVisible by remember { mutableStateOf(false) }
@@ -65,61 +67,89 @@ fun NutritionalValuesCard(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                AnimatedNutritionalValue(
-                    label = "Kalorie",
-                    value = nutritionalValues.calories.toFloat(),
-                    maxValue = 1000f,
-                    unit = "kcal",
-                    icon = Icons.Default.LocalFireDepartment,
-                    isVisible = isVisible
-                )
+            if (nutritionalValues != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    AnimatedNutritionalValue(
+                        label = "Kalorie",
+                        value = nutritionalValues.calories.toFloat(),
+                        maxValue = 1000f,
+                        unit = "kcal",
+                        icon = Icons.Default.LocalFireDepartment,
+                        isVisible = isVisible
+                    )
 
-                AnimatedNutritionalValue(
-                    label = "Białko",
-                    value = nutritionalValues.protein.toFloat(),
-                    maxValue = 100f,
-                    unit = "g",
-                    icon = Icons.Default.FitnessCenter,
-                    isVisible = isVisible
-                )
+                    AnimatedNutritionalValue(
+                        label = "Białko",
+                        value = nutritionalValues.protein.toFloat(),
+                        maxValue = 100f,
+                        unit = "g",
+                        icon = Icons.Default.FitnessCenter,
+                        isVisible = isVisible
+                    )
 
-                AnimatedNutritionalValue(
-                    label = "Tłuszcze",
-                    value = nutritionalValues.fat.toFloat(),
-                    maxValue = 100f,
-                    unit = "g",
-                    icon = Icons.Default.Water,
-                    isVisible = isVisible
-                )
+                    AnimatedNutritionalValue(
+                        label = "Tłuszcze",
+                        value = nutritionalValues.fat.toFloat(),
+                        maxValue = 100f,
+                        unit = "g",
+                        icon = Icons.Default.Water,
+                        isVisible = isVisible
+                    )
 
-                AnimatedNutritionalValue(
-                    label = "Węglowodany",
-                    value = nutritionalValues.carbs.toFloat(),
-                    maxValue = 200f,
-                    unit = "g",
-                    icon = Icons.Default.Grain,
-                    isVisible = isVisible
-                )
+                    AnimatedNutritionalValue(
+                        label = "Węglowodany",
+                        value = nutritionalValues.carbs.toFloat(),
+                        maxValue = 200f,
+                        unit = "g",
+                        icon = Icons.Default.Grain,
+                        isVisible = isVisible
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            text = "Brak danych o wartościach odżywczych",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
         }
     }
 }
-
 @Composable
 private fun AnimatedNutritionalValue(
     label: String,
-    value: Float,
+    value: Float?,
     maxValue: Float,
     unit: String,
     icon: ImageVector,
     isVisible: Boolean
 ){
+    val safeValue = value ?: 0f
+    val progress = (safeValue / maxValue).coerceIn(0f, 1f)
+
     val animatedProgress by animateFloatAsState(
-        targetValue = if (isVisible) value / maxValue else 0f,
+        targetValue = if (isVisible) progress else 0f,
         animationSpec = tween(1000),
         label = "Progress Animation"
     )
@@ -153,7 +183,7 @@ private fun AnimatedNutritionalValue(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = value.toInt().toString(),
+                    text = safeValue.toInt().toString(),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

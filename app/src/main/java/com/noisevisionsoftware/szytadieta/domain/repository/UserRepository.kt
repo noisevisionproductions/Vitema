@@ -93,12 +93,15 @@ class UserRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteAccount(): Result<Unit> {
+    suspend fun deleteAccount(password: String): Result<Unit> {
         return try {
             val currentUser =
                 auth.currentUser
                     ?: return Result.failure(Exception("Użytkownik nie jest zalogowany"))
+
             val email = currentUser.email ?: throw Exception("Brak emaila")
+            val credential = EmailAuthProvider.getCredential(email, password)
+            currentUser.reauthenticate(credential).await()
 
             val folderRef = storage.reference
                 .child("users")

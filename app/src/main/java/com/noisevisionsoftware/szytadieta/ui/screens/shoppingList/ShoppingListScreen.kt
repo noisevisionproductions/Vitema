@@ -52,12 +52,12 @@ fun ShoppingListScreen(
             onRefreshClick = { viewModel.onRefreshData() }
         )
 
-        PeriodSelector(
-            selectedPeriod = selectedPeriod,
-            onClick = { showPeriodSelector = true }
-        )
-
         if (availablePeriods.isNotEmpty()) {
+            PeriodSelector(
+                selectedPeriod = selectedPeriod,
+                onClick = { showPeriodSelector = true }
+            )
+
             PeriodSelectorDropdownMenu(
                 expanded = showPeriodSelector,
                 onDismissRequest = { showPeriodSelector = false },
@@ -70,11 +70,13 @@ fun ShoppingListScreen(
             )
         }
 
-        CategorySelector(
-            categories = activeCategories.toList(),
-            selectedCategory = selectedCategory,
-            onCategorySelected = { category -> selectedCategory = category }
-        )
+        if (activeCategories.isNotEmpty()) {
+            CategorySelector(
+                categories = activeCategories.toList(),
+                selectedCategory = selectedCategory,
+                onCategorySelected = { category -> selectedCategory = category }
+            )
+        }
 
         when (shoppingListState) {
             is ViewModelState.Initial -> LoadingOverlay()
@@ -91,8 +93,7 @@ fun ShoppingListScreen(
                         hasAnyShoppingLists = availablePeriods.isNotEmpty(),
                         onNavigateToAvailablePeriod = if (availablePeriods.isNotEmpty()) {
                             { viewModel.navigateToClosestAvailableWeek() }
-                        } else null,
-                        onNavigate = onNavigate
+                        } else null
                     )
                 } else {
                     CategorizedShoppingList(

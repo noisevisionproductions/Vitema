@@ -20,6 +20,7 @@
         android:roundIcon="@mipmap/szyta_dieta_logo_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SzytaDieta"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <meta-data
             android:name="google_analytics_default_allow_analytics_storage"
@@ -78,7 +79,25 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
+                <data android:host="fitapplication-3a2ae.firebaseapp.com" />
+                <data android:pathPattern="/auth/action" />
+            </intent-filter>
         </activity>
+
     </application>
 
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+    </queries>
 </manifest>

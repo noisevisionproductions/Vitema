@@ -7,13 +7,9 @@ data class Recipe(
     val id: String = "",
     val name: String = "",
     val instructions: String = "",
-
-    @PropertyName("createdAt")
-    @get:PropertyName("createdAt")
-    val createdAt: Timestamp = Timestamp.now(),
-
+    val createdAt: Timestamp?,
     val photos: List<String> = emptyList(),
-    val nutritionalValues: NutritionalValues = NutritionalValues(),
+    val nutritionalValues: NutritionalValues? = null,
     val ingredients: List<String> = emptyList(),
     val parentRecipeId: String? = null
 )

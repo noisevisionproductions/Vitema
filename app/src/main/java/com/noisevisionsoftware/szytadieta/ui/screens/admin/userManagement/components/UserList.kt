@@ -157,16 +157,16 @@ private fun UserCard(
             }
         }
 
-        if (showRoleDialog) {
-            RoleSelectionDialog(
-                currentRole = user.role,
-                onDismiss = { showRoleDialog = false },
-                onRoleSelected = { newRole ->
-                    onRoleChange(user.id, newRole)
-                    showRoleDialog = false
-                }
-            )
-        }
+        /*   if (showRoleDialog) {
+               RoleSelectionDialog(
+                   currentRole = user.role,
+                   onDismiss = { showRoleDialog = false },
+                   onRoleSelected = { newRole ->
+                       onRoleChange(user.id, newRole)
+                       showRoleDialog = false
+                   }
+               )
+           }*/
     }
 }
 

@@ -2,7 +2,8 @@ package com.noisevisionsoftware.szytadieta.domain.model.user
 
 enum class UserRole {
     USER,
-    ADMIN;
+    ADMIN,
+    OWNER;
 
     companion object {
         fun fromString(value: String?): UserRole {

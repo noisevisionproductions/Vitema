@@ -41,7 +41,7 @@ class WaterReminderReceiver : BroadcastReceiver() {
                             ).show()
                         }
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             context,

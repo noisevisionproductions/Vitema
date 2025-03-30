@@ -21,10 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.noisevisionsoftware.szytadieta.domain.alert.Alert
-import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
+import com.google.firebase.auth.FirebaseAuth
 import com.noisevisionsoftware.szytadieta.data.localPreferences.PreferencesManager
 import com.noisevisionsoftware.szytadieta.data.localPreferences.SettingsManager
+import com.noisevisionsoftware.szytadieta.domain.alert.Alert
+import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager
 import com.noisevisionsoftware.szytadieta.domain.navigation.NavigationManager
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationHelper
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationScheduler
@@ -36,8 +37,11 @@ import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.MainScreen
 import com.noisevisionsoftware.szytadieta.ui.theme.FitApplicationTheme
 import com.noisevisionsoftware.szytadieta.ui.theme.PatternBackground
+import com.noisevisionsoftware.szytadieta.utils.AppConfig
+import com.noisevisionsoftware.szytadieta.utils.UrlHandler
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -73,6 +77,8 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) {
             appVersionViewModel.checkAppVersion()
             checkNotificationPermission()
+
+            handleEmailVerificationLink(intent)
         }
 
         setContent {
@@ -83,6 +89,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleNotificationNavigation(intent)
+        handleEmailVerificationLink(intent)
     }
 
     @Composable
@@ -118,6 +125,7 @@ class MainActivity : ComponentActivity() {
                     }
                 )
             }
+
             else -> Unit
         }
 
@@ -166,6 +174,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+
+            NotificationType.SURVEY_REMINDER.name -> {
+                UrlHandler.openUrl(this, AppConfig.Urls.SURVEY_URL)
+                notificationHelper.cancelNotification(1002)
+            }
         }
     }
 
@@ -173,6 +186,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 notificationScheduler.scheduleWaterReminder()
+                notificationScheduler.scheduleSurveyReminder()
             } catch (e: Exception) {
                 Log.e("MainActivity", "Error scheduling notifications", e)
                 alertManager.showAlert(
@@ -206,6 +220,42 @@ class MainActivity : ComponentActivity() {
             }
         } else {
             scheduleNotifications()
+        }
+    }
+
+    private fun handleEmailVerificationLink(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_VIEW && intent.data != null) {
+            val uri = intent.data
+            val uriString = uri.toString()
+
+            if (uriString.contains("/auth/action") &&
+                (uri?.getQueryParameter("mode") == "action" || uri?.getQueryParameter("mode") == "verifyEmail")
+            ) {
+                lifecycleScope.launch {
+                    try {
+                        val oobCode = uri.getQueryParameter("oobCode")
+                        if (!oobCode.isNullOrEmpty()) {
+                            FirebaseAuth.getInstance().applyActionCode(oobCode).await()
+
+                            navigationManager.navigateToScreen(
+                                NavigationDestination.UnauthenticatedDestination.EmailVerified
+                            )
+                            alertManager.showAlert(
+                                Alert.Success("Twój adres email został pomyślnie zweryfikowany!")
+                            )
+                        } else {
+                            alertManager.showAlert(
+                                Alert.Error("Brak kodu weryfikacyjnego w linku")
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error verifying email", e)
+                        alertManager.showAlert(
+                            Alert.Error("Wystąpił błąd podczas weryfikacji adresu email: ${e.message}")
+                        )
+                    }
+                }
+            }
         }
     }
 }

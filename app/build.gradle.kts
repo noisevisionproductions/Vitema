@@ -33,8 +33,8 @@ android {
     defaultConfig {
         version = Version(
             major = 1,
-            minor = 3,
-            patch = 5
+            minor = 4,
+            patch = 3
         )
 
         applicationId = "com.noisevisionsoftware.szytadieta"
@@ -154,6 +154,14 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
     kapt(libs.androidx.hilt.compiler)
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // OkHttp
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
 
     // Preferences
     implementation(libs.androidx.datastore.preferences)

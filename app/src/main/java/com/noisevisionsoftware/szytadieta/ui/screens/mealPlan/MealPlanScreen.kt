@@ -76,11 +76,10 @@ fun MealPlanScreen(
                     val dietDay = (mealPlanState as ViewModelState.Success<DietDay>).data
                     if (dietDay.meals.isEmpty()) {
                         NoMealPlanMessage(
-                            hasAnyMealPlans = hasAnyMealPlans ?: false,
+                            hasAnyMealPlans = hasAnyMealPlans == true,
                             onNavigateToAvailableWeek = if (hasAnyMealPlans == true) {
                                 { viewModel.navigateToClosestAvailableWeek() }
-                            } else null,
-                            onNavigate = onNavigate
+                            } else null
                         )
                     } else {
                         DayMealList(

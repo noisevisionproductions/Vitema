@@ -9,6 +9,7 @@ import com.noisevisionsoftware.szytadieta.domain.exceptions.ValidationManager
 import com.noisevisionsoftware.szytadieta.data.localPreferences.SessionManager
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.UserRole
+import com.noisevisionsoftware.szytadieta.domain.model.user.auth.EmailVerificationState
 import com.noisevisionsoftware.szytadieta.domain.network.NetworkConnectivityManager
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationManager
@@ -38,6 +39,14 @@ class AuthViewModel @Inject constructor(
     private val _profileCompleted = MutableStateFlow<Boolean?>(null)
     val profileCompleted = _profileCompleted.asStateFlow()
 
+    private val _emailVerificationState = MutableStateFlow<EmailVerificationState>(
+        EmailVerificationState.Initial
+    )
+    val emailVerificationState = _emailVerificationState.asStateFlow()
+
+    private val _showVerificationDialog = MutableStateFlow(false)
+    val showVerificationDialog = _showVerificationDialog.asStateFlow()
+
     val userSession = sessionManager.userSessionFlow
 
     init {
@@ -50,15 +59,65 @@ class AuthViewModel @Inject constructor(
             safeApiCall { authRepository.getCurrentUserData() }
                 .onSuccess { user ->
                     user?.let {
-                        sessionManager.saveUserSession(it)
-                        checkProfileCompletion(it)
-                        _authState.value = AuthState.Success(it)
+                        safeApiCall { authRepository.isEmailVerified() }
+                            .onSuccess { isVerified ->
+                                if (isVerified) {
+                                    sessionManager.saveUserSession(it)
+                                    checkProfileCompletion(it)
+                                    _authState.value = AuthState.Success(it)
+                                } else {
+                                    logout(showMessage = false)
+                                    _authState.value =
+                                        AuthState.Error("Email nie został zweryfikowany. Sprawdź swoją skrzynkę pocztową i kliknij w link aktywacyjny.")
+                                }
+                            }
+                            .onFailure { throwable ->
+                                handleAuthError(throwable)
+                            }
                     } ?: run {
                         _authState.value = AuthState.Error("Użytkownik nie jest zalogowany")
                     }
                 }
                 .onFailure { throwable ->
                     handleAuthError(throwable)
+                }
+        }
+    }
+
+    fun setShowVerificationDialog(show: Boolean) {
+        _showVerificationDialog.value = show
+    }
+
+    fun checkEmailVerification() {
+        viewModelScope.launch {
+            _emailVerificationState.value = EmailVerificationState.Loading
+            safeApiCall { authRepository.isEmailVerified() }
+                .onSuccess { isVerified ->
+                    _emailVerificationState.value = if (isVerified) {
+                        EmailVerificationState.Verified
+                    } else {
+                        EmailVerificationState.NotVerified
+                    }
+                }
+                .onFailure { throwable ->
+                    _emailVerificationState.value =
+                        EmailVerificationState.Error(throwable.message ?: "Błąd weryfikacji")
+                }
+        }
+    }
+
+    fun resendVerificationEmail() {
+        viewModelScope.launch {
+            _emailVerificationState.value = EmailVerificationState.Loading
+            safeApiCall { authRepository.resendVerificationEmail() }
+                .onSuccess {
+                    _emailVerificationState.value = EmailVerificationState.EmailSent
+                    showSuccess("Link weryfikacyjny został wysłany ponownie na Twój adres email")
+                }
+                .onFailure { throwable ->
+                    _emailVerificationState.value =
+                        EmailVerificationState.Error(throwable.message ?: "Błąd wysyłania")
+                    showError("Nie udało się wysłać emaila weryfikacyjnego: ${throwable.message}")
                 }
         }
     }
@@ -74,7 +133,11 @@ class AuthViewModel @Inject constructor(
                 result.onSuccess { user ->
                     handleSuccessfulAuth(user)
                 }.onFailure { throwable ->
-                    Log.e("LoginError", "Login failed", throwable)
+                    if (throwable is AppException.AuthException &&
+                        throwable.message.contains("nie został zweryfikowany")
+                    ) {
+                        _showVerificationDialog.value = true
+                    }
                     handleAuthError(throwable)
                 }
             } catch (e: Exception) {
@@ -97,8 +160,10 @@ class AuthViewModel @Inject constructor(
                 val result = authRepository.register(nickname, email, password)
 
                 result.onSuccess { user ->
+                    _emailVerificationState.value = EmailVerificationState.EmailSent
                     handleSuccessfulAuth(user)
-                    showSuccess("Konto zostało utworzone")
+                    showSuccess("Konto zostało utworzone. Sprawdź swoją skrzynkę email aby zweryfikować konto.")
+                    logout(showMessage = false)
                 }.onFailure { throwable ->
                     Log.e("RegistrationError", "Registration failed", throwable)
                     handleAuthError(throwable)
@@ -128,7 +193,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun logout() {
+    fun logout(showMessage: Boolean = true) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             try {
@@ -137,7 +202,10 @@ class AuthViewModel @Inject constructor(
                 notificationManager.cancelAllNotifications()
                 eventBus.emit(AppEvent.UserLoggedOut)
                 _authState.value = AuthState.Logout
-            } catch (e: Exception) {
+                if (showMessage) {
+                    showSuccess("Wylogowano pomyślnie")
+                }
+            } catch (_: Exception) {
                 showError("Błąd podczas wylogowywania")
             }
         }
@@ -147,7 +215,7 @@ class AuthViewModel @Inject constructor(
         return try {
             val user = getCurrentUser()
             user.role == UserRole.ADMIN
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -166,15 +234,32 @@ class AuthViewModel @Inject constructor(
             }
 
             is AppException.AuthException -> {
+                if (throwable.message.contains("nie został zweryfikowany") ||
+                    throwable.message.contains("email") ||
+                    throwable.message.contains("weryfikacji")
+                ) {
+                    _showVerificationDialog.value = true
+                }
                 showError(throwable.message)
                 _authState.value = AuthState.Initial
                 return
             }
 
             is AppException -> throwable
-            is Exception -> FirebaseErrorMapper.mapFirebaseAuthError(throwable)
+            is Exception -> {
+                val mappedError = FirebaseErrorMapper.mapFirebaseAuthError(throwable)
+                if (mappedError.message.contains("nie został zweryfikowany") ||
+                    mappedError.message.contains("email") ||
+                    mappedError.message.contains("weryfikacji")
+                ) {
+                    _showVerificationDialog.value = true
+                }
+                mappedError
+            }
+
             else -> AppException.UnknownException()
         }
+
         if (appException is AppException.NetworkException || appException is AppException.UnknownException) {
             _authState.value = AuthState.Error(appException.message)
         } else {

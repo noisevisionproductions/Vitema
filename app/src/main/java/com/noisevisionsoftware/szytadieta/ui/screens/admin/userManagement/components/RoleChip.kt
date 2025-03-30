@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.MoveDown
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.AssistChip
@@ -43,6 +44,7 @@ fun RoleChip(
                 imageVector = when (role) {
                     UserRole.ADMIN -> Icons.Default.AdminPanelSettings
                     UserRole.USER -> Icons.Default.Person
+                    UserRole.OWNER -> Icons.Default.MoveDown
                 },
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
@@ -110,6 +112,7 @@ fun RoleSelectionDialog(
                                     text = when (role) {
                                         UserRole.ADMIN -> "Pełny dostęp do panelu administracyjnego"
                                         UserRole.USER -> "Standardowy dostęp użytkownika"
+                                        UserRole.OWNER -> "Testowy"
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant

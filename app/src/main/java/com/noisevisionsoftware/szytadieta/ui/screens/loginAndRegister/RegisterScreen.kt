@@ -17,11 +17,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -45,6 +50,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.noisevisionsoftware.szytadieta.domain.model.user.auth.EmailVerificationState
 import com.noisevisionsoftware.szytadieta.domain.state.AuthState
 import com.noisevisionsoftware.szytadieta.ui.common.PasswordTextField
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
@@ -61,6 +67,14 @@ fun RegisterScreen(
     val focusManager = LocalFocusManager.current
     val authState by viewModel.authState.collectAsState()
     val profileCompleted by viewModel.profileCompleted.collectAsState()
+    val emailVerificationState by viewModel.emailVerificationState.collectAsState()
+    var showVerificationDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(emailVerificationState) {
+        if (emailVerificationState is EmailVerificationState.EmailSent) {
+            showVerificationDialog = true
+        }
+    }
 
     LaunchedEffect(authState, profileCompleted) {
         when {
@@ -72,6 +86,15 @@ fun RegisterScreen(
                 onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard)
             }
         }
+    }
+
+    if (showVerificationDialog) {
+        EmailVerificationDialog(
+            onDismiss = {
+                showVerificationDialog = false
+                onNavigate(NavigationDestination.UnauthenticatedDestination.Login)
+            }
+        )
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -293,6 +316,73 @@ private fun AlreadyHaveAccount(onLoginClick: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EmailVerificationDialog(
+    onDismiss: () -> Unit
+) {
+    BasicAlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Email,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .padding(bottom = 16.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = "Potwierdź swój adres email",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Text(
+                    text = "Wysłaliśmy link weryfikacyjny na Twój adres email. Kliknij w niego, aby aktywować konto i móc się zalogować.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(
+                        text = "Zrozumiałem",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            }
         }
     }
 }

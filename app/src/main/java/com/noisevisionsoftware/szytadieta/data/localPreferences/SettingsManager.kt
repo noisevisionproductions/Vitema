@@ -31,7 +31,7 @@ class SettingsManager @Inject constructor(
     }
 
     val isDarkMode: Flow<Boolean> = dataStore.data.map { preferences ->
-        preferences[IS_DARK_MODE_KEY] ?: true
+        preferences[IS_DARK_MODE_KEY] != false
     }
 
     suspend fun setDarkMode(enabled: Boolean) {
@@ -50,7 +50,7 @@ class SettingsManager @Inject constructor(
             val validOrder = savedOrder.mapNotNull { name ->
                 try {
                     DashboardCardType.valueOf(name)
-                } catch (e: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     null
                 }
             }
@@ -58,7 +58,7 @@ class SettingsManager @Inject constructor(
             val validHidden = savedHidden.mapNotNull { name ->
                 try {
                     DashboardCardType.valueOf(name)
-                } catch (e: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     null
                 }
             }.toSet()
@@ -70,7 +70,7 @@ class SettingsManager @Inject constructor(
                 cardOrder = finalOrder,
                 hiddenCards = validHidden
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             DashboardConfig(
                 cardOrder = DashboardCardType.entries,
                 hiddenCards = emptySet()
@@ -86,7 +86,7 @@ class SettingsManager @Inject constructor(
     }
 
     val waterNotificationsEnabled: Flow<Boolean> = dataStore.data.map { preferences ->
-        preferences[WATER_NOTIFICATIONS_ENABLED_KEY] ?: true
+        preferences[WATER_NOTIFICATIONS_ENABLED_KEY] != false
     }
 
     suspend fun setWaterNotificationsEnabled(enabled: Boolean) {

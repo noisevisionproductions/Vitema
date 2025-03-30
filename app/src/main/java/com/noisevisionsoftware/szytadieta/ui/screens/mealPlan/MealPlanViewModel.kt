@@ -11,6 +11,7 @@ import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.meals.EatenMealsRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.meals.RecipeRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.meals.RecipeRepositoryOld
 import com.noisevisionsoftware.szytadieta.domain.state.ViewModelState
 import com.noisevisionsoftware.szytadieta.ui.base.BaseViewModel
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
@@ -73,14 +74,33 @@ class MealPlanViewModel @Inject constructor(
                     ?: DietDay(timestamp = timestampForDate)
 
                 if (dietDay.meals.isNotEmpty()) {
+                    val mealsIds = dietDay.meals.map { it.recipeId }
+                    Log.d("MealPlanViewModel", "Próba ładowania przepisów: $mealsIds")
+
                     val recipesResult = recipeRepository.getRecipesForMeals(dietDay.meals)
                     when {
                         recipesResult.isSuccess -> {
                             val recipes = recipesResult.getOrNull() ?: emptyMap()
+
+                            dietDay.meals.forEach { meal ->
+                                if (meal.recipeId.isNotEmpty() && !recipes.containsKey(meal.recipeId)) {
+                                    Log.e(
+                                        "MealPlanViewModel",
+                                        "Nie znaleziono przepisu o ID: ${meal.recipeId}"
+                                    )
+                                }
+                            }
+
                             _recipesState.value = recipes
                         }
 
                         recipesResult.isFailure -> {
+                            val exception = recipesResult.exceptionOrNull()
+                            Log.e(
+                                "MealPlanViewModel",
+                                "Błąd podczas pobierania przepisów: ${exception?.message}",
+                                exception
+                            )
                             _recipesState.value = emptyMap()
                         }
                     }
@@ -111,7 +131,7 @@ class MealPlanViewModel @Inject constructor(
 
     private fun checkForAnyPlans() {
         viewModelScope.launch {
-            _hasAnyMealPlans.value = dietRepository.hasAnyDiets().getOrNull() ?: false
+            _hasAnyMealPlans.value = dietRepository.hasAnyDiets().getOrNull() == true
         }
     }
 
@@ -158,20 +178,16 @@ class MealPlanViewModel @Inject constructor(
                 val user = authRepository.getCurrentUser() ?: return@launch
                 val date = formatDate(_currentDate.value)
 
-                // Sprawdź aktualny stan w Firestore przed zmianą
                 val currentEatenMeals = eatenMealsRepository.getEatenMeals(user.uid, date)
 
                 val newEatenMeals = if (mealId in currentEatenMeals) {
-                    // Jeśli posiłek już jest zjedzony, usuń go
                     eatenMealsRepository.removeEatenMeal(user.uid, date, mealId)
                     currentEatenMeals - mealId
                 } else {
-                    // Jeśli posiłek nie jest zjedzony, dodaj go
                     eatenMealsRepository.saveEatenMeal(user.uid, date, mealId)
                     currentEatenMeals + mealId
                 }
 
-                // Zaktualizuj lokalny stan
                 _eatenMeals.value = newEatenMeals
             } catch (e: Exception) {
                 Log.e("MealPlanViewModel", "Error toggling meal", e)

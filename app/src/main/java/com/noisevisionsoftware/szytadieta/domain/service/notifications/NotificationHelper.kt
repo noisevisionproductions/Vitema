@@ -25,6 +25,7 @@ class NotificationHelper @Inject constructor(
         private const val CHANNEL_NAME = "Szyta Dieta"
         private const val CHANNEL_DESCRIPTION = "Powiadomienia z aplikacji Szyta Dieta"
         private const val WATER_REMINDER_NOTIFICATION_ID = 1001
+        private const val SURVEY_REMINDER_NOTIFICATION_ID = 1002
         const val EXTRA_DESTINATION = "destination"
     }
 
@@ -145,6 +146,37 @@ class NotificationHelper @Inject constructor(
 
         val notificationId = dietId.hashCode()
         notificationManager.notify(notificationId, notification)
+    }
+
+    fun showSurveyReminder() {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("notification_type", NotificationType.SURVEY_REMINDER.name)
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.mipmap.szyta_dieta_logo)
+            .setContentTitle("Wypełnij ankietę!")
+            .setContentText("Wypełnij naszą ankietę, aby otrzymać indywidualną dietę")
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText("Wypełnij naszą ankietę, aby otrzymać indywidualną dietę. " +
+                            "To zajmie tylko kilka minut, a pozwoli nam lepiej dopasować plan żywieniowy do Twoich potrzeb. " +
+                            "Dane będą zweryfikowane w ciągu godziny od wypełnienia.")
+            )
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        notificationManager.notify(SURVEY_REMINDER_NOTIFICATION_ID, notification)
     }
 
     fun cancelNotification(notificationId: Int) {

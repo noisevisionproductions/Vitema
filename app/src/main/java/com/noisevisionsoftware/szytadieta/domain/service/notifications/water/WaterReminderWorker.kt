@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.noisevisionsoftware.szytadieta.data.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationHelper
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationScheduler
 import dagger.assisted.Assisted
@@ -18,7 +17,7 @@ class WaterReminderWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val notificationHelper: NotificationHelper,
-    private val settingsManager: SettingsManager
+    private val notificationScheduler: NotificationScheduler
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -34,7 +33,7 @@ class WaterReminderWorker @AssistedInject constructor(
             )
 
             notificationHelper.showWaterReminder(messages.random())
-            NotificationScheduler(applicationContext, settingsManager).scheduleWaterReminder()
+            notificationScheduler.scheduleWaterReminder()
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Błąd podczas wyświetlania powiadomienia", e)

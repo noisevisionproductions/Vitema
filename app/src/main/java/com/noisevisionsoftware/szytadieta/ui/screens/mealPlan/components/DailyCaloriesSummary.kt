@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,17 +37,32 @@ fun DailyCaloriesSummary(
     eatenMeals: Set<String>,
     modifier: Modifier = Modifier
 ) {
-    val totalCalories = recipes.values
-        .sumOf { it.nutritionalValues.calories }
-        .toFloat()
+    val recipesWithCalories = recipes.values.filter {
+        it.nutritionalValues?.calories?.let { calories -> calories > 0 } == true
+    }
 
-    val consumedCalories = dietDay.meals
-        .filter { it.recipeId in  eatenMeals }
-        .mapNotNull { meal -> recipes[meal.recipeId]?.nutritionalValues?.calories }
-        .sum()
-        .toFloat()
+    val hasCaloriesData = recipesWithCalories.isNotEmpty()
 
-    val progress = (consumedCalories / totalCalories).coerceIn(0f, 1f)
+    val totalCalories = if (hasCaloriesData) {
+        recipes.values
+            .sumOf { it.nutritionalValues?.calories ?: 0.0 }
+            .toFloat()
+    } else 0f
+
+    val consumedCalories = if (hasCaloriesData) {
+        dietDay.meals
+            .filter { it.recipeId in eatenMeals }
+            .mapNotNull { meal -> recipes[meal.recipeId]?.nutritionalValues?.calories }
+            .sum()
+            .toFloat()
+    } else 0f
+
+    val progress = if (totalCalories > 0) {
+        (consumedCalories / totalCalories).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
         animationSpec = tween(1000),
@@ -86,22 +105,48 @@ fun DailyCaloriesSummary(
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                Text(
-                    text = "${consumedCalories.toInt()}/${totalCalories.toInt()} kcal",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = progressColor
-                )
+                if (hasCaloriesData) {
+                    Text(
+                        text = "${consumedCalories.toInt()}/${totalCalories.toInt()} kcal",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = progressColor
+                    )
+                }
             }
 
-            LinearProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp),
-                color = progressColor,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+            if (hasCaloriesData) {
+                LinearProgressIndicator(
+                    progress = {
+                        animatedProgress.takeIf { !it.isNaN() } ?: 0f
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp),
+                    color = progressColor,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Nie podano wartości kalorycznych dla posiłków",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
         }
     }
 }

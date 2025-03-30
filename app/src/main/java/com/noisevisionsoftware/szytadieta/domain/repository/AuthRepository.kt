@@ -12,7 +12,7 @@ import com.noisevisionsoftware.szytadieta.domain.exceptions.AppException
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.BodyMeasurements
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementSourceType
 import com.noisevisionsoftware.szytadieta.domain.model.health.measurements.MeasurementType
-import com.noisevisionsoftware.szytadieta.domain.model.user.PrivacyConsent
+import com.noisevisionsoftware.szytadieta.domain.model.user.auth.PrivacyConsent
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
 import com.noisevisionsoftware.szytadieta.domain.model.user.pending.PendingUser
 import com.noisevisionsoftware.szytadieta.utils.DateUtils
@@ -28,19 +28,22 @@ class AuthRepository @Inject constructor(
     private val fcmTokenRepository: FCMTokenRepository
 ) {
     suspend fun register(nickname: String, email: String, password: String): Result<User> = try {
-        // 1. Najpierw sprawdzamy, czy istnieje pendingUser
         val pendingUserDocRef = firestore.collection("pendingUsers").document(email)
         val pendingUserSnapshot = pendingUserDocRef.get().await()
 
-        // 2. Tworzymy użytkownika przez Firebase Auth
+        val hasSurveyData = pendingUserSnapshot.exists()
+
         val authResult = auth.createUserWithEmailAndPassword(email, password).await()
 
         authResult.user?.let { firebaseUser ->
+            firebaseUser.sendEmailVerification().await()
+
             var user = User(
                 id = firebaseUser.uid,
                 email = email,
                 nickname = nickname,
                 createdAt = DateUtils.getCurrentLocalDate(),
+                surveyCompleted = hasSurveyData,
                 privacyConsent = PrivacyConsent(
                     privacyPolicyAccepted = true,
                     termsAccepted = true,
@@ -48,7 +51,6 @@ class AuthRepository @Inject constructor(
                 )
             )
 
-            // 3. Jeśli istnieje pendingUser, aktualizujemy dane użytkownika i zapisujemy pomiary
             if (pendingUserSnapshot.exists()) {
                 val pendingUser = pendingUserSnapshot.toObject<PendingUser>()
                 pendingUser?.let { pending ->
@@ -59,7 +61,6 @@ class AuthRepository @Inject constructor(
                         profileCompleted = true
                     )
 
-                    // Zapisujemy pomiary jeśli istnieją
                     pending.measurements?.forEach { measurement ->
                         val bodyMeasurement = BodyMeasurements(
                             userId = user.id,
@@ -85,12 +86,10 @@ class AuthRepository @Inject constructor(
                             .await()
                     }
 
-                    // Usuwamy pendingUser po przetworzeniu
                     pendingUserDocRef.delete().await()
                 }
             }
 
-            // 4. Zapisujemy użytkownika w firestore
             firestore.collection("users")
                 .document(user.id)
                 .set(user)
@@ -112,6 +111,10 @@ class AuthRepository @Inject constructor(
         val authResult = auth.signInWithEmailAndPassword(email, password).await()
 
         authResult.user?.let { firebaseUser ->
+            if (!firebaseUser.isEmailVerified) {
+                return Result.failure(AppException.AuthException("Email nie został zweryfikowany. Sprawdź swoją skrzynkę pocztową i kliknij w link aktywacyjny."))
+            }
+
             val documentSnapshot = firestore.collection("users")
                 .document(firebaseUser.uid)
                 .get()
@@ -129,6 +132,32 @@ class AuthRepository @Inject constructor(
         } ?: Result.failure(Exception("Błąd podczas logowania"))
     } catch (e: Exception) {
         Result.failure(e)
+    }
+
+    suspend fun isEmailVerified(): Result<Boolean> {
+        return try {
+            val currentUser = auth.currentUser
+                ?: return Result.failure(AppException.AuthException("Użytkownik nie jest zalogowany"))
+
+            currentUser.reload().await()
+
+            Result.success(currentUser.isEmailVerified)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun resendVerificationEmail(): Result<Unit> {
+        return try {
+            val currentUser = auth.currentUser
+                ?: return Result.failure(AppException.AuthException("Użytkownik nie jest zalogowany"))
+
+            currentUser.sendEmailVerification().await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun getCurrentUserData(): Result<User?> = try {
@@ -268,7 +297,7 @@ class AuthRepository @Inject constructor(
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = timestamp
             return calendar.get(Calendar.WEEK_OF_YEAR)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return 1
         }
     }

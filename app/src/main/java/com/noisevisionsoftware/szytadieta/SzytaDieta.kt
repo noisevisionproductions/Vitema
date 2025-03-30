@@ -1,11 +1,11 @@
 package com.noisevisionsoftware.szytadieta
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import androidx.work.WorkManager
-import com.google.firebase.BuildConfig
 import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.Executors
@@ -44,7 +44,7 @@ class SzytaDieta : Application(), Configuration.Provider {
             .build()
 
     private fun getLogLevel(): Int =
-        if (BuildConfig.DEBUG) Log.DEBUG else Log.ERROR
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) Log.DEBUG else Log.ERROR
 
     companion object {
         private const val TAG = "SzytaDieta"

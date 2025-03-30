@@ -95,22 +95,30 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun deleteAccount() {
+    fun deleteAccount(password: String) {
         handleOperation(_settingsState) {
             authRepository.withAuthenticatedUser { userId ->
 
-                safeApiCall { userRepository.deleteAccount() }
-                    .getOrThrow()
+                ValidationManager.validatePassword(password).getOrThrow()
 
-                sessionManager.clearSession()
-                settingsManager.clearSettings()
-                preferencesManager.clearAllUserData(userId = userId)
-                showSuccess("Konto zostało usunięte")
+                safeApiCall { userRepository.deleteAccount(password) }
+                    .fold(
+                        onSuccess = {
+                            sessionManager.clearSession()
+                            settingsManager.clearSettings()
+                            preferencesManager.clearAllUserData(userId = userId)
+                            showSuccess("Konto zostało usunięte")
 
-                SettingsData(
-                    isAccountDeleted = true,
-                    appVersion = appVersionUtils.getAppVersion()
-                )
+                            SettingsData(
+                                isAccountDeleted = true,
+                                appVersion = appVersionUtils.getAppVersion()
+                            )
+                        },
+                        onFailure = { throwable ->
+                            val error = FirebaseErrorMapper.mapFirebaseAuthError(throwable as Exception)
+                            throw AppException.AuthException(error.message)
+                        }
+                    )
             }
         }
     }

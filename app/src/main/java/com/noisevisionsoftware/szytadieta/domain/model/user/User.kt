@@ -1,6 +1,7 @@
 package com.noisevisionsoftware.szytadieta.domain.model.user
 
 import android.icu.util.Calendar
+import com.noisevisionsoftware.szytadieta.domain.model.user.auth.PrivacyConsent
 
 data class User(
     val id: String = "",
@@ -13,7 +14,10 @@ data class User(
     val storedAge: Int = 0,
     val privacyConsent: PrivacyConsent = PrivacyConsent(),
     val profileCompleted: Boolean = false,
-    val role: UserRole = UserRole.USER
+    val surveyCompleted: Boolean = false,
+    val role: UserRole = UserRole.USER,
+    val note: String? = null,
+    val fcmToken: String? = null
 ) {
     fun calculateAge(): Int {
         return birthDate?.let {

@@ -123,8 +123,8 @@ fun SettingsScreen(
         if (showDeleteAccountDialog) {
             DeleteAccountDialog(
                 onDismiss = { showDeleteAccountDialog = false },
-                onConfirm = {
-                    viewModel.deleteAccount()
+                onConfirm = { password ->
+                    viewModel.deleteAccount(password)
                     showDeleteAccountDialog = false
                 }
             )

@@ -14,7 +14,7 @@ import com.noisevisionsoftware.szytadieta.domain.repository.AppVersionRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.AuthRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.BodyMeasurementRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.FileRepository
-import com.noisevisionsoftware.szytadieta.domain.repository.meals.RecipeRepository
+import com.noisevisionsoftware.szytadieta.domain.repository.meals.RecipeRepositoryOld
 import com.noisevisionsoftware.szytadieta.domain.repository.StatisticsRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.health.WeightRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.DietRepository
@@ -128,7 +128,7 @@ object RepositoryModule {
     fun provideRecipeRepository(
         firestore: FirebaseFirestore,
         storage: FirebaseStorage
-    ): RecipeRepository = RecipeRepository(firestore, storage)
+    ): RecipeRepositoryOld = RecipeRepositoryOld(firestore, storage)
 
     @Provides
     @Singleton
