@@ -1,16 +1,24 @@
 import React from "react";
 import {Recipe} from "../../types";
-import {FileX} from "lucide-react";
+import {FileX, Trash2} from "lucide-react";
 import {formatTimestamp} from "../../utils/dateFormatters";
 import NutritionalValues from "../common/NutritionalValues";
 
 interface RecipeCardProps {
     recipe: Recipe;
     onClick: (recipeId: string) => void;
+    onDelete?: (recipe: Recipe, e: React.MouseEvent) => void;
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({recipe, onClick}) => {
+const RecipeCard: React.FC<RecipeCardProps> = ({recipe, onClick, onDelete}) => {
     const hasImage = recipe.photos && recipe.photos.length > 0;
+
+    const handleDeleteClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onDelete) {
+            onDelete(recipe, e);
+        }
+    };
 
     return (
         <div className="p-1">
@@ -18,6 +26,14 @@ const RecipeCard: React.FC<RecipeCardProps> = ({recipe, onClick}) => {
                 className="hover:shadow-md hover:scale-[1.01] hover:border-primary-light transition-all duration-300 cursor-pointer rounded-lg border border-slate-200 overflow-hidden group bg-white"
                 onClick={() => onClick(recipe.id)}
             >
+                <button
+                    onClick={handleDeleteClick}
+                    className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 z-10"
+                    title="Usuń przepis"
+                >
+                    <Trash2 className="text-red-500" size={16}/>
+                </button>
+
                 {hasImage && (
                     <div className="h-32 overflow-hidden">
                         <img

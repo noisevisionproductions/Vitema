@@ -1,11 +1,12 @@
-import {useEffect, useState, forwardRef, useImperativeHandle} from "react";
+import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useState} from "react";
 import {Recipe} from "../../types";
 import {RecipeService} from "../../services/RecipeService";
 import {toast} from "../../utils/toast";
 import LoadingSpinner from "../common/LoadingSpinner";
-import {FloatingActionButtonGroup, FloatingActionButton} from "../common/FloatingActionButton";
+import {FloatingActionButton, FloatingActionButtonGroup} from "../common/FloatingActionButton";
 import RecipeCard from "./RecipeCard";
 import debounce from 'lodash/debounce';
+import ConfirmationDialog from "../common/ConfirmationDialog";
 
 interface RecipesListProps {
     onRecipeSelect: (recipeId: string) => void;
@@ -18,6 +19,7 @@ interface RecipesListProps {
 
 export interface RecipesListRef {
     refreshRecipes: () => void;
+    updateRecipe: (updatedRecipe: Recipe) => void;
 }
 
 const RecipesList = forwardRef<RecipesListRef, RecipesListProps>(({
@@ -37,6 +39,9 @@ const RecipesList = forwardRef<RecipesListRef, RecipesListProps>(({
     const [filterWithoutImages, setFilterWithoutImages] = useState(initialFilterWithoutImages);
     const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'name' | 'calories'>(initialSortBy);
     const [isSearching, setIsSearching] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
+    const [isDeletingRecipe, setIsDeletingRecipe] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(0);
     const [hasMorePages, setHasMorePages] = useState(true);
@@ -65,23 +70,39 @@ const RecipesList = forwardRef<RecipesListRef, RecipesListProps>(({
         }
     }, [filteredRecipes.length, isSearching, onRecipesCountUpdate]);
 
-    useImperativeHandle(ref, () => ({
-        refreshRecipes: () => {
-            const savedSearchQuery = searchQuery;
-            const savedFilterWithImages = filterWithImages;
-            const savedFilterWithoutImages = filterWithoutImages;
-            const savedSortBy = sortBy;
+    // Metoda do aktualizacji pojedynczego przepisu bez ponownego ładowania całej listy
+    const updateRecipe = useCallback((updatedRecipe: Recipe) => {
+        setRecipes(currentRecipes =>
+            currentRecipes.map(recipe =>
+                recipe.id === updatedRecipe.id ? updatedRecipe : recipe
+            )
+        );
+    }, []);
 
-            fetchInitialRecipes()
-                .then(() => {
-                    setSearchQuery(savedSearchQuery);
-                    setFilterWithImages(savedFilterWithImages);
-                    setFilterWithoutImages(savedFilterWithoutImages);
-                    setSortBy(savedSortBy);
-                })
-                .catch(console.error);
-        }
+    useImperativeHandle(ref, () => ({
+        refreshRecipes: async () => {
+            try {
+                await fetchInitialRecipes();
+                await loadSavedPages(currentPage);
+                setSearchQuery(searchQuery);
+                setFilterWithImages(filterWithImages);
+                setFilterWithoutImages(filterWithoutImages);
+                setSortBy(sortBy);
+            } catch (message) {
+                return console.error(message);
+            }
+        },
+        updateRecipe
     }));
+
+    // Funkcja do ładowania kilku stron do określonego indeksu strony
+    const loadSavedPages = async (targetPage: number) => {
+        if (targetPage <= 0) return;
+
+        for (let page = 1; page <= targetPage; page++) {
+            await loadMoreRecipes(page);
+        }
+    };
 
     useEffect(() => {
         fetchInitialRecipes().catch(console.error);
@@ -179,12 +200,14 @@ const RecipesList = forwardRef<RecipesListRef, RecipesListProps>(({
         }
     };
 
-    const loadMoreRecipes = async () => {
-        if (loadingMore || !hasMorePages) return;
+    const loadMoreRecipes = async (pageToLoad?: number) => {
+        if (loadingMore) return;
+
+        const nextPage = pageToLoad !== undefined ? pageToLoad : currentPage + 1;
+        if (!hasMorePages && nextPage > currentPage) return;
 
         try {
             setLoadingMore(true);
-            const nextPage = currentPage + 1;
 
             const response = await RecipeService.getRecipesPage(nextPage, pageSize);
 
@@ -204,6 +227,45 @@ const RecipesList = forwardRef<RecipesListRef, RecipesListProps>(({
         }
     };
 
+    const handleDeleteRecipe = (recipe: Recipe, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setRecipeToDelete(recipe);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleCloseDeleteDialog = () => {
+        if (!isDeletingRecipe) {
+            setDeleteDialogOpen(false);
+            setRecipeToDelete(null);
+        }
+    };
+
+    const confirmDeleteRecipe = async () => {
+        if (!recipeToDelete) return;
+
+        try {
+            setIsDeletingRecipe(true);
+            await RecipeService.deleteRecipe(recipeToDelete.id);
+
+            // Aktualizacja lokalnych list przepisów
+            const newRecipes = recipes.filter(r => r.id !== recipeToDelete.id);
+            setRecipes(newRecipes);
+
+            // Aktualizacja filtrowanej listy
+            const newFilteredRecipes = filteredRecipes.filter(r => r.id !== recipeToDelete.id);
+            setFilteredRecipes(newFilteredRecipes);
+
+            toast.success(`Przepis "${recipeToDelete.name}" został usunięty`);
+        } catch (error) {
+            console.error('Błąd podczas usuwania przepisu:', error);
+            toast.error('Nie udało się usunąć przepisu');
+        } finally {
+            setIsDeletingRecipe(false);
+            setRecipeToDelete(null);
+            setDeleteDialogOpen(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -217,7 +279,6 @@ const RecipesList = forwardRef<RecipesListRef, RecipesListProps>(({
 
     return (
         <div className="h-full flex flex-col">
-
             {/* Lista przepisów */}
             <div className="flex-grow overflow-auto relative">
                 {filteredRecipes.length === 0 ? (
@@ -235,17 +296,18 @@ const RecipesList = forwardRef<RecipesListRef, RecipesListProps>(({
                                 key={recipe.id}
                                 recipe={recipe}
                                 onClick={onRecipeSelect}
+                                onDelete={handleDeleteRecipe}
                             />
                         ))}
                     </div>
                 )}
 
-                {/* Przycisk "Załaduj więcej" - teraz jako pływający guzik */}
+                {/* Przycisk "Załaduj więcej" */}
                 {showLoadMoreButton && (
                     <FloatingActionButtonGroup position="bottom-right">
                         <FloatingActionButton
                             label="Załaduj więcej"
-                            onClick={loadMoreRecipes}
+                            onClick={() => loadMoreRecipes()}
                             disabled={loadingMore}
                             isLoading={loadingMore}
                             loadingLabel="Ładowanie..."
@@ -255,6 +317,19 @@ const RecipesList = forwardRef<RecipesListRef, RecipesListProps>(({
                     </FloatingActionButtonGroup>
                 )}
             </div>
+
+            {/* Dialog potwierdzający usunięcie przepisu */}
+            <ConfirmationDialog
+                isOpen={deleteDialogOpen}
+                onClose={handleCloseDeleteDialog}
+                onConfirm={confirmDeleteRecipe}
+                title="Czy na pewno chcesz usunąć ten przepis?"
+                description={`Przepis "${recipeToDelete?.name || ''}" zostanie trwale usunięty. Tej operacji nie można cofnąć.`}
+                confirmLabel="Usuń"
+                cancelLabel="Anuluj"
+                variant="destructive"
+                isLoading={isDeletingRecipe}
+            />
         </div>
     );
 });

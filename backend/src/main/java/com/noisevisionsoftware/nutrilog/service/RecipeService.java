@@ -4,7 +4,9 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.storage.*;
 import com.noisevisionsoftware.nutrilog.exception.NotFoundException;
 import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
-import com.noisevisionsoftware.nutrilog.repository.RecipeRepository;
+import com.noisevisionsoftware.nutrilog.model.recipe.RecipeImageReference;
+import com.noisevisionsoftware.nutrilog.repository.recipe.RecipeImageRepository;
+import com.noisevisionsoftware.nutrilog.repository.recipe.RecipeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
@@ -14,19 +16,21 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RecipeService {
+
     private final RecipeRepository recipeRepository;
+    private final RecipeImageRepository recipeImageRepository;
     private final Storage storage;
 
     @Value("${firebase.storage.bucket-name}")
@@ -67,6 +71,47 @@ public class RecipeService {
         recipe.setId(id);
 
         return recipeRepository.update(id, recipe);
+    }
+
+    @Caching(evict = {
+            @CacheEvict(value = RECIPES_CACHE, key = "#id"),
+            @CacheEvict(value = RECIPES_BATCH_CACHE, allEntries = true),
+            @CacheEvict(value = RECIPES_PAGE_CACHE, allEntries = true)
+    })
+    public void deleteRecipe(String id) {
+        Recipe recipe = getRecipeById(id);
+
+        if (recipe.getPhotos() != null && !recipe.getPhotos().isEmpty()) {
+            for (String photoUrl : recipe.getPhotos()) {
+                try {
+                    recipeImageRepository.decrementReferenceCount(photoUrl);
+                } catch (Exception e) {
+                    log.error("Błąd podczas aktualizacji referencji zdjęcia: {}", photoUrl, e);
+                }
+            }
+        }
+
+        recipeRepository.delete(id);
+
+        cleanupOrphanedImages();
+    }
+
+    @Async
+    protected void cleanupOrphanedImages() {
+        List<RecipeImageReference> orphanedImages = recipeImageRepository.findAllWithZeroReferences();
+
+        for (RecipeImageReference image : orphanedImages) {
+            try {
+                if (image.getStoragePath() != null) {
+                    BlobId blobId = BlobId.of(storageBucket, image.getStoragePath());
+                    storage.delete(blobId);
+                    log.info("Usunięto osierocone zdjęcie: {}", image.getImageUrl());
+                }
+                recipeImageRepository.deleteByImageUrl(image.getImageUrl());
+            } catch (Exception e) {
+                log.error("Błąd podczas usuwania osieroconego zdjęcia: {}", image.getImageUrl(), e);
+            }
+        }
     }
 
     public Recipe createRecipe(Recipe recipe) {
@@ -146,7 +191,6 @@ public class RecipeService {
         }
     }
 
-
     @Caching(evict = {
             @CacheEvict(value = RECIPES_CACHE, key = "#id"),
             @CacheEvict(value = RECIPES_BATCH_CACHE, allEntries = true),
@@ -179,6 +223,18 @@ public class RecipeService {
 
             String imageUrl = String.format("https://storage.googleapis.com/%s/%s",
                     storageBucket, objectName);
+
+            Optional<RecipeImageReference> existingRef = recipeImageRepository.findByImageUrl(imageUrl);
+            if (existingRef.isPresent()) {
+                recipeImageRepository.incrementReferenceCount(imageUrl);
+            } else {
+                RecipeImageReference newRef = RecipeImageReference.builder()
+                        .imageUrl(imageUrl)
+                        .storagePath(objectName)
+                        .referenceCount(1)
+                        .build();
+                recipeImageRepository.save(newRef);
+            }
 
             List<String> photos = new ArrayList<>(recipe.getPhotos() != null ? recipe.getPhotos() : new ArrayList<>());
             photos.add(imageUrl);
@@ -301,7 +357,6 @@ public class RecipeService {
 
                         if (timestamp < cutoffTime) {
                             blob.delete();
-                            log.debug("Usunięto plik: {}", name);
                         }
                     }
                 } catch (Exception e) {

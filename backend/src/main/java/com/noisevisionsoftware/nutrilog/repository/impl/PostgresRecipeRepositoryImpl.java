@@ -6,7 +6,7 @@ import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
 import com.noisevisionsoftware.nutrilog.model.recipe.RecipeReference;
 import com.noisevisionsoftware.nutrilog.model.recipe.jpa.RecipeEntity;
 import com.noisevisionsoftware.nutrilog.model.recipe.jpa.RecipeReferenceEntity;
-import com.noisevisionsoftware.nutrilog.repository.RecipeRepository;
+import com.noisevisionsoftware.nutrilog.repository.recipe.RecipeRepository;
 import com.noisevisionsoftware.nutrilog.repository.jpa.recipe.RecipeJpaRepository;
 import com.noisevisionsoftware.nutrilog.repository.jpa.recipe.RecipeReferenceJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -77,14 +77,11 @@ public class PostgresRecipeRepositoryImpl implements RecipeRepository {
     @Override
     public List<Recipe> findAll() {
         try {
-            log.info("Pobieranie wszystkich przepisów");
             List<RecipeEntity> entities = recipeJpaRepository.findAll();
-            List<Recipe> recipes = entities.stream()
+
+            return entities.stream()
                     .map(recipeJpaConverter::toModel)
                     .collect(Collectors.toList());
-
-            log.info("Pobrano {} przepisów", recipes.size());
-            return recipes;
         } catch (Exception e) {
             log.error("Błąd podczas pobierania wszystkich przepisów", e);
             throw new RuntimeException("Failed to fetch all recipes", e);

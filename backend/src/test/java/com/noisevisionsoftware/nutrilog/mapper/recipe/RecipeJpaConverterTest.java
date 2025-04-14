@@ -44,10 +44,10 @@ class RecipeJpaConverterTest {
     void toJpaEntity_withCompleteRecipe_convertsAllFields() {
         // Given
         NutritionalValues nutritionalValues = NutritionalValues.builder()
-                .calories(100)
-                .protein(20)
-                .fat(10)
-                .carbs(30)
+                .calories(100.0)
+                .protein(20.0)
+                .fat(10.0)
+                .carbs(30.0)
                 .build();
 
         Timestamp now = Timestamp.of(java.sql.Timestamp.from(

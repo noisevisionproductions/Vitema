@@ -9,7 +9,7 @@ import com.noisevisionsoftware.nutrilog.model.diet.DietFileInfo;
 import com.noisevisionsoftware.nutrilog.model.diet.DietMetadata;
 import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
 import com.noisevisionsoftware.nutrilog.model.recipe.RecipeReference;
-import com.noisevisionsoftware.nutrilog.repository.RecipeRepository;
+import com.noisevisionsoftware.nutrilog.repository.recipe.RecipeRepository;
 import com.noisevisionsoftware.nutrilog.service.RecipeService;
 import com.noisevisionsoftware.nutrilog.utils.excelParser.model.ParsedDay;
 import com.noisevisionsoftware.nutrilog.utils.excelParser.model.ParsedDietData;
@@ -91,7 +91,6 @@ public class DietManagerService {
             ParsedDay day = parsedData.getDays().get(dayIndex);
 
             for (ParsedMeal meal : day.getMeals()) {
-                List<String> photos = meal.getPhotos();
 
                 // Tworzenie obiektu Recipe
                 Recipe recipe = Recipe.builder()

@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.nutrilog.repository;
+package com.noisevisionsoftware.nutrilog.repository.recipe;
 
 import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
 import com.noisevisionsoftware.nutrilog.model.recipe.RecipeReference;
@@ -30,7 +30,6 @@ public interface RecipeRepository {
     Recipe save(Recipe recipe);
 
     List<Recipe> findByParentRecipeId(String parentId);
-
 
     // Jeśli ta metoda jest specyficzna tylko dla Firestore, można ją przenieść do FirestoreRecipeRepository
     default void saveReference(RecipeReference reference) {

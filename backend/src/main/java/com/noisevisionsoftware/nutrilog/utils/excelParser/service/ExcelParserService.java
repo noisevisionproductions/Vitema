@@ -10,15 +10,16 @@ import com.noisevisionsoftware.nutrilog.utils.excelParser.config.ExcelParserConf
 import com.noisevisionsoftware.nutrilog.utils.excelParser.model.ParsedMeal;
 import com.noisevisionsoftware.nutrilog.utils.excelParser.model.ParsedProduct;
 import com.noisevisionsoftware.nutrilog.utils.excelParser.model.ParsingResult;
-import com.noisevisionsoftware.nutrilog.utils.excelParser.service.helpers.UnitService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,7 +31,6 @@ public class ExcelParserService {
 
     private final ProductParsingService productParsingService;
     private final ProductCategorizationService categorizationService;
-    private final UnitService unitService;
     private final ExcelParserConfig excelParserConfig;
 
     public record ParsedExcelResult(
@@ -100,17 +100,15 @@ public class ExcelParserService {
             meal.setInstructions(instructions);
 
             // Parsowanie składników-trzecia kolumna po pominiętych
-            List<ParsedProduct> ingredients = new ArrayList<>();
             if (row.size() > skipColumnsCount + 2 && !row.get(skipColumnsCount + 2).trim().isEmpty()) {
-                List<String> ingredientsList = splitIngredientsList(row.get(skipColumnsCount + 2));
-                for (String ingredient : ingredientsList) {
-                    ingredient = ingredient.trim();
-                    if (!ingredient.isEmpty()) {
+                List<String> shoppingItems = splitIngredientsList(row.get(skipColumnsCount + 2));
+                for (String item : shoppingItems) {
+                    item = item.trim();
+                    if (!item.isEmpty()) {
                         try {
-                            ParsedProduct product = parseProduct(ingredient);
-                            ingredients.add(product);
+                            ParsedProduct product = parseProduct(item);
 
-                            // Agregacja do listy zakupów
+                            // Dodawanie bezpośrednio do listy zakupów
                             String key = product.getOriginal().toLowerCase().trim();
                             uniqueItems.merge(key, product, (existing, newProduct) -> {
                                 if (existing.getUnit().equals(newProduct.getUnit())) {
@@ -120,21 +118,23 @@ public class ExcelParserService {
                                 return newProduct;
                             });
                         } catch (Exception e) {
-                            log.error("Błąd podczas parsowania produktu: {}", ingredient, e);
+                            log.error("Błąd podczas parsowania produktu: {}", item, e);
                             // Tworzymy podstawowy produkt, gdy parsowanie się nie powiedzie
                             ParsedProduct fallbackProduct = ParsedProduct.builder()
-                                    .name(ingredient)
+                                    .name(item)
                                     .quantity(1.0)
                                     .unit("szt")
-                                    .original(ingredient)
+                                    .original(item)
                                     .hasCustomUnit(false)
                                     .build();
-                            ingredients.add(fallbackProduct);
+
+                            // Dodawanie do listy zakupów
+                            String key = item.toLowerCase().trim();
+                            uniqueItems.put(key, fallbackProduct);
                         }
                     }
                 }
             }
-            meal.setIngredients(ingredients);
 
             // Parsowanie wartości odżywczych-czwarta kolumna po pominiętych
             if (row.size() > skipColumnsCount + 3 && !row.get(skipColumnsCount + 3).trim().isEmpty()) {
@@ -147,6 +147,8 @@ public class ExcelParserService {
 
             meal.setMealType(MealType.BREAKFAST);
             meal.setTime("");
+
+            meal.setIngredients(new ArrayList<>());
 
             meals.add(meal);
         }
@@ -269,6 +271,43 @@ public class ExcelParserService {
         return value >= 0 && value <= 1000;
     }
 
+
+    private List<String> splitIngredientsList(String ingredientsStr) {
+        List<String> result = new ArrayList<>();
+
+        // Wzorzec do wykrywania produktów oddzielonych przecinkami
+        // Ten wzorzec uwzględnia przecinki w liczbach
+        Pattern pattern = Pattern.compile(
+                // Produkt może zawierać tekst, liczby (również z przecinkiem jako separator dziesiętny)
+                // i kończy się przecinkiem z opcjonalną spacją
+                "([^,]+\\d+[,.]\\d+\\s*[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+|[^,]+),\\s*"
+        );
+
+        Matcher matcher = pattern.matcher(ingredientsStr + ", "); // Dodajemy przecinek na końcu dla ułatwienia
+        int lastEnd = 0;
+
+        // Znajdź wszystkie dopasowania
+        while (matcher.find()) {
+            String item = matcher.group(1).trim();
+            if (!item.isEmpty()) {
+                result.add(item);
+            }
+            lastEnd = matcher.end();
+        }
+
+        // Dodaj ostatni element, jeśli pozostał
+        if (lastEnd < ingredientsStr.length()) {
+            String lastItem = ingredientsStr.substring(lastEnd).trim();
+            if (!lastItem.isEmpty() && !lastItem.equals(",")) {
+                result.add(lastItem);
+            }
+        }
+
+        return result;
+    }
+}
+/*
+
     // Metoda do łączenia podobnych produktów w liście zakupów
     private List<ParsedProduct> combineSimilarProducts(List<ParsedProduct> products) {
         Map<String, ParsedProduct> combinedProducts = new HashMap<>();
@@ -336,37 +375,4 @@ public class ExcelParserService {
         return quantity1 + quantity2;
     }
 
-    private List<String> splitIngredientsList(String ingredientsStr) {
-        List<String> result = new ArrayList<>();
-
-        // Wzorzec do wykrywania produktów oddzielonych przecinkami
-        // Ten wzorzec uwzględnia przecinki w liczbach
-        Pattern pattern = Pattern.compile(
-                // Produkt może zawierać tekst, liczby (również z przecinkiem jako separator dziesiętny)
-                // i kończy się przecinkiem z opcjonalną spacją
-                "([^,]+\\d+[,.]\\d+\\s*[a-zA-ZąćęłńóśźżĄĆĘŁŃÓŚŹŻ]+|[^,]+),\\s*"
-        );
-
-        Matcher matcher = pattern.matcher(ingredientsStr + ", "); // Dodajemy przecinek na końcu dla ułatwienia
-        int lastEnd = 0;
-
-        // Znajdź wszystkie dopasowania
-        while (matcher.find()) {
-            String item = matcher.group(1).trim();
-            if (!item.isEmpty()) {
-                result.add(item);
-            }
-            lastEnd = matcher.end();
-        }
-
-        // Dodaj ostatni element, jeśli pozostał
-        if (lastEnd < ingredientsStr.length()) {
-            String lastItem = ingredientsStr.substring(lastEnd).trim();
-            if (!lastItem.isEmpty() && !lastItem.equals(",")) {
-                result.add(lastItem);
-            }
-        }
-
-        return result;
-    }
-}
+}*/

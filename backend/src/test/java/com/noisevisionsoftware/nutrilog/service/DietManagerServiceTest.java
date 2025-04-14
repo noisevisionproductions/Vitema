@@ -13,7 +13,7 @@ import com.noisevisionsoftware.nutrilog.model.diet.MealType;
 import com.noisevisionsoftware.nutrilog.model.recipe.NutritionalValues;
 import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
 import com.noisevisionsoftware.nutrilog.model.recipe.RecipeReference;
-import com.noisevisionsoftware.nutrilog.repository.RecipeRepository;
+import com.noisevisionsoftware.nutrilog.repository.recipe.RecipeRepository;
 import com.noisevisionsoftware.nutrilog.service.diet.DietManagerService;
 import com.noisevisionsoftware.nutrilog.service.diet.DietService;
 import com.noisevisionsoftware.nutrilog.utils.excelParser.model.*;

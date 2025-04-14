@@ -125,7 +125,7 @@ const NutritionalValues: React.FC<NutritionalValuesProps> = ({
                 <div className={`${textSizes.value} text-yellow-700`}>
                     {values.carbs || 0}g
                 </div>
-                <div className={`${textSizes.label} text-gray-600`}>węglowodany</div>
+                <div className={`${textSizes.label} text-gray-600`}>węgl.</div>
             </div>
         </div>
     );

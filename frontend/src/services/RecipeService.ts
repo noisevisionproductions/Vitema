@@ -92,6 +92,10 @@ export class RecipeService {
         });
     }
 
+    static async deleteRecipe(id: string): Promise<void> {
+        await api.delete(`${this.BASE_URL}/${id}`);
+    }
+
     /**
      * Znajduje przepis na podstawie nazwy
      */

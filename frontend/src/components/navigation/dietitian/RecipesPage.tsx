@@ -1,5 +1,5 @@
 import React, {useRef, useState} from "react";
-import RecipesList from "../../recipes/RecipesList";
+import RecipesList, {RecipesListRef} from "../../recipes/RecipesList";
 import RecipeModal from "../../recipes/RecipeModal";
 import SectionHeader from "../../common/SectionHeader";
 import {Button} from "../../ui/button";
@@ -15,11 +15,12 @@ import {
     DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import LoadingSpinner from "../../common/LoadingSpinner";
+import {Recipe} from "../../../types";
 
 const RecipesPage: React.FC = () => {
     const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const recipesListRef = useRef<{ refreshRecipes: () => void } | null>(null);
+    const recipesListRef = useRef<RecipesListRef | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterWithImages, setFilterWithImages] = useState(false);
     const [filterWithoutImages, setFilterWithoutImages] = useState(false);
@@ -35,14 +36,11 @@ const RecipesPage: React.FC = () => {
 
     const handleModalClose = () => {
         setIsModalOpen(false);
-        if (recipesListRef.current) {
-            recipesListRef.current.refreshRecipes();
-        }
     };
 
-    const handleRecipeUpdate = () => {
+    const handleRecipeUpdate = (updatedRecipe: Recipe) => {
         if (recipesListRef.current) {
-            recipesListRef.current.refreshRecipes();
+            recipesListRef.current.updateRecipe(updatedRecipe);
         }
     };
 
@@ -90,8 +88,6 @@ const RecipesPage: React.FC = () => {
         if (text.length <= maxLength) return text;
         return text.slice(0, maxLength) + '...';
     };
-
-    // Aktualizacja w headerRightContent wewnątrz RecipesPage
 
     const headerRightContent = (
         <div className="flex flex-col items-end gap-2">

@@ -1,11 +1,16 @@
 package com.noisevisionsoftware.nutrilog.service;
 
 import com.google.cloud.Timestamp;
-import com.google.cloud.storage.*;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
 import com.noisevisionsoftware.nutrilog.exception.NotFoundException;
 import com.noisevisionsoftware.nutrilog.model.recipe.NutritionalValues;
 import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
-import com.noisevisionsoftware.nutrilog.repository.RecipeRepository;
+import com.noisevisionsoftware.nutrilog.model.recipe.RecipeImageReference;
+import com.noisevisionsoftware.nutrilog.repository.recipe.RecipeImageRepository;
+import com.noisevisionsoftware.nutrilog.repository.recipe.RecipeRepository;
 import org.apache.coyote.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +43,9 @@ class RecipeServiceTest {
     @Mock
     private Storage storage;
 
+    @Mock
+    private RecipeImageRepository recipeImageRepository;
+
     @InjectMocks
     private RecipeService recipeService;
 
@@ -50,15 +58,18 @@ class RecipeServiceTest {
     @Captor
     private ArgumentCaptor<byte[]> byteArrayCaptor;
 
+    @Captor
+    private ArgumentCaptor<RecipeImageReference> imageReferenceCaptor;
+
     @Value("${firebase.storage.bucket-name:test-bucket}")
     private String storageBucket = "test-bucket";
 
     private static final String TEST_RECIPE_ID = "test-recipe-id";
     private static final String TEST_BUCKET_NAME = "test-bucket";
+    private static final String TEST_IMAGE_URL = "https://storage.googleapis.com/test-bucket/recipes/test-recipe-id/images/test-image.jpg";
 
     @BeforeEach
     void setUp() {
-        // Ustawienie wartości dla storageBucket
         ReflectionTestUtils.setField(recipeService, "storageBucket", TEST_BUCKET_NAME);
     }
 
@@ -334,10 +345,10 @@ class RecipeServiceTest {
     void findOrCreateRecipe_WhenExistingHasNoNutritionalValuesButNewHas_ShouldUpdate() {
         // given
         NutritionalValues nutritionalValues = new NutritionalValues();
-        nutritionalValues.setCalories(250);
-        nutritionalValues.setProtein(10);
-        nutritionalValues.setCarbs(30);
-        nutritionalValues.setFat(5);
+        nutritionalValues.setCalories(250.0);
+        nutritionalValues.setProtein(10.0);
+        nutritionalValues.setCarbs(30.0);
+        nutritionalValues.setFat(5.0);
 
         Recipe newRecipe = Recipe.builder()
                 .name("Existing Recipe")
@@ -440,6 +451,7 @@ class RecipeServiceTest {
         // given
         Recipe recipe = createTestRecipe();
         when(recipeRepository.findById(TEST_RECIPE_ID)).thenReturn(Optional.of(recipe));
+        when(recipeImageRepository.findByImageUrl(any())).thenReturn(Optional.empty());
 
         MockMultipartFile imageFile = new MockMultipartFile(
                 "image",
@@ -462,10 +474,12 @@ class RecipeServiceTest {
             // then
             verify(storage).create(blobInfoCaptor.capture(), byteArrayCaptor.capture());
             verify(recipeRepository).update(eq(TEST_RECIPE_ID), recipeCaptor.capture());
+            verify(recipeImageRepository).save(imageReferenceCaptor.capture());
 
             BlobInfo capturedBlobInfo = blobInfoCaptor.getValue();
             byte[] capturedBytes = byteArrayCaptor.getValue();
             Recipe capturedRecipe = recipeCaptor.getValue();
+            RecipeImageReference capturedReference = imageReferenceCaptor.getValue();
 
             assertThat(capturedBlobInfo.getBlobId().getBucket()).isEqualTo("test-bucket");
             assertThat(capturedBlobInfo.getBlobId().getName())
@@ -479,8 +493,210 @@ class RecipeServiceTest {
                     .contains("photo1.jpg", "photo2.jpg")
                     .contains("https://storage.googleapis.com/test-bucket/recipes/test-recipe-id/images/12345678-1234-1234-1234-123456789012.jpg");
 
+            // Sprawdzenie referencji obrazu
+            assertThat(capturedReference.getImageUrl()).isEqualTo(
+                    "https://storage.googleapis.com/test-bucket/recipes/test-recipe-id/images/12345678-1234-1234-1234-123456789012.jpg");
+            assertThat(capturedReference.getStoragePath()).isEqualTo(
+                    "recipes/test-recipe-id/images/12345678-1234-1234-1234-123456789012.jpg");
+            assertThat(capturedReference.getReferenceCount()).isEqualTo(1);
+
             assertThat(imageUrl).isEqualTo("https://storage.googleapis.com/test-bucket/recipes/test-recipe-id/images/12345678-1234-1234-1234-123456789012.jpg");
         }
+    }
+
+    @Test
+    void uploadImage_WithExistingImageReference_ShouldIncrementReferenceCount() throws BadRequestException, IOException {
+        // given
+        Recipe recipe = createTestRecipe();
+        when(recipeRepository.findById(TEST_RECIPE_ID)).thenReturn(Optional.of(recipe));
+
+        String expectedImageUrl = "https://storage.googleapis.com/test-bucket/recipes/test-recipe-id/images/12345678-1234-1234-1234-123456789012.jpg";
+
+        // Symulujemy, że referencja do obrazu już istnieje
+        RecipeImageReference existingReference = RecipeImageReference.builder()
+                .imageUrl(expectedImageUrl)
+                .storagePath("recipes/test-recipe-id/images/12345678-1234-1234-1234-123456789012.jpg")
+                .referenceCount(2)
+                .build();
+
+        when(recipeImageRepository.findByImageUrl(expectedImageUrl)).thenReturn(Optional.of(existingReference));
+
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "image",
+                "test-image.jpg",
+                "image/jpeg",
+                "test image content".getBytes()
+        );
+
+        Blob blob = mock(Blob.class);
+        when(storage.create(any(BlobInfo.class), any(byte[].class))).thenReturn(blob);
+
+        // Mockujemy generowanie UUID, aby test był deterministyczny
+        try (MockedStatic<UUID> mockedUuid = Mockito.mockStatic(UUID.class)) {
+            UUID mockUuid = UUID.fromString("12345678-1234-1234-1234-123456789012");
+            mockedUuid.when(UUID::randomUUID).thenReturn(mockUuid);
+
+            // when
+            String imageUrl = recipeService.uploadImage(TEST_RECIPE_ID, imageFile);
+
+            // then
+            verify(storage).create(any(BlobInfo.class), any(byte[].class));
+            verify(recipeRepository).update(eq(TEST_RECIPE_ID), any(Recipe.class));
+            verify(recipeImageRepository).incrementReferenceCount(expectedImageUrl);
+
+            assertThat(imageUrl).isEqualTo(expectedImageUrl);
+        }
+    }
+
+    @Test
+    void deleteImage_ShouldDecrementReferenceCountAndNotDeletePhysicallyWhenStillReferenced() throws BadRequestException {
+        // given
+        Recipe recipe = createTestRecipe();
+        recipe.setPhotos(Arrays.asList("photo1.jpg", TEST_IMAGE_URL));
+        when(recipeRepository.findById(TEST_RECIPE_ID)).thenReturn(Optional.of(recipe));
+
+        // Symulujemy, że obraz jest używany przez inne przepisy (referenceCount > 1)
+        when(recipeImageRepository.decrementReferenceCount(TEST_IMAGE_URL)).thenReturn(1); // zwraca nową wartość po dekrementacji
+
+        // when
+        recipeService.deleteImage(TEST_RECIPE_ID, TEST_IMAGE_URL);
+
+        // then
+        verify(recipeImageRepository).decrementReferenceCount(TEST_IMAGE_URL);
+        verify(storage, never()).delete(any(BlobId.class)); // Obraz nie powinien być fizycznie usunięty
+
+        verify(recipeRepository).update(eq(TEST_RECIPE_ID), recipeCaptor.capture());
+        Recipe capturedRecipe = recipeCaptor.getValue();
+
+        assertThat(capturedRecipe.getPhotos()).hasSize(1);
+        assertThat(capturedRecipe.getPhotos()).contains("photo1.jpg");
+        assertThat(capturedRecipe.getPhotos()).doesNotContain(TEST_IMAGE_URL);
+    }
+
+    @Test
+    void deleteImage_ShouldDeletePhysicallyWhenNoMoreReferences() throws BadRequestException {
+        // given
+        Recipe recipe = createTestRecipe();
+        recipe.setPhotos(Arrays.asList("photo1.jpg", TEST_IMAGE_URL));
+        when(recipeRepository.findById(TEST_RECIPE_ID)).thenReturn(Optional.of(recipe));
+
+        // Symulujemy, że to ostatnie odniesienie do obrazu
+        when(recipeImageRepository.decrementReferenceCount(TEST_IMAGE_URL)).thenReturn(0);
+
+        // when
+        recipeService.deleteImage(TEST_RECIPE_ID, TEST_IMAGE_URL);
+
+        // then
+        verify(recipeImageRepository).decrementReferenceCount(TEST_IMAGE_URL);
+        verify(recipeImageRepository).deleteByImageUrl(TEST_IMAGE_URL);
+
+        // Weryfikujemy, że obraz został fizycznie usunięty
+        verify(storage).delete(any(BlobId.class));
+
+        verify(recipeRepository).update(eq(TEST_RECIPE_ID), recipeCaptor.capture());
+        Recipe capturedRecipe = recipeCaptor.getValue();
+
+        assertThat(capturedRecipe.getPhotos()).hasSize(1);
+        assertThat(capturedRecipe.getPhotos()).contains("photo1.jpg");
+        assertThat(capturedRecipe.getPhotos()).doesNotContain(TEST_IMAGE_URL);
+    }
+
+    @Test
+    void deleteRecipe_ShouldDecrementReferenceCountForAllPhotos() {
+        // given
+        Recipe recipe = createTestRecipe();
+        recipe.setPhotos(Arrays.asList("photo1.jpg", TEST_IMAGE_URL, "photo3.jpg"));
+        when(recipeRepository.findById(TEST_RECIPE_ID)).thenReturn(Optional.of(recipe));
+
+        // Symuluj, że wszystkie zdjęcia mają jeszcze inne referencje
+        when(recipeImageRepository.decrementReferenceCount(any())).thenReturn(1);
+
+        // when
+        recipeService.deleteRecipe(TEST_RECIPE_ID);
+
+        // then
+        verify(recipeRepository).delete(TEST_RECIPE_ID);
+
+        // Weryfikuj, że zmniejszono liczbę referencji dla każdego zdjęcia
+        verify(recipeImageRepository).decrementReferenceCount("photo1.jpg");
+        verify(recipeImageRepository).decrementReferenceCount(TEST_IMAGE_URL);
+        verify(recipeImageRepository).decrementReferenceCount("photo3.jpg");
+
+        // Nie usuwaj żadnych zdjęć fizycznie
+        verify(storage, never()).delete(any(BlobId.class));
+    }
+
+    @Test
+    void deleteRecipe_ShouldDeleteOrphanedImages() {
+        // given
+        Recipe recipe = createTestRecipe();
+        String orphanedImageUrl = "https://storage.googleapis.com/test-bucket/recipes/test-recipe-id/images/orphaned.jpg";
+        recipe.setPhotos(Arrays.asList("photo1.jpg", orphanedImageUrl));
+        when(recipeRepository.findById(TEST_RECIPE_ID)).thenReturn(Optional.of(recipe));
+
+        // Symulujemy, że pierwsze zdjęcie ma inne referencje
+        when(recipeImageRepository.decrementReferenceCount("photo1.jpg")).thenReturn(1);
+
+        // Symulujemy, że drugie zdjęcie nie ma już referencji
+        when(recipeImageRepository.decrementReferenceCount(orphanedImageUrl)).thenReturn(0);
+
+        // when
+        recipeService.deleteRecipe(TEST_RECIPE_ID);
+
+        // then
+        verify(recipeRepository).delete(TEST_RECIPE_ID);
+
+        // Weryfikuj, że zmniejszono liczbę referencji dla obu zdjęć
+        verify(recipeImageRepository).decrementReferenceCount("photo1.jpg");
+        verify(recipeImageRepository).decrementReferenceCount(orphanedImageUrl);
+
+        // Weryfikuj, że usunięto osierocone zdjęcie i jego referencję
+        verify(recipeImageRepository).deleteByImageUrl(orphanedImageUrl);
+
+        // Weryfikuj, że podjęto próbę fizycznego usunięcia zdjęcia
+        ArgumentCaptor<BlobId> blobIdCaptor = ArgumentCaptor.forClass(BlobId.class);
+        verify(storage).delete(blobIdCaptor.capture());
+
+        BlobId capturedBlobId = blobIdCaptor.getValue();
+        assertThat(capturedBlobId.getName()).contains("orphaned.jpg");
+    }
+
+    @Test
+    void cleanupOrphanedImages_ShouldDeleteImagesWithZeroReferences() {
+        // given
+        List<RecipeImageReference> orphanedImages = Arrays.asList(
+                RecipeImageReference.builder()
+                        .imageUrl("https://storage.googleapis.com/test-bucket/images/orphaned1.jpg")
+                        .storagePath("images/orphaned1.jpg")
+                        .referenceCount(0)
+                        .build(),
+                RecipeImageReference.builder()
+                        .imageUrl("https://storage.googleapis.com/test-bucket/images/orphaned2.jpg")
+                        .storagePath("images/orphaned2.jpg")
+                        .referenceCount(0)
+                        .build()
+        );
+
+        when(recipeImageRepository.findAllWithZeroReferences()).thenReturn(orphanedImages);
+
+        // when
+        recipeService.cleanupOrphanedImages();
+
+        // then
+        verify(recipeImageRepository).findAllWithZeroReferences();
+
+        // Weryfikuj, że usunięto oba obrazy fizycznie
+        ArgumentCaptor<BlobId> blobIdCaptor = ArgumentCaptor.forClass(BlobId.class);
+        verify(storage, times(2)).delete(blobIdCaptor.capture());
+
+        List<BlobId> capturedBlobIds = blobIdCaptor.getAllValues();
+        assertThat(capturedBlobIds).hasSize(2);
+        assertThat(capturedBlobIds.get(0).getName()).isEqualTo("images/orphaned1.jpg");
+        assertThat(capturedBlobIds.get(1).getName()).isEqualTo("images/orphaned2.jpg");
+
+        // Weryfikuj, że usunięto obie referencje
+        verify(recipeImageRepository).deleteByImageUrl("https://storage.googleapis.com/test-bucket/images/orphaned1.jpg");
+        verify(recipeImageRepository).deleteByImageUrl("https://storage.googleapis.com/test-bucket/images/orphaned2.jpg");
     }
 
     @Test

@@ -6,7 +6,6 @@ import com.noisevisionsoftware.nutrilog.utils.excelParser.config.ExcelParserConf
 import com.noisevisionsoftware.nutrilog.utils.excelParser.model.ParsedMeal;
 import com.noisevisionsoftware.nutrilog.utils.excelParser.model.ParsedProduct;
 import com.noisevisionsoftware.nutrilog.utils.excelParser.model.ParsingResult;
-import com.noisevisionsoftware.nutrilog.utils.excelParser.service.helpers.UnitService;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -22,10 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,9 +36,6 @@ class ExcelParserServiceTest {
 
     @Mock
     private ProductCategorizationService categorizationService;
-
-    @Mock
-    private UnitService unitService;
 
     @Mock
     private ExcelParserConfig excelParserConfig;
@@ -311,100 +303,6 @@ class ExcelParserServiceTest {
         assertEquals("szt", result.getUnit());
         assertEquals(ingredient, result.getOriginal());
         assertNull(result.getCategoryId());
-    }
-
-    @Test
-    @DisplayName("Powinien obliczać podobieństwo między stringami")
-    void calculateSimilarity_shouldCalculateSimilarityBetweenStrings() throws Exception {
-        // Użycie refleksji do wywołania prywatnej metody
-        java.lang.reflect.Method method = ExcelParserService.class.getDeclaredMethod("calculateSimilarity", String.class, String.class);
-        method.setAccessible(true);
-
-        // given, when, then
-        // Identyczne stringi
-        assertEquals(1.0, (Double) method.invoke(excelParserService, "mąka", "mąka"));
-
-        // Różne wielkości liter
-        assertEquals(1.0, (Double) method.invoke(excelParserService, "Mąka", "mąka"));
-
-        // Podobne stringi
-        double similarityMakaMaka = (Double) method.invoke(excelParserService, "mąka", "maka");
-        assertTrue(similarityMakaMaka > 0.7);
-
-        // Różne stringi
-        double similarityMakaJablko = (Double) method.invoke(excelParserService, "mąka", "jabłko");
-        assertTrue(similarityMakaJablko < 0.5);
-    }
-
-    @Test
-    @DisplayName("Powinien znajdować najlepsze dopasowanie")
-    void findBestMatch_shouldFindBestMatch() throws Exception {
-
-        ExcelParserService testService = new ExcelParserService(
-                productParsingService, categorizationService, unitService, excelParserConfig) {
-
-            @Override
-            double calculateSimilarity(String str1, String str2) {
-                if (str1.equals("mąka") && str2.equals("mąka pszenna")) return 0.95;
-                if (str1.equals("mąka") && str2.equals("mleko")) return 0.3;
-                if (str1.equals("mąka") && str2.equals("cukier")) return 0.3;
-
-                if (str1.equals("mleko 3.2%") && str2.equals("mąka pszenna")) return 0.3;
-                if (str1.equals("mleko 3.2%") && str2.equals("mleko")) return 0.95;
-                if (str1.equals("mleko 3.2%") && str2.equals("cukier")) return 0.3;
-
-                if (str1.equals("jabłko") && str2.equals("mąka pszenna")) return 0.3;
-                if (str1.equals("jabłko") && str2.equals("mleko")) return 0.3;
-                if (str1.equals("jabłko") && str2.equals("cukier")) return 0.3;
-
-                return 0.0;
-            }
-        };
-
-        // Użycie refleksji do wywołania prywatnej metody
-        java.lang.reflect.Method method = ExcelParserService.class.getDeclaredMethod("findBestMatch", String.class, Set.class);
-        method.setAccessible(true);
-
-        // given
-        Set<String> existingNames = new HashSet<>(Arrays.asList("mąka pszenna", "mleko", "cukier"));
-
-        // when, then
-        assertEquals("mąka pszenna", method.invoke(testService, "mąka", existingNames));
-        assertEquals("mleko", method.invoke(testService, "mleko 3.2%", existingNames));
-        assertNull(method.invoke(testService, "jabłko", existingNames));
-    }
-
-    @Test
-    @DisplayName("Powinien łączyć podobne produkty")
-    void combineSimilarProducts_shouldCombineSimilarProducts() throws Exception {
-        // Użycie refleksji do wywołania prywatnej metody
-        java.lang.reflect.Method method = ExcelParserService.class.getDeclaredMethod("combineSimilarProducts", List.class);
-        method.setAccessible(true);
-
-        // given
-        ParsedProduct product1 = ParsedProduct.builder()
-                .name("mąka pszenna")
-                .quantity(200.0)
-                .unit("g")
-                .original("200g mąka pszenna")
-                .build();
-
-        ParsedProduct product2 = ParsedProduct.builder()
-                .name("mąka")
-                .quantity(100.0)
-                .unit("g")
-                .original("100g mąka")
-                .build();
-
-        List<ParsedProduct> products = Arrays.asList(product1, product2);
-
-        // when
-        @SuppressWarnings("unchecked")
-        List<ParsedProduct> result = (List<ParsedProduct>) method.invoke(excelParserService, products);
-
-        // then
-        assertNotNull(result);
-        assertEquals(2, result.size());
     }
 
     @Test

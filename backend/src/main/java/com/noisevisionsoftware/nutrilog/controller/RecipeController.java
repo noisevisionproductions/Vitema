@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -98,6 +99,20 @@ public class RecipeController {
         Recipe recipe = recipeMapper.toModel(request);
         Recipe updatedRecipe = recipeService.updateRecipe(id, recipe);
         return ResponseEntity.ok(recipeMapper.toResponse(updatedRecipe));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRecipe(@PathVariable String id) {
+        try {
+            recipeService.deleteRecipe(id);
+            return ResponseEntity.ok().build();
+        } catch (NotFoundException e) {
+            log.warn("Próba usunięcia nieistniejącego przepisu: {}", id);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Błąd podczas usuwania przepisu: {}", id, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

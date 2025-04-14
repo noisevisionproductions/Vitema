@@ -26,7 +26,7 @@ interface RecipeModalProps {
     recipeId: string | null;
     isOpen: boolean;
     onClose: () => void;
-    onRecipeUpdate?: () => void;
+    onRecipeUpdate?: (updatedRecipe: Recipe) => void;
 }
 
 const RecipeModal: React.FC<RecipeModalProps> = ({
@@ -73,9 +73,8 @@ const RecipeModal: React.FC<RecipeModalProps> = ({
 
         try {
             setSaving(true);
-            await RecipeService.updateRecipe(recipe.id, editedRecipe);
+            const updatedRecipe = await RecipeService.updateRecipe(recipe.id, editedRecipe);
 
-            const updatedRecipe = await RecipeService.getRecipeById(recipe.id);
             setRecipe(updatedRecipe);
             setEditedRecipe(updatedRecipe);
 
@@ -83,7 +82,7 @@ const RecipeModal: React.FC<RecipeModalProps> = ({
             toast.success("Przepis został zapisany");
 
             if (onRecipeUpdate) {
-                onRecipeUpdate();
+                onRecipeUpdate(updatedRecipe);
             }
         } catch (error) {
             console.error("Błąd podczas zapisywania przepisu:", error);
@@ -128,34 +127,31 @@ const RecipeModal: React.FC<RecipeModalProps> = ({
         if (!recipe) return;
 
         try {
-            // Najpierw zaktualizujemy UI, aby dać natychmiastową informację zwrotną
             const updatedPhotos = recipe.photos.filter(
                 (photo) => photo !== imageUrl
             );
 
-            setRecipe({
+            const updatedRecipe = {
                 ...recipe,
                 photos: updatedPhotos,
-            });
+            };
 
+            setRecipe(updatedRecipe);
             setEditedRecipe((prev) => ({
                 ...prev,
                 photos: updatedPhotos,
             }));
 
-            // Następnie wykonujemy faktyczne usunięcie na serwerze
             await RecipeService.deleteRecipeImage(recipe.id, imageUrl);
             toast.success("Zdjęcie zostało usunięte");
 
-            // Informujemy rodzica o zmianach
             if (onRecipeUpdate) {
-                onRecipeUpdate();
+                onRecipeUpdate(updatedRecipe);
             }
         } catch (error) {
             console.error("Błąd podczas usuwania zdjęcia:", error);
             toast.error("Nie udało się usunąć zdjęcia");
 
-            // Przywracamy oryginalne zdjęcia w przypadku błędu
             fetchRecipe().catch(console.error);
         }
     };
@@ -164,14 +160,14 @@ const RecipeModal: React.FC<RecipeModalProps> = ({
         if (!recipe) return;
 
         try {
-            // Aktualizujemy lokalny stan, aby dać natychmiastową informację zwrotną
             const updatedPhotos = [...(recipe.photos || []), imageUrl];
 
-            setRecipe({
+            const updatedRecipe = {
                 ...recipe,
                 photos: updatedPhotos,
-            });
+            };
 
+            setRecipe(updatedRecipe);
             setEditedRecipe((prev) => ({
                 ...prev,
                 photos: updatedPhotos,
@@ -180,15 +176,13 @@ const RecipeModal: React.FC<RecipeModalProps> = ({
             setShowImageUpload(false);
             toast.success("Zdjęcie zostało dodane");
 
-            // Informujemy rodzica o zmianach
             if (onRecipeUpdate) {
-                onRecipeUpdate();
+                onRecipeUpdate(updatedRecipe);
             }
         } catch (error) {
             console.error("Błąd podczas dodawania zdjęcia:", error);
             toast.error("Nie udało się dodać zdjęcia");
 
-            // Odświeżamy stan w przypadku błędu
             fetchRecipe().catch(console.error);
         }
     };
