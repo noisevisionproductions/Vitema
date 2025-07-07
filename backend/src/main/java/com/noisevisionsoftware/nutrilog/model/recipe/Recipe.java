@@ -18,6 +18,7 @@ public class Recipe {
     private String instructions;
     private Timestamp createdAt;
     private List<String> photos;
+    private List<RecipeIngredient> ingredients;
     private NutritionalValues nutritionalValues;
     private String parentRecipeId;
 }

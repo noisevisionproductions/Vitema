@@ -1,11 +1,11 @@
-import React, {useCallback, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {NutritionalValues, ParsedMeal} from "../../../../../types";
 import {ParsedProduct} from "../../../../../types/product";
 import IngredientsList from "./components/IngredientsList";
 import InlineIngredientSearch from "./steps/InlineIngredientSearch";
 import ColoredNutritionBadges from "./steps/ColoredNutritionBadges";
 import {MealSuggestion} from "../../../../../types/mealSuggestions";
-import {MealSuggestionService} from "../../../../../services/diet/MealSuggestionService";
+import {MealSuggestionService} from "../../../../../services/diet/manual/MealSuggestionService";
 import {toast} from "../../../../../utils/toast";
 import {Camera, Save, Sparkles} from "lucide-react";
 import MealNameSearchField from "./components/MealNameSearchField";
@@ -16,6 +16,9 @@ import {
     convertMealIngredientsToParsedProducts
 } from "../../../../../utils/mealConverters";
 import ConfirmationDialog from "../../../../common/ConfirmationDialog";
+import {TemplateChangeTracker} from "../../../../../services/diet/manual/TemplateChangeTracker";
+import {RecipeService} from "../../../../../services/RecipeService";
+import TemplateChangeManager from "./components/TemplateChangeManager";
 
 interface MealEditorProps {
     meal: ParsedMeal;
@@ -42,6 +45,32 @@ const MealEditor: React.FC<MealEditorProps> = ({
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [confirmDeleteImage, setConfirmDeleteImage] = useState(false);
     const [imageToDelete, setImageToDelete] = useState<number | null>(null);
+
+    // Template updates
+    const [changeTracker] = useState(() => new TemplateChangeTracker());
+    const [appliedTemplate, setAppliedTemplate] = useState<MealSuggestion | null>(null);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [showChangeManager, setShowChangeManager] = useState(false);
+
+    const currentSummary = useMemo(() => {
+        if (appliedTemplate && changeTracker) {
+            changeTracker.detectChanges({
+                name: meal.name,
+                instructions: meal.instructions,
+                ingredients: meal.ingredients,
+                nutritionalValues: meal.nutritionalValues,
+                photos: meal.photos
+            });
+
+            return changeTracker.getUpdateSummary();
+        }
+        return null;
+    }, [meal.name, meal.instructions, meal.ingredients, meal.nutritionalValues, meal.photos, appliedTemplate, changeTracker]);
+
+    useEffect(() => {
+        setShowChangeManager(currentSummary?.hasSignificantChanges || false);
+        setHasUnsavedChanges((currentSummary?.changes?.length || 0) > 0);
+    }, [currentSummary]);
 
     const handleMealUpdate = useCallback((updates: Partial<ParsedMeal>) => {
         onUpdateMeal(dayIndex, mealIndex, {...meal, ...updates});
@@ -100,6 +129,47 @@ const MealEditor: React.FC<MealEditorProps> = ({
         }
     }, [meal, enableTemplateFeatures, saveAsTemplate, isSavingTemplate]);
 
+    const handleSaveChangesToTemplate = useCallback(async () => {
+        const summary = changeTracker.getUpdateSummary();
+        if (!summary) return;
+
+        console.log('🔍 Zapisywanie szablonu:', {
+            templateId: summary.templateId,
+            source: summary.source,
+            photos: meal.photos,
+            photosLength: meal.photos?.length || 0
+        });
+
+        try {
+            if (summary.source === 'TEMPLATE') {
+                await MealSuggestionService.updateMealTemplate(summary.templateId, {
+                    name: meal.name,
+                    instructions: meal.instructions || '',
+                    nutritionalValues: meal.nutritionalValues,
+                    photos: meal.photos || [],
+                    ingredients: meal.ingredients ? convertParsedProductsToMealIngredients(meal.ingredients) : [],
+                    isPublic: false,
+                    shouldSave: true
+                });
+            } else {
+                await RecipeService.updateRecipe(summary.templateId.replace('recipe-', ''), {
+                    name: meal.name,
+                    instructions: meal.instructions || '',
+                    nutritionalValues: meal.nutritionalValues,
+                    photos: meal.photos || []
+                });
+            }
+
+            changeTracker.reset();
+            setShowChangeManager(false);
+            setHasUnsavedChanges(false);
+            toast.success('Szablon został zaktualizowany');
+        } catch (error) {
+            console.error('Błąd podczas aktualizacji szablonu:', error);
+            toast.error('Nie udało się zaktualizować szablonu');
+        }
+    }, [meal, changeTracker]);
+
     const handleMealSelect = useCallback(async (suggestion: MealSuggestion) => {
         if (!enableTemplateFeatures) {
             handleMealUpdate({name: suggestion.name});
@@ -109,6 +179,10 @@ const MealEditor: React.FC<MealEditorProps> = ({
         setIsApplyingTemplate(true);
         try {
             const appliedMeal = await MealSuggestionService.applyMealTemplate(suggestion.id, meal);
+
+            changeTracker.startTracking(suggestion);
+            setAppliedTemplate(suggestion);
+            setHasUnsavedChanges(false);
 
             const newMeal: Partial<ParsedMeal> = {
                 name: appliedMeal.name,
@@ -124,6 +198,7 @@ const MealEditor: React.FC<MealEditorProps> = ({
         } catch (error) {
             console.error('Błąd podczas aplikowania szablonu:', error);
             toast.error('Nie udało się zastosować szablonu');
+
             handleMealUpdate({
                 name: suggestion.name,
                 instructions: '',
@@ -133,7 +208,7 @@ const MealEditor: React.FC<MealEditorProps> = ({
         } finally {
             setIsApplyingTemplate(false);
         }
-    }, [meal, handleMealUpdate, enableTemplateFeatures]);
+    }, [meal, handleMealUpdate, enableTemplateFeatures, changeTracker]);
 
     const handleImageUploadSuccess = useCallback(async (imageUrl: string) => {
         try {
@@ -232,31 +307,56 @@ const MealEditor: React.FC<MealEditorProps> = ({
 
     return (
         <div className="space-y-4">
+            {showChangeManager && changeTracker.getUpdateSummary() && (
+                <TemplateChangeManager
+                    updateSummary={changeTracker.getUpdateSummary()!}
+                    onSaveChanges={handleSaveChangesToTemplate}
+                    onDiscardChanges={() => {
+                        if (appliedTemplate) {
+                            handleMealSelect(appliedTemplate).catch(console.error);
+                        }
+                    }}
+                    onKeepLocal={() => {
+                        setShowChangeManager(false);
+                        changeTracker.reset();
+                    }}
+                    isVisible={showChangeManager}
+                />
+            )}
+
             <div>
                 <div className="flex items-center justify-between mb-1">
                     <label className="block text-sm font-medium text-gray-700">
                         Nazwa posiłku
                     </label>
-                    {enableTemplateFeatures && meal.name && meal.name.trim().length > 2 && (
-                        <div className="flex items-center gap-2">
-                            {isSavingTemplate && (
-                                <span className="text-xs text-gray-500 flex items-center gap-1">
+                    <div className="flex items-center gap-2">
+                        {hasUnsavedChanges && (
+                            <span className="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                            • Niezapisane zmiany
+                        </span>
+                        )}
+
+                        {enableTemplateFeatures && meal.name && meal.name.trim().length > 2 && (
+                            <div className="flex items-center gap-2">
+                                {isSavingTemplate && (
+                                    <span className="text-xs text-gray-500 flex items-center gap-1">
                                     <div
                                         className="w-3 h-3 border border-gray-300 border-t-primary rounded-full animate-spin"></div>
                                     Zapisywanie...
                                 </span>
-                            )}
-                            <button
-                                onClick={handleManualSaveTemplate}
-                                disabled={isSavingTemplate}
-                                className="flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50"
-                                title="Zapisz jako szablon"
-                            >
-                                <Save className="h-3 w-3"/>
-                                Zapisz szablon
-                            </button>
-                        </div>
-                    )}
+                                )}
+                                <button
+                                    onClick={handleManualSaveTemplate}
+                                    disabled={isSavingTemplate}
+                                    className="flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors disabled:opacity-50"
+                                    title="Zapisz jako szablon"
+                                >
+                                    <Save className="h-3 w-3"/>
+                                    Zapisz szablon
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {enableTemplateFeatures ? (
@@ -292,7 +392,8 @@ const MealEditor: React.FC<MealEditorProps> = ({
                 )}
             </div>
 
-            {/* Instructions */}
+            {/* Instructions */
+            }
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                     Instrukcje przygotowania
@@ -306,7 +407,8 @@ const MealEditor: React.FC<MealEditorProps> = ({
                 />
             </div>
 
-            {/* Photos section */}
+            {/* Photos section */
+            }
             <div>
                 <div className="flex items-center justify-between mb-2">
                     <label className="block text-sm font-medium text-gray-700">
@@ -341,7 +443,8 @@ const MealEditor: React.FC<MealEditorProps> = ({
                 )}
             </div>
 
-            {/* Ingredients section */}
+            {/* Ingredients section */
+            }
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                     Składniki
@@ -360,7 +463,8 @@ const MealEditor: React.FC<MealEditorProps> = ({
                 />
             </div>
 
-            {/* Nutritional values */}
+            {/* Nutritional values */
+            }
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                     Wartości odżywcze (opcjonalnie)
@@ -440,36 +544,42 @@ const MealEditor: React.FC<MealEditorProps> = ({
                 </div>
             </div>
 
-            {/* Image Upload Dialog */}
-            {showImageUpload && (
-                <ImageUploadDialog
-                    isOpen={showImageUpload}
-                    onClose={() => setShowImageUpload(false)}
-                    title={`Dodaj zdjęcie - ${meal.name || 'Posiłek'}`}
-                    description="Wybierz zdjęcie posiłku. Zostanie ono zapisane razem z dietą."
-                    onSuccess={handleImageUploadSuccess}
-                    localMode={true}
-                    recipeId={meal.recipeId}
-                />
-            )}
+            {/* Image Upload Dialog */
+            }
+            {
+                showImageUpload && (
+                    <ImageUploadDialog
+                        isOpen={showImageUpload}
+                        onClose={() => setShowImageUpload(false)}
+                        title={`Dodaj zdjęcie - ${meal.name || 'Posiłek'}`}
+                        description="Wybierz zdjęcie posiłku. Zostanie ono zapisane razem z dietą."
+                        onSuccess={handleImageUploadSuccess}
+                        localMode={true}
+                        recipeId={meal.recipeId}
+                    />
+                )
+            }
 
-            {confirmDeleteImage && (
-                <ConfirmationDialog
-                    isOpen={confirmDeleteImage}
-                    onClose={() => {
-                        setConfirmDeleteImage(false);
-                        setImageToDelete(null);
-                    }}
-                    onConfirm={confirmRemoveImage}
-                    title="Usuń zdjęcie"
-                    description="Czy na pewno chcesz usunąć to zdjęcie?"
-                    confirmLabel="Usuń"
-                    cancelLabel="Anuluj"
-                    variant="destructive"
-                />
-            )}
+            {
+                confirmDeleteImage && (
+                    <ConfirmationDialog
+                        isOpen={confirmDeleteImage}
+                        onClose={() => {
+                            setConfirmDeleteImage(false);
+                            setImageToDelete(null);
+                        }}
+                        onConfirm={confirmRemoveImage}
+                        title="Usuń zdjęcie"
+                        description="Czy na pewno chcesz usunąć to zdjęcie?"
+                        confirmLabel="Usuń"
+                        cancelLabel="Anuluj"
+                        variant="destructive"
+                    />
+                )
+            }
         </div>
-    );
+    )
+        ;
 };
 
 export default MealEditor;

@@ -141,6 +141,7 @@ public class RecipeService {
                     .photos(existing.getPhotos() != null ? new ArrayList<>(existing.getPhotos()) : new ArrayList<>())
                     .nutritionalValues(existing.getNutritionalValues())
                     .parentRecipeId(existing.getParentRecipeId())
+                    .ingredients(existing.getIngredients())
                     .build();
 
             boolean shouldUpdate = false;

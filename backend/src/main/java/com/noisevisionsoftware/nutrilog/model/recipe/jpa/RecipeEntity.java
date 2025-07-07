@@ -31,6 +31,10 @@ public class RecipeEntity {
     @Column(length = 5000)
     private String instructions;
 
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("displayOrder ASC")
+    private List<RecipeIngredientEntity> ingredients;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 

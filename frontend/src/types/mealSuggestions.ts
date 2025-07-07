@@ -60,6 +60,21 @@ export interface MealSavePreview {
     message: string;
 }
 
+export interface TemplateChange {
+    field: string;
+    oldValue: any;
+    newValue: any;
+    timestamp: Date;
+}
+
+export interface TemplateUpdateSummary {
+    templateId: string;
+    templateName: string;
+    source: 'RECIPE' | 'TEMPLATE';
+    changes: TemplateChange[];
+    hasSignificantChanges: boolean;
+}
+
 export interface MealImageResponse {
     imageUrl: string;
 }

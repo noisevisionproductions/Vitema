@@ -3,14 +3,20 @@ package com.noisevisionsoftware.nutrilog.mapper.recipe;
 import com.google.cloud.Timestamp;
 import com.noisevisionsoftware.nutrilog.model.recipe.NutritionalValues;
 import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
+import com.noisevisionsoftware.nutrilog.model.recipe.RecipeIngredient;
 import com.noisevisionsoftware.nutrilog.model.recipe.jpa.NutritionalValuesEntity;
 import com.noisevisionsoftware.nutrilog.model.recipe.jpa.RecipeEntity;
+import com.noisevisionsoftware.nutrilog.model.recipe.jpa.RecipeIngredientEntity;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class RecipeJpaConverter {
@@ -40,12 +46,11 @@ public class RecipeJpaConverter {
 
         String externalId = recipe.getId();
         if (externalId == null || externalId.isEmpty()) {
-            // Jeśli brak ID, użyj UUID jako fallback
             externalId = UUID.randomUUID().toString();
         }
 
-        return RecipeEntity.builder()
-                .externalId(externalId) // Używamy oryginalnego ID
+        RecipeEntity recipeEntity = RecipeEntity.builder()
+                .externalId(externalId)
                 .name(recipe.getName())
                 .instructions(recipe.getInstructions())
                 .createdAt(createdAt)
@@ -53,6 +58,26 @@ public class RecipeJpaConverter {
                 .nutritionalValues(nutritionalValuesEntity)
                 .parentRecipeId(recipe.getParentRecipeId())
                 .build();
+
+        if (recipe.getIngredients() != null) {
+            List<RecipeIngredientEntity> ingredientEntities = new ArrayList<>();
+            for (int i = 0; i < recipe.getIngredients().size(); i++) {
+                RecipeIngredient ingredient = recipe.getIngredients().get(i);
+                ingredientEntities.add(RecipeIngredientEntity.builder()
+                        .recipe(recipeEntity)
+                        .name(ingredient.getName())
+                        .quantity(BigDecimal.valueOf(ingredient.getQuantity()))
+                        .unit(ingredient.getUnit())
+                        .originalText(ingredient.getOriginal())
+                        .categoryId(ingredient.getCategoryId())
+                        .hasCustomUnit(ingredient.isHasCustomUnit())
+                        .displayOrder(i)
+                        .build());
+            }
+            recipeEntity.setIngredients(ingredientEntities);
+        }
+
+        return recipeEntity;
     }
 
     public Recipe toModel(RecipeEntity entity) {
@@ -81,8 +106,26 @@ public class RecipeJpaConverter {
                 .instructions(entity.getInstructions())
                 .createdAt(createdAt)
                 .photos(entity.getPhotos())
+                .ingredients(convertIngredients(entity.getIngredients()))
                 .nutritionalValues(nutritionalValues)
                 .parentRecipeId(entity.getParentRecipeId())
                 .build();
+    }
+
+    private List<RecipeIngredient> convertIngredients(List<RecipeIngredientEntity> ingredientEntities) {
+        if (ingredientEntities == null) return new ArrayList<>();
+
+        return ingredientEntities.stream()
+                .sorted(Comparator.comparingInt(RecipeIngredientEntity::getDisplayOrder))
+                .map(e -> RecipeIngredient.builder()
+                        .id(e.getId().toString())
+                        .name(e.getName())
+                        .quantity(e.getQuantity().doubleValue())
+                        .unit(e.getUnit())
+                        .original(e.getOriginalText())
+                        .categoryId(e.getCategoryId())
+                        .hasCustomUnit(e.isHasCustomUnit())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

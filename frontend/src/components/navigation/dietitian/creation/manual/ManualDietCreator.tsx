@@ -10,7 +10,7 @@ import {Timestamp} from "firebase/firestore";
 import {DEFAULT_DIET_CONFIG} from "../../../../../types/dietDefaults";
 import MealPlanningStep from "./steps/MealPlanningSteps";
 import DietConfigurationStep from "./steps/DietConfigurationStep";
-import {ManualDietRequest, ManualDietService} from "../../../../../services/diet/ManualDietService";
+import {ManualDietRequest, ManualDietService} from "../../../../../services/diet/manual/ManualDietService";
 import {User} from "../../../../../types/user";
 import DietPreview from "../../../../diet/upload/preview/DietPreview";
 import {useCategorization} from "../../../../../hooks/shopping/useCategorization";

@@ -12,6 +12,7 @@ import com.noisevisionsoftware.nutrilog.model.meal.MealIngredient;
 import com.noisevisionsoftware.nutrilog.model.meal.MealTemplate;
 import com.noisevisionsoftware.nutrilog.model.recipe.NutritionalValues;
 import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
+import com.noisevisionsoftware.nutrilog.model.recipe.RecipeIngredient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -65,7 +66,7 @@ public class MealTemplateConverter {
                 .instructions(recipe.getInstructions())
                 .nutritionalValues(convertNutritionalValuesToResponse(recipe.getNutritionalValues()))
                 .photos(recipe.getPhotos() != null ? new ArrayList<>(recipe.getPhotos()) : new ArrayList<>())
-                .ingredients(new ArrayList<>()) // Recipe nie ma szczegółowych składników w modelu
+                .ingredients(convertRecipeIngredientsToResponse(recipe.getIngredients())) // zamiast new ArrayList<>()
                 .mealType(null) // Recipe nie ma mealType
                 .category(null) // Recipe nie ma category
                 .createdBy(null) // Recipe nie ma createdBy
@@ -146,22 +147,7 @@ public class MealTemplateConverter {
                 .build();
     }
 
-    /**
-     * Konwertuje NutritionalValues na Map dla kompatybilności wstecznej
-     */
-    public Map<String, Object> convertNutritionalValues(NutritionalValues nutritionalValues) {
-        if (nutritionalValues == null) return null;
-
-        Map<String, Object> values = new HashMap<>();
-        values.put("calories", nutritionalValues.getCalories() != null ? nutritionalValues.getCalories() : 0.0);
-        values.put("protein", nutritionalValues.getProtein() != null ? nutritionalValues.getProtein() : 0.0);
-        values.put("fat", nutritionalValues.getFat() != null ? nutritionalValues.getFat() : 0.0);
-        values.put("carbs", nutritionalValues.getCarbs() != null ? nutritionalValues.getCarbs() : 0.0);
-
-        return values;
-    }
-
-    private NutritionalValues convertNutritionalValuesFromRequest(NutritionalValuesRequest request) {
+    public NutritionalValues convertNutritionalValuesFromRequest(NutritionalValuesRequest request) {
         if (request == null) return null;
 
         return NutritionalValues.builder()
@@ -172,7 +158,7 @@ public class MealTemplateConverter {
                 .build();
     }
 
-    private List<MealIngredient> convertIngredientsFromRequest(List<MealIngredientRequest> ingredientRequests) {
+    public List<MealIngredient> convertIngredientsFromRequest(List<MealIngredientRequest> ingredientRequests) {
         if (ingredientRequests == null) return new ArrayList<>();
 
         return ingredientRequests.stream()
@@ -184,6 +170,22 @@ public class MealTemplateConverter {
                         .original(request.getOriginal())
                         .categoryId(request.getCategoryId())
                         .hasCustomUnit(request.isHasCustomUnit())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private List<MealIngredientResponse> convertRecipeIngredientsToResponse(List<RecipeIngredient> ingredients) {
+        if (ingredients == null) return new ArrayList<>();
+
+        return ingredients.stream()
+                .map(ingredient -> MealIngredientResponse.builder()
+                        .id(ingredient.getId())
+                        .name(ingredient.getName())
+                        .quantity(String.valueOf(ingredient.getQuantity()))
+                        .unit(ingredient.getUnit())
+                        .original(ingredient.getOriginal())
+                        .categoryId(ingredient.getCategoryId())
+                        .hasCustomUnit(ingredient.isHasCustomUnit())
                         .build())
                 .collect(Collectors.toList());
     }

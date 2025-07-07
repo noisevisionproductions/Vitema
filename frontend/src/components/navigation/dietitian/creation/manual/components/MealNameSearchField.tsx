@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {MealSuggestion} from "../../../../../../types/mealSuggestions";
 import {useDebounce} from "../../../../../../hooks/useDebounce";
-import {MealSuggestionService} from "../../../../../../services/diet/MealSuggestionService";
+import {MealSuggestionService} from "../../../../../../services/diet/manual/MealSuggestionService";
 import {toast} from "../../../../../../utils/toast";
 import {Check, ChefHat, Clock, Info, Search, Users, X} from "lucide-react";
 import LoadingSpinner from "../../../../../common/LoadingSpinner";

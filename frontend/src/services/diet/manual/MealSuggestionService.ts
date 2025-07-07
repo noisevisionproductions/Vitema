@@ -4,9 +4,9 @@ import {
     MealSuggestion,
     MealTemplate,
     SaveMealTemplateRequest
-} from "../../types/mealSuggestions";
-import api from "../../config/axios";
-import {NutritionalValues} from "../../types";
+} from "../../../types/mealSuggestions";
+import api from "../../../config/axios";
+import {NutritionalValues} from "../../../types";
 
 export class MealSuggestionService {
     private static readonly BASE_URL = '/diets/manual';
@@ -14,7 +14,7 @@ export class MealSuggestionService {
     static async searchMeals(query: string, limit: number = 10): Promise<MealSuggestion[]> {
         try {
             const response = await api.get(`${this.BASE_URL}/meals/search`, {
-                params: { query, limit }
+                params: {query, limit}
             });
             return response.data;
         } catch (error) {
@@ -85,6 +85,11 @@ export class MealSuggestionService {
             console.error('Błąd podczas aplikowania szablonu posiłku:', error);
             throw error;
         }
+    }
+
+    static async updateMealTemplate(templateId: string, request: SaveMealTemplateRequest): Promise<MealTemplate> {
+        const response = await api.put(`${this.BASE_URL}/meals/templates/${templateId}`, request);
+        return response.data;
     }
 
     /**

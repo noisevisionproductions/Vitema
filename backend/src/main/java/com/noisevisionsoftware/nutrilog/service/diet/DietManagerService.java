@@ -8,6 +8,7 @@ import com.noisevisionsoftware.nutrilog.model.diet.Diet;
 import com.noisevisionsoftware.nutrilog.model.diet.DietFileInfo;
 import com.noisevisionsoftware.nutrilog.model.diet.DietMetadata;
 import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
+import com.noisevisionsoftware.nutrilog.model.recipe.RecipeIngredient;
 import com.noisevisionsoftware.nutrilog.model.recipe.RecipeReference;
 import com.noisevisionsoftware.nutrilog.repository.recipe.RecipeRepository;
 import com.noisevisionsoftware.nutrilog.service.RecipeService;
@@ -20,10 +21,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -99,6 +98,7 @@ public class DietManagerService {
                         .nutritionalValues(meal.getNutritionalValues())
                         .createdAt(now)
                         .photos(meal.getPhotos() != null ? meal.getPhotos() : new ArrayList<>())
+                        .ingredients(convertToRecipeIngredients(meal.getIngredients()))
                         .parentRecipeId(null)
                         .build();
 
@@ -216,5 +216,21 @@ public class DietManagerService {
             categoryItems.add(itemMap);
         }
         return categoryItems;
+    }
+
+    private List<RecipeIngredient> convertToRecipeIngredients(List<ParsedProduct> parsedProducts) {
+        if (parsedProducts == null) return new ArrayList<>();
+
+        return parsedProducts.stream()
+                .map(product -> RecipeIngredient.builder()
+                        .id(UUID.randomUUID().toString())
+                        .name(product.getName())
+                        .quantity(product.getQuantity())
+                        .unit(product.getUnit())
+                        .original(product.getOriginal())
+                        .categoryId(product.getCategoryId())
+                        .hasCustomUnit(product.isHasCustomUnit())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

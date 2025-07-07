@@ -157,4 +157,18 @@ public class ManualDietController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PutMapping("/meals/templates/{templateId}")
+    public ResponseEntity<MealTemplateResponse> updateMealTemplate(
+            @PathVariable String templateId,
+            @RequestBody SaveMealTemplateRequest request
+    ) {
+        try {
+            MealTemplateResponse updatedTemplate = manualDietService.updateMealTemplate(templateId, request);
+            return ResponseEntity.ok(updatedTemplate);
+        } catch (Exception e) {
+            log.error("Błąd podczas aktualizacji szablonu posiłku: {}", templateId, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

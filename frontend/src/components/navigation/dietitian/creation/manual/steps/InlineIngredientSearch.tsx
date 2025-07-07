@@ -3,7 +3,7 @@ import {ParsedProduct} from '../../../../../../types/product';
 import {useDebounce} from '../../../../../../hooks/useDebounce';
 import {toast} from '../../../../../../utils/toast';
 import {Loader2, Package, Plus, Search} from 'lucide-react';
-import {ManualDietService} from '../../../../../../services/diet/ManualDietService';
+import {ManualDietService} from '../../../../../../services/diet/manual/ManualDietService';
 
 interface InlineIngredientSearchProps {
     onSelect: (ingredient: ParsedProduct) => void;

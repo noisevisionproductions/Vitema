@@ -1,5 +1,6 @@
 package com.noisevisionsoftware.nutrilog.service.diet.manual;
 
+import com.google.cloud.Timestamp;
 import com.noisevisionsoftware.nutrilog.dto.request.diet.ManualDietRequest;
 import com.noisevisionsoftware.nutrilog.dto.request.diet.manual.PreviewMealSaveRequest;
 import com.noisevisionsoftware.nutrilog.dto.request.diet.manual.SaveMealTemplateRequest;
@@ -8,6 +9,7 @@ import com.noisevisionsoftware.nutrilog.dto.response.diet.manual.MealSuggestionR
 import com.noisevisionsoftware.nutrilog.dto.response.diet.manual.MealTemplateResponse;
 import com.noisevisionsoftware.nutrilog.model.diet.DietFileInfo;
 import com.noisevisionsoftware.nutrilog.model.meal.MealTemplate;
+import com.noisevisionsoftware.nutrilog.model.recipe.Recipe;
 import com.noisevisionsoftware.nutrilog.service.RecipeService;
 import com.noisevisionsoftware.nutrilog.service.diet.DietManagerService;
 import com.noisevisionsoftware.nutrilog.utils.MealTemplateConverter;
@@ -21,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +76,54 @@ public class ManualDietService {
         } catch (Exception e) {
             log.error("Błąd podczas zapisywania ręcznej diety dla użytkownika: {}", request.getUserId(), e);
             throw new RuntimeException("Nie udało się zapisać diety: " + e.getMessage());
+        }
+    }
+
+    /*
+     * Aktualizuje istniejący szablon posiłku
+     * */
+    @Transactional
+    public MealTemplateResponse updateMealTemplate(String templateId, SaveMealTemplateRequest request) {
+        try {
+            log.info("Aktualizacja szablonu {} - zdjęcia: {}", templateId,
+                    request.getPhotos() != null ? request.getPhotos().size() : 0);
+            if (templateId.startsWith("recipe-")) {
+                String recipeId = templateId.replace("recipe-", "");
+                Recipe updatedRecipe = Recipe.builder()
+                        .id(recipeId)
+                        .name(request.getName())
+                        .instructions(request.getInstructions())
+                        .nutritionalValues(mealTemplateConverter.convertNutritionalValuesFromRequest(request.getNutritionalValues()))
+                        .photos(request.getPhotos() != null ? request.getPhotos() : new ArrayList<>())
+                        .build();
+
+                Recipe savedRecipe = recipeService.updateRecipe(recipeId, updatedRecipe);
+                return mealTemplateConverter.convertRecipeToTemplate(savedRecipe);
+            } else {
+                MealTemplate existingTemplate = mealTemplateService.getById(templateId);
+
+                // Aktualizuj tylko zmienione pola
+                MealTemplate updatedTemplate = MealTemplate.builder()
+                        .id(templateId)
+                        .name(request.getName())
+                        .instructions(request.getInstructions())
+                        .nutritionalValues(mealTemplateConverter.convertNutritionalValuesFromRequest(request.getNutritionalValues()))
+                        .photos(request.getPhotos() != null ? request.getPhotos() : new ArrayList<>())
+                        .ingredients(mealTemplateConverter.convertIngredientsFromRequest(request.getIngredients()))
+                        .mealType(request.getMealType())
+                        .category(request.getCategory())
+                        .createdBy(existingTemplate.getCreatedBy())
+                        .createdAt(existingTemplate.getCreatedAt())
+                        .updatedAt(Timestamp.now())
+                        .usageCount(existingTemplate.getUsageCount())
+                        .build();
+
+                MealTemplate savedTemplate = mealTemplateService.save(updatedTemplate);
+                return mealTemplateConverter.convertTemplateToResponse(savedTemplate);
+            }
+        } catch (Exception e) {
+            log.error("Błąd podczas aktualizacji szablonu posiłku: {}", templateId, e);
+            throw new RuntimeException("Nie udało się zaktualizować szablonu posiłku");
         }
     }
 

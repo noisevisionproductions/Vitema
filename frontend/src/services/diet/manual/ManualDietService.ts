@@ -1,5 +1,5 @@
-import api from "../../config/axios";
-import {ParsedProduct} from "../../types/product";
+import api from "../../../config/axios";
+import {ParsedProduct} from "../../../types/product";
 
 export interface ManualDietRequest {
     userId: string;

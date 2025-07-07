@@ -44,6 +44,7 @@ public class RecipeMapper {
                 .name(request.getName())
                 .instructions(request.getInstructions())
                 .nutritionalValues(nutritionalValues)
+                .photos(request.getPhotos() != null ? request.getPhotos() : new ArrayList<>())
                 .build();
     }
 
