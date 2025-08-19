@@ -1,5 +1,5 @@
 import {Timestamp} from "firebase/firestore";
-import {Diet} from "../../types";
+import {Diet} from "../../types/nutrilog";
 import {getFirstDayOfDiet, getLastDayOfDiet, getTimestampSeconds} from "./dietWarningUtils";
 
 export interface DietContinuityStatus {

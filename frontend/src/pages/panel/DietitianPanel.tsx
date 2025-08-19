@@ -1,19 +1,19 @@
 import React, {useEffect} from 'react';
 import {Route, Routes} from "react-router-dom";
-import ExcelUpload from "../../components/navigation/dietitian/creation/excel/ExcelUpload";
-import UsersManagement from "../../components/navigation/dietitian/creation/excel/UsersManagement";
-import DietManagement from "../../components/diet/DietManagement";
-import StatsPanel from "../../components/stats/StatsPanel";
-import DietGuide from "../../components/navigation/dietitian/creation/excel/DietGuide";
-import Changelog from "../../components/navigation/dietitian/creation/excel/Changelog";
-import RecipesPage from "../../components/navigation/dietitian/creation/excel/RecipesPage";
-import usePageTitle from "../../hooks/usePageTitle";
-import DietitianDashboard from "../../components/navigation/dietitian/creation/excel/DietitianDashboard";
-import DietitianSidebar from "../../components/navigation/DietitianSidebar";
-import DietCreationContainer from "../../components/navigation/dietitian/creation/DietCreationContainer";
-import {useDietitianNavigation} from "../../hooks/useDietitianNavigation";
-import {MainNav} from "../../types/navigation";
-import DietTemplatesManager from "../../components/diet/templates/DietTemplatesManager";
+import ExcelUpload from "../../components/nutrilog/navigation/dietitian/creation/excel/ExcelUpload";
+import UsersManagement from "../../components/nutrilog/navigation/dietitian/creation/excel/UsersManagement";
+import DietManagement from "../../components/nutrilog/diet/DietManagement";
+import StatsPanel from "../../components/nutrilog/stats/StatsPanel";
+import DietGuide from "../../components/nutrilog/navigation/dietitian/creation/excel/DietGuide";
+import Changelog from "../../components/nutrilog/navigation/dietitian/creation/excel/Changelog";
+import RecipesPage from "../../components/nutrilog/navigation/dietitian/creation/excel/RecipesPage";
+import usePageTitle from "../../hooks/nutrilog/usePageTitle";
+import DietitianDashboard from "../../components/nutrilog/navigation/dietitian/creation/excel/DietitianDashboard";
+import DietitianSidebar from "../../components/nutrilog/navigation/DietitianSidebar";
+import DietCreationContainer from "../../components/nutrilog/navigation/dietitian/creation/DietCreationContainer";
+import {useDietitianNavigation} from "../../hooks/nutrilog/useDietitianNavigation";
+import {MainNav} from "../../types/nutrilog/navigation";
+import DietTemplatesManager from "../../components/nutrilog/diet/templates/DietTemplatesManager";
 
 const DietitianPanel: React.FC = () => {
     const {currentTab, navigateToTab} = useDietitianNavigation();

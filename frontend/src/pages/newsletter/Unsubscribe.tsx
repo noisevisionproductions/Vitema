@@ -1,5 +1,5 @@
 import {Link, useSearchParams} from "react-router-dom";
-import {PublicNewsletterService} from "../../services/newsletter";
+import {PublicNewsletterService} from "../../services/nutrilog/newsletter";
 import {useState} from "react";
 import LandingLayout from "../../components/landing/layout/LandingLayout";
 

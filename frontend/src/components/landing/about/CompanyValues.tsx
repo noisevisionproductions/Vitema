@@ -1,5 +1,5 @@
 import {Lightbulb, Shield, Users, Zap} from "lucide-react";
-import Container from "../../ui/landing/Container";
+import Container from "../../shared/ui/landing/Container";
 import {motion} from "framer-motion";
 
 const values = [

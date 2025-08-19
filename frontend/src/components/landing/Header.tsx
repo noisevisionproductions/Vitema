@@ -1,7 +1,7 @@
 import {FC, useEffect, useState} from "react";
-import Container from "../ui/landing/Container";
+import Container from "../shared/ui/landing/Container";
 import {Bars3Icon, XMarkIcon} from "@heroicons/react/16/solid";
-import Logo from "../ui/landing/Logo";
+import Logo from "../shared/ui/landing/Logo";
 import * as React from "react";
 import {useLocation} from "react-router-dom";
 import {useAuth} from "../../contexts/AuthContext";

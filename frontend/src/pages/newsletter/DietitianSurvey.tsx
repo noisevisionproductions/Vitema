@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {PublicNewsletterService} from "../../services/newsletter";
+import {PublicNewsletterService} from "../../services/nutrilog/newsletter";
 
 interface SurveyQuestion {
     id: string;

@@ -1,7 +1,7 @@
 import {ClockIcon, UsersIcon} from "lucide-react";
 import {ChartBarIcon} from "@heroicons/react/24/outline";
-import Container from "../../ui/landing/Container";
-import SectionHeader from "../../ui/landing/SectionHeader";
+import Container from "../../shared/ui/landing/Container";
+import SectionHeader from "../../shared/ui/landing/SectionHeader";
 
 const MarketStats = () => {
     const statistics = [

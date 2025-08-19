@@ -1,4 +1,4 @@
-import Container from "../../ui/landing/Container";
+import Container from "../../shared/ui/landing/Container";
 import {motion} from "framer-motion";
 
 const CompanyHistory = () => {

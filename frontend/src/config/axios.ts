@@ -4,6 +4,9 @@ import {toast} from "../utils/toast";
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
+const RATE_LIMIT_DELAY = 100; // 100ms między żądaniami
+let lastRequestTime = 0;
+
 const api = axios.create({
     baseURL: apiUrl,
     headers: {
@@ -12,14 +15,34 @@ const api = axios.create({
     withCredentials: true
 });
 
-api.interceptors.request.use(async (config) => {
-    const user = auth.currentUser;
-    if (user) {
-        const token = await user.getIdToken();
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
+// Jeden interceptor request - obsługuje auth i rate limiting
+api.interceptors.request.use(
+    async (config) => {
+        try {
+            const now = Date.now();
+            const timeSinceLastRequest = now - lastRequestTime;
+            if (timeSinceLastRequest < RATE_LIMIT_DELAY) {
+                await new Promise(resolve =>
+                    setTimeout(resolve, RATE_LIMIT_DELAY - timeSinceLastRequest)
+                );
+            }
+            lastRequestTime = Date.now();
+
+            // Dodaj token autoryzacji
+            const user = auth.currentUser;
+            if (user) {
+                const token = await user.getIdToken();
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+
+            return config;
+        } catch (error) {
+            console.error('Request interceptor error:', error);
+            return config;
+        }
+    },
+    (error) => Promise.reject(error)
+);
 
 api.interceptors.response.use(
     (response) => response,
@@ -34,13 +57,25 @@ api.interceptors.response.use(
             }
         });
 
-        if (error.response?.status === 401) {
+        // Obsługa błędów rate limiting
+        if (error.response?.status === 429) {
+            toast.error('Za dużo żądań. Spróbuj ponownie za chwilę.');
+            // Automatyczne ponowienie po opóźnieniu
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(api.request(error.config));
+                }, 2000);
+            });
+        } else if (error.response?.status === 401) {
             toast.error('Sesja wygasła. Zaloguj się ponownie.');
         } else if (error.response?.status === 403) {
             toast.error('Brak uprawnień do wykonania tej operacji.');
+        } else if (error.response?.status >= 500) {
+            toast.error('Błąd serwera. Spróbuj ponownie później.');
         } else {
-            toast.error(error.response?.data?.message || `Wystąpił błąd: ${error}`);
+            toast.error(error.response?.data?.message || `Wystąpił błąd: ${error.message}`);
         }
+
         return Promise.reject(error);
     }
 );

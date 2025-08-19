@@ -23,6 +23,7 @@
     "@radix-ui/react-scroll-area": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
+    "@supabase/supabase-js": "^2.55.0",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.7",
     "@tanstack/react-query": "^4.36.1",
@@ -41,12 +42,12 @@
     "react-feather": "^2.0.10",
     "react-google-recaptcha": "^3.1.0",
     "react-hook-form": "^7.54.2",
-    "react-quill": "^2.0.0",
+    "@uiw/react-md-editor": "^4.0.4",
+    "xlsx-js-style": "^1.2.0",
     "react-router-dom": "^6.20.0",
     "recharts": "^2.10.3",
     "sonner": "^1.2.4",
     "tailwind-merge": "^2.6.0",
-    "xlsx-js-style": "^1.2.0",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
@@ -59,7 +60,7 @@
     "@types/react-dom": "^18.2.17",
     "@types/react-google-recaptcha": "^2.1.9",
     "@vitejs/plugin-react": "^4.2.1",
-    "@vitest/coverage-v8": "^1.6.1",
+    "@vitest/coverage-v8": "^3.2.4",
     "@vitest/spy": "^3.0.5",
     "autoprefixer": "^10.4.16",
     "jsdom": "^23.2.0",
@@ -67,8 +68,8 @@
     "tailwindcss": "^3.3.6",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.3.3",
-    "vite": "^5.0.7",
-    "vitest": "^1.6.1",
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4",
     "worker-loader": "^3.0.8",
     "xlsx": "^0.18.5"
   }

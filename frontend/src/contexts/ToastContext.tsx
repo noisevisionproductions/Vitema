@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useState, useCallback, ReactNode, useEffect} from 'react';
-import Toast, {ToastType} from "../components/common/Toast";
+import Toast, {ToastType} from "../components/shared/common/Toast";
 import { setToastAPI } from '../utils/toast';
 
 interface ToastItem {

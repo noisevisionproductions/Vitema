@@ -39,13 +39,19 @@ public class DietTemplateService {
         return dietTemplateRepository.save(template);
     }
 
+    // src/main/java/com/noisevisionsoftware/nutrilog/service/diet/manual/dietTemplate/DietTemplateService.java
+
+    @Transactional
     public void incrementUsageCount(String templateId) {
-        Optional<DietTemplate> templateOpt = dietTemplateRepository.findById(templateId);
-        if (templateOpt.isPresent()) {
-            DietTemplate t = templateOpt.get();
-            t.setUsageCount(t.getUsageCount() + 1);
-            t.setLastUsed(Timestamp.now());
-            saveTemplate(t);
+        log.info("Incrementing usage count for template: {}", templateId);
+
+        try {
+            // Użyj bezpośredniego update zamiast saveTemplate
+            dietTemplateRepository.incrementUsageCount(templateId);
+            log.info("Successfully incremented usage count for template: {}", templateId);
+        } catch (Exception e) {
+            log.error("Error incrementing usage count for template: {}", templateId, e);
+            throw new RuntimeException("Nie udało się zaktualizować licznika użyć", e);
         }
     }
 

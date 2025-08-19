@@ -1,5 +1,5 @@
-import Container from "../../ui/landing/Container";
-import SectionHeader from "../../ui/landing/SectionHeader";
+import Container from "../../shared/ui/landing/Container";
+import SectionHeader from "../../shared/ui/landing/SectionHeader";
 import {userTypes} from './forWhoData';
 import UserTypeCard from "./UserTypeCard";
 

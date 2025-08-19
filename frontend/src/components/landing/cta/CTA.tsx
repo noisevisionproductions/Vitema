@@ -1,7 +1,7 @@
-import Container from "../../ui/landing/Container";
+import Container from "../../shared/ui/landing/Container";
 import {motion} from "framer-motion";
 import NewsletterForm from "../forms/NewsletterForm";
-import CountdownTimer from "../../common/CountdownTimer";
+import CountdownTimer from "../../shared/common/CountdownTimer";
 import {useMemo} from "react";
 
 const CTA = () => {

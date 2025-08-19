@@ -1,5 +1,5 @@
 import NewsletterForm from "../components/landing/forms/NewsletterForm";
-import Container from "../components/ui/landing/Container";
+import Container from "../components/shared/ui/landing/Container";
 
 const Newsletter = () => {
     return (

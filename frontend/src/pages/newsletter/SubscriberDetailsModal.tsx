@@ -1,6 +1,6 @@
-import {NewsletterSubscriber} from "../../types/newsletter";
+import {NewsletterSubscriber} from "../../types/nutrilog/newsletter";
 import React from "react";
-import Modal from "../../components/common/Modal";
+import Modal from "../../components/shared/common/Modal";
 import {formatPostgresTimestamp} from "../../utils/dateFormatters";
 
 interface SubscriberDetailsModalProps {

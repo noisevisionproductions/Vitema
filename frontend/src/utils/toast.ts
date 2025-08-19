@@ -1,5 +1,5 @@
 import { toast as sonnerToast } from 'sonner';
-import { ToastType } from '../components/common/Toast';
+import { ToastType } from '../components/shared/common/Toast';
 
 const ToastContextAPI = {
     showToast: null as null | ((message: string, type: ToastType, duration?: number) => void)

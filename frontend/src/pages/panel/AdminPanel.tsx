@@ -1,11 +1,11 @@
 import React, {useState} from 'react';
-import {AdminNav} from '../../types/navigation';
-import AdminDashboard from "../../components/admin/AdminDashboard";
+import {AdminNav} from '../../types/nutrilog/navigation';
+import AdminDashboard from "../../components/nutrilog/admin/AdminDashboard";
 import AdminNewsletterPanel from "../newsletter/AdminNewsletterPanel";
-import BulkEmailSender from '../../components/admin/newsletter/email-sender/BulkEmailSender';
-import ContactMessagesPanel from '../../components/admin/contact/ContactMessagesPanel';
-import AdminSidebar from "../../components/navigation/AdminSidebar";
-import usePageTitle from "../../hooks/usePageTitle";
+import BulkEmailSender from '../../components/nutrilog/admin/newsletter/email-sender/BulkEmailSender';
+import ContactMessagesPanel from '../../components/nutrilog/admin/contact/ContactMessagesPanel';
+import AdminSidebar from "../../components/nutrilog/navigation/AdminSidebar";
+import usePageTitle from "../../hooks/nutrilog/usePageTitle";
 
 const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<AdminNav>('adminDashboard');

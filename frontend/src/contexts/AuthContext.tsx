@@ -1,10 +1,13 @@
 import {onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser} from 'firebase/auth';
 import React, {createContext, useContext, useEffect, useState} from "react";
 import {auth} from '../config/firebase';
-import {User, UserRole} from '../types/user';
+import {User, UserRole} from '../types/nutrilog/user';
 import api from "../config/axios";
 import axios from 'axios';
 import {useRouteRestoration} from "./RouteRestorationContext";
+import {ApplicationType} from "../types/application";
+import {SupabaseAuthService, SupabaseUser} from "../services/scandallShuffle/SupabaseAuthService";
+import {useApplication} from "./ApplicationContext";
 
 interface AuthContextType {
     currentUser: FirebaseUser | null;
@@ -17,6 +20,9 @@ interface AuthContextType {
     isAdmin: () => boolean;
     isOwner: () => boolean;
     hasRole: (requiredRole: UserRole) => boolean;
+    supabaseUser: SupabaseUser | null;
+    loginWithApplication: (email: string, password: string, applicationType: ApplicationType) => Promise<any>;
+    isAuthenticated: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -34,43 +40,98 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
     const [userData, setUserData] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [userClaims, setUserClaims] = useState<Record<string, any> | null>(null);
+    const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
+
+    const {currentApplication} = useApplication();
     const {clearSavedRoute} = useRouteRestoration();
+    const {setApplication} = useApplication();
+
 
     useEffect(() => {
-        return onAuthStateChanged(auth, async (user) => {
-            setCurrentUser(user);
+        let firebaseUnsubscribe: (() => void) | undefined;
+        let supabaseUnsubscribe: { unsubscribe: () => void } | undefined;
 
-            if (user) {
-                try {
-                    const tokenResult = await user.getIdTokenResult();
-                    setUserClaims(tokenResult.claims);
-
-                    await validateTokenAndSetUserData(user);
-                } catch (error) {
-                    console.error("Token validation failed:", error);
-                    await logout();
+        const initializeAuth = async () => {
+            try {
+                // Wait for application context to be loaded
+                if (currentApplication === null) {
+                    setLoading(false);
+                    return;
                 }
-            } else {
-                setUserData(null);
-                setUserClaims(null);
-            }
 
-            setLoading(false);
-        });
-    }, []);
+                if (currentApplication === ApplicationType.NUTRILOG) {
+                    // Firebase auth listener
+                    firebaseUnsubscribe = onAuthStateChanged(auth, async (user) => {
+                        setCurrentUser(user);
+
+                        if (user) {
+                            try {
+                                const tokenResult = await user.getIdTokenResult();
+                                setUserClaims(tokenResult.claims);
+                                await validateTokenAndSetUserData(user);
+                            } catch (error) {
+                                console.error("Token validation failed:", error);
+                                await logout();
+                            }
+                        } else {
+                            setUserData(null);
+                            setUserClaims(null);
+                        }
+
+                        setLoading(false);
+                    });
+                } else if (currentApplication === ApplicationType.YOUR_NEW_APP) {
+                    // Initialize Supabase session
+                    const supabaseUser = await SupabaseAuthService.initializeSession();
+
+                    if (supabaseUser) {
+                        setSupabaseUser(supabaseUser);
+                        const userData = mapSupabaseUserToUser(supabaseUser);
+                        setUserData(userData);
+                    }
+
+                    // Listen for Supabase auth changes
+                    const {data: {subscription}} = SupabaseAuthService.onAuthStateChange((user) => {
+                        setSupabaseUser(user);
+
+                        if (user) {
+                            const userData = mapSupabaseUserToUser(user);
+                            setUserData(userData);
+                        } else {
+                            setUserData(null);
+                        }
+                    });
+
+                    supabaseUnsubscribe = subscription;
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error("Error initializing auth:", error);
+                setLoading(false);
+            }
+        };
+
+        initializeAuth().catch(console.error);
+
+        // Cleanup function
+        return () => {
+            if (firebaseUnsubscribe) {
+                firebaseUnsubscribe();
+            }
+            if (supabaseUnsubscribe) {
+                supabaseUnsubscribe.unsubscribe();
+            }
+        };
+    }, [currentApplication]);
 
     const validateTokenAndSetUserData = async (user: FirebaseUser) => {
         try {
             const token = await user.getIdToken(true);
-
             const response = await api.post('/auth/validate-token', {}, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: {'Authorization': `Bearer ${token}`}
             });
 
             setUserData(response.data as User);
-
             const tokenResult = await user.getIdTokenResult(true);
             setUserClaims(tokenResult.claims);
         } catch (error) {
@@ -93,28 +154,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
 
     const login = async (email: string, password: string): Promise<User> => {
         try {
-            const credential = await signInWithEmailAndPassword(auth, email, password);
-            const token = await credential.user.getIdToken(true);
+            if (currentApplication === ApplicationType.YOUR_NEW_APP) {
+                const supabaseUser = await SupabaseAuthService.login(email, password);
+                setSupabaseUser(supabaseUser);
 
-            const response = await api.post('/auth/login',
-                {email},
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                }
-            );
+                const userData: User = {
+                    id: supabaseUser.id,
+                    email: supabaseUser.email,
+                    nickname: supabaseUser.displayName || supabaseUser.email.split('@')[0],
+                    role: supabaseUser.role as any,
+                    gender: null,
+                    birthDate: null,
+                    storedAge: 0,
+                    profileCompleted: false,
+                    note: '',
+                    createdAt: Date.now()
+                };
 
-            const userData = response.data as User;
-            setUserData(userData);
+                setUserData(userData);
+                return userData;
+            } else {
+                const credential = await signInWithEmailAndPassword(auth, email, password);
+                const token = await credential.user.getIdToken(true);
 
-            const tokenResult = await credential.user.getIdTokenResult();
-            setUserClaims(tokenResult.claims);
+                const response = await api.post('/auth/login', {email}, {
+                    headers: {'Authorization': `Bearer ${token}`}
+                });
 
-            return userData;
+                const userData = response.data as User;
+                setUserData(userData);
+
+                const tokenResult = await credential.user.getIdTokenResult();
+                setUserClaims(tokenResult.claims);
+
+                return userData;
+            }
         } catch (error) {
-            console.error('Błąd uwierzytelniania:', error);
-
+            console.error('Authentication error:', error);
             await logout();
 
             if (axios.isAxiosError(error)) {
@@ -124,13 +200,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
         }
     };
 
+    const loginWithApplication = async (email: string, password: string, applicationType: ApplicationType) => {
+        try {
+            setApplication(applicationType);
+
+            if (applicationType === ApplicationType.NUTRILOG) {
+                return await login(email, password);
+            } else {
+                const user = await SupabaseAuthService.login(email, password);
+                setSupabaseUser(user);
+
+                const userData: User = {
+                    id: user.id,
+                    email: user.email,
+                    nickname: user.displayName || user.email.split('@')[0],
+                    role: user.role as any,
+                    gender: null,
+                    birthDate: null,
+                    storedAge: 0,
+                    profileCompleted: false,
+                    note: '',
+                    createdAt: Date.now()
+                };
+
+                setUserData(userData);
+                return user;
+            }
+        } catch (error) {
+            console.error('Login with application error:', error);
+            throw error;
+        }
+    };
+
     const logout = async () => {
         try {
             clearSavedRoute();
-            await signOut(auth);
-            setCurrentUser(null);
-            setUserData(null);
-            setUserClaims(null);
+
+            if (currentUser) {
+                await signOut(auth);
+                setCurrentUser(null);
+                setUserData(null);
+                setUserClaims(null);
+            }
+
+            if (supabaseUser) {
+                await SupabaseAuthService.logout();
+                setSupabaseUser(null);
+                setUserData(null);
+            }
         } catch (error) {
             console.error('Błąd wylogowania:', error);
             throw error;
@@ -138,39 +255,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
     };
 
     const isOwner = (): boolean => {
-        if (userClaims?.owner === true) {
-            return true;
+        if (currentApplication === ApplicationType.NUTRILOG) {
+            return userClaims?.owner === true || userData?.role === UserRole.OWNER;
         }
-
-        return userData?.role === UserRole.OWNER;
+        return supabaseUser?.role === 'owner';
     };
 
     const isAdmin = (): boolean => {
-        if (isOwner()) {
-            return true;
+        if (currentApplication === ApplicationType.NUTRILOG) {
+            return isOwner() || userClaims?.admin === true || userData?.role === UserRole.ADMIN;
         }
-
-        if (userClaims?.admin === true) {
-            return true;
-        }
-
-        return userData?.role === UserRole.ADMIN;
+        return supabaseUser?.role === 'admin' || supabaseUser?.role === 'owner';
     };
 
-    const hasRole = (requiredRole: UserRole): boolean => {
-        if (!userData) return false;
+    const hasRole = (requiredRole: UserRole | string): boolean => {
+        if (currentApplication === ApplicationType.NUTRILOG) {
+            if (!userData) return false;
 
-        const roleHierarchy: Record<UserRole, number> = {
-            [UserRole.USER]: 1,
-            [UserRole.ADMIN]: 2,
-            [UserRole.OWNER]: 3
+            const roleHierarchy: Record<UserRole, number> = {
+                [UserRole.USER]: 1,
+                [UserRole.ADMIN]: 2,
+                [UserRole.OWNER]: 3
+            };
+
+            const userRole = userData.role as UserRole;
+            const userRoleLevel = roleHierarchy[userRole] || 0;
+            const requiredRoleLevel = roleHierarchy[requiredRole as UserRole] || 0;
+
+            return userRoleLevel >= requiredRoleLevel;
+        }
+
+        if (currentApplication === ApplicationType.YOUR_NEW_APP) {
+            if (!supabaseUser) return false;
+
+            const userRole = supabaseUser.role;
+            if (requiredRole === 'owner') return userRole === 'owner';
+            if (requiredRole === 'admin') return userRole === 'admin' || userRole === 'owner';
+            return requiredRole === 'user';
+        }
+
+        return false;
+    };
+
+    const isAuthenticated = (): boolean => {
+        if (currentApplication === ApplicationType.NUTRILOG) {
+            return !!currentUser && !!userData;
+        }
+        if (currentApplication === ApplicationType.YOUR_NEW_APP) {
+            return !!supabaseUser;
+        }
+        return false;
+    };
+
+    const mapSupabaseUserToUser = (supabaseUser: SupabaseUser): User => {
+        return {
+            id: supabaseUser.id,
+            email: supabaseUser.email,
+            nickname: supabaseUser.displayName || supabaseUser.email.split('@')[0],
+            role: supabaseUser.role as any,
+            gender: null,
+            birthDate: null,
+            storedAge: 0,
+            profileCompleted: false,
+            note: '',
+            createdAt: Date.now()
         };
-
-        const userRole = userData.role as UserRole;
-        const userRoleLevel = roleHierarchy[userRole] || 0;
-        const requiredRoleLevel = roleHierarchy[requiredRole] || 0;
-
-        return userRoleLevel >= requiredRoleLevel;
     };
 
     const value = {
@@ -183,7 +332,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
         refreshUserData,
         isAdmin,
         isOwner,
-        hasRole
+        hasRole,
+        supabaseUser,
+        loginWithApplication,
+        isAuthenticated
     };
 
     return (

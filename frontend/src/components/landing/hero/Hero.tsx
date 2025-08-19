@@ -1,5 +1,5 @@
 import {motion} from 'framer-motion';
-import Container from "../../ui/landing/Container";
+import Container from "../../shared/ui/landing/Container";
 import NewsletterForm from "../forms/NewsletterForm";
 import DeviceMockup from "./DeviceMockup";
 

@@ -95,9 +95,13 @@ public class PostgresDietTemplateRepository implements DietTemplateRepository {
             DietTemplateEntity entity;
 
             if (template.getId() != null) {
-                entity = jpaRepository.findByExternalId(template.getId())
-                        .orElseThrow(() -> new NotFoundException("Template not found: " + template.getId()));
-                converter.updateEntity(entity, template);
+                Optional<DietTemplateEntity> existingEntity = jpaRepository.findByExternalId(template.getId());
+                if (existingEntity.isPresent()) {
+                    entity = existingEntity.get();
+                    converter.updateEntity(entity, template);
+                } else {
+                    entity = converter.toEntity(template);
+                }
             } else {
                 entity = converter.toEntity(template);
             }

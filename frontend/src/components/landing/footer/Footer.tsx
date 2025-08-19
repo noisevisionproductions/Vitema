@@ -1,5 +1,5 @@
-import Container from "../../ui/landing/Container";
-import Logo from "../../ui/landing/Logo";
+import Container from "../../shared/ui/landing/Container";
+import Logo from "../../shared/ui/landing/Logo";
 import {footerLinks} from './footerData';
 
 const Footer = () => {

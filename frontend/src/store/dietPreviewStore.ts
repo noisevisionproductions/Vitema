@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { User } from '../types/user';
-import {ParsedDietData} from "../types";
+import { User } from '../types/nutrilog/user';
+import {ParsedDietData} from "../types/nutrilog";
 
 interface DietPreviewStore {
     previewData: ParsedDietData | null;

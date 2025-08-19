@@ -1,5 +1,5 @@
-import { ParsedProduct } from "../types/product";
-import { MealIngredient } from "../types/mealSuggestions";
+import { ParsedProduct } from "../types/nutrilog/product";
+import { MealIngredient } from "../types/nutrilog/mealSuggestions";
 
 /**
  * Konwertuje ParsedProduct na MealIngredient
