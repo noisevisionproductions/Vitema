@@ -35,6 +35,7 @@ export interface Database {
                     id: string
                     name: string
                     description: string | null
+                    initial_clue: string | null
                     suggested_players: number
                     max_players: number
                     difficulty: string
@@ -43,22 +44,26 @@ export interface Database {
                     solution: string | null
                     average_rating: number | null
                     total_ratings: number
+                    status: 'pending' | 'approved' | 'rejected'
                     created_at: string
                     updated_at: string
                 }
                 Insert: {
                     name: string
                     description?: string | null
+                    initial_clue?: string | null
                     suggested_players?: number
                     max_players?: number
                     difficulty?: string
                     duration_minutes?: number
                     image_url?: string | null
                     solution?: string | null
+                    status?: 'pending' | 'approved' | 'rejected'
                 }
                 Update: {
                     name?: string
                     description?: string | null
+                    initial_clue?: string | null
                     suggested_players?: number
                     max_players?: number
                     difficulty?: string
@@ -68,6 +73,7 @@ export interface Database {
                     average_rating?: number | null
                     total_ratings?: number
                     updated_at?: string
+                    status?: 'pending' | 'approved' | 'rejected'
                 }
             }
             game_sessions: {

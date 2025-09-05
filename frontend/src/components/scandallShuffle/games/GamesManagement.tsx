@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {Play, Users, X, Eye} from 'lucide-react';
-import {ScandalShuffleApiService} from "../../../services/scandallShuffle/ApiService";
 import {GameSession} from "../../../types/scandallShuffle/database";
 import LoadingSpinner from '../../shared/common/LoadingSpinner';
 import {toast} from '../../../utils/toast';
 import {formatDistanceToNow} from 'date-fns';
 import {pl} from 'date-fns/locale';
 import SectionHeader from '../../shared/common/SectionHeader';
+import {GameSessionApiService} from "../../../services/scandallShuffle/GameSessionApiService";
 
 /**
  * Component for managing active and recent game sessions
@@ -17,23 +17,32 @@ const GamesManagement: React.FC = () => {
     const [filter, setFilter] = useState<'all' | 'active' | 'ended'>('all');
 
     useEffect(() => {
-        fetchGames().catch(console.error);
-    }, []);
+        let isMounted = true;
 
-    /**
-     * Fetch game sessions from API
-     */
-    const fetchGames = async () => {
-        try {
-            const gamesData = await ScandalShuffleApiService.getRecentGameSessions();
-            setGames(gamesData);
-        } catch (error) {
-            console.error('Error fetching games:', error);
-            toast.error('Błąd podczas pobierania gier');
-        } finally {
-            setLoading(false);
-        }
-    };
+        const fetchGames = async () => {
+            try {
+                const gamesData = await GameSessionApiService.getRecent();
+                if (isMounted) {
+                    setGames(gamesData);
+                }
+            } catch (error) {
+                console.error('Error fetching games:', error);
+                if (isMounted) {
+                    toast.error('Błąd podczas pobierania gier');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchGames().catch(console.error);
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     /**
      * Get status badge styling based on game status

@@ -1,31 +1,43 @@
 import React, {useEffect, useState} from 'react';
 import {Edit, MoreVertical, Trash2, User} from 'lucide-react';
-import {ScandalShuffleApiService} from "../../../services/scandallShuffle/ApiService";
 import {Profile} from "../../../types/scandallShuffle/database";
 import LoadingSpinner from '../../shared/common/LoadingSpinner';
 import {toast} from '../../../utils/toast';
 import {formatDistanceToNow} from 'date-fns';
 import SectionHeader from "../../shared/common/SectionHeader";
+import {ProfileApiService} from "../../../services/scandallShuffle/ProfileApiService";
 
 const UsersManagement: React.FC = () => {
     const [users, setUsers] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchUsers().catch(console.error);
-    }, []);
+        let isMounted = true;
 
-    const fetchUsers = async () => {
-        try {
-            const profiles = await ScandalShuffleApiService.getAllProfiles();
-            setUsers(profiles);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-            toast.error('Błąd podczas pobierania użytkowników');
-        } finally {
-            setLoading(false);
-        }
-    };
+        const fetchUsers = async () => {
+            try {
+                const profiles = await ProfileApiService.getAll();
+                if (isMounted) {
+                    setUsers(profiles);
+                }
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                if (isMounted) {
+                    toast.error('Błąd podczas pobierania użytkowników');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchUsers().catch(console.error);
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     if (loading) {
         return (

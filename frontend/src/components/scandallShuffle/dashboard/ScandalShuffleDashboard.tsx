@@ -2,9 +2,9 @@ import React, {useEffect, useState} from 'react';
 import {Users, BookOpen, Play, TrendingUp} from 'lucide-react';
 import LoadingSpinner from '../../shared/common/LoadingSpinner';
 import {toast} from '../../../utils/toast';
-import {ScandalShuffleApiService} from "../../../services/scandallShuffle/ApiService";
 import SectionHeader from "../../shared/common/SectionHeader";
 import {ScandalShuffleNav} from "../navigation/ScandalShuffleSidebar";
+import {DashboardApiService} from "../../../services/scandallShuffle/DashboardApiService";
 
 interface DashboardStats {
     totalUsers: number;
@@ -26,7 +26,7 @@ const ScandalShuffleDashboard: React.FC<ScandalShuffleDashboardProps> = ({onNavi
 
     const fetchStats = async () => {
         try {
-            const dashboardStats = await ScandalShuffleApiService.getDashboardStats();
+            const dashboardStats = await DashboardApiService.getStats();
             setStats(dashboardStats);
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
@@ -115,7 +115,7 @@ const ScandalShuffleDashboard: React.FC<ScandalShuffleDashboardProps> = ({onNavi
                         onClick={() => onNavigate?.('scenarios')}
                         className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors hover:border-green-500 group">
                         <BookOpen className="h-5 w-5 mr-2 text-gray-400 group-hover:text-green-600"/>
-                        <span className="text-sm font-medium group-hover:text-green-600">Add Scenario</span>
+                        <span className="text-sm font-medium group-hover:text-green-600">Manage Scenarios</span>
                     </button>
                     <button
                         onClick={() => onNavigate?.('games')}
