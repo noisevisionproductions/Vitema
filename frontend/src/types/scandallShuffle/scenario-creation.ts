@@ -1,6 +1,7 @@
 // src/types/scandallShuffle/scenario-creation.ts
 
 import {Scenario} from "./database";
+import {SupportedLanguage} from "./language";
 
 export interface ScenarioFormData {
     name: string;
@@ -8,6 +9,7 @@ export interface ScenarioFormData {
     firstClue: string;
     solution: string;
     difficulty: 'easy' | 'medium' | 'hard';
+    language: SupportedLanguage;
     maxPlayers?: number;
     suggestedPlayers?: number;
     duration?: number;
@@ -19,6 +21,7 @@ export interface FormErrors {
     description?: string;
     firstClue?: string;
     solution?: string;
+    language?: string;
     maxPlayers?: string;
     duration?: string;
     general?: string;

@@ -1,4 +1,4 @@
-import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
+import {BrowserRouter as Router, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
 import {AuthProvider} from './contexts/AuthContext';
 import ProtectedRoute from './components/nutrilog/auth/ProtectedRoute';
 import Unauthorized from "./pages/Unauthorized";
@@ -21,15 +21,27 @@ import {SettingsProvider} from './contexts/SettingsContextType';
 import {RouteRestorationProvider} from "./contexts/RouteRestorationContext";
 import SSProtectedRoute from "./components/scandallShuffle/auth/SSProtectedRoute";
 import {ApplicationProvider} from "./contexts/ApplicationContext";
-import {lazy, Suspense} from "react";
+import {lazy, Suspense, useEffect} from "react";
 import LoadingSpinner from "./components/shared/common/LoadingSpinner";
 import ResetPasswordPage from "./pages/scandal-shuffle/ResetPasswordPage";
-import EmailVerifiedPage from "./pages/scandal-shuffle/EmailVerifiedPage";
+import AuthCallbackPage from "./pages/scandal-shuffle/AuthCallbackPage";
 
 const DietitianPanel = lazy(() => import('./pages/panel/DietitianPanel'));
 const AdminPanel = lazy(() => import('./pages/panel/AdminPanel'));
 const ScandalShufflePanel = lazy(() => import('./components/scandallShuffle/panel/ScandalShufflePanel'));
 
+const AuthRedirectHandler = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (location.hash.includes('access_token') && location.pathname === '/') {
+            navigate('/auth/callback', {replace: true});
+        }
+    }, [location, navigate]);
+
+    return null;
+};
 
 function App() {
     const SuspenseFallback = () => (
@@ -46,6 +58,8 @@ function App() {
             }}
         >
             <ScrollToTop/>
+            <AuthRedirectHandler/>
+
             <ToastProvider>
                 <ApplicationProvider>
                     <RouteRestorationProvider>
@@ -53,6 +67,7 @@ function App() {
                             <Suspense fallback={<SuspenseFallback/>}>
 
                                 <Routes>
+
                                     {/* Landing page routes */}
                                     <Route path="/" element={
                                         <LandingLayout>
@@ -74,7 +89,7 @@ function App() {
                                         <ResetPasswordPage/>
                                     }/>
 
-                                    <Route path="/auth/callback" element={<EmailVerifiedPage/>}/>
+                                    <Route path="/auth/callback" element={<AuthCallbackPage/>}/>
 
                                     {/* Newsletter routes */}
                                     <Route path="/verify-email" element={<VerifyEmail/>}/>

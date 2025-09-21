@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {BookOpen, Plus, Edit, Trash2, Users, Clock, Star} from 'lucide-react';
+import {BookOpen, Plus, Edit, Trash2, Users, Clock, Star, Wand2} from 'lucide-react';
 import {Scenario} from '../../../types/scandallShuffle/database';
 import LoadingSpinner from '../../shared/common/LoadingSpinner';
 import {toast} from '../../../utils/toast';
@@ -79,11 +79,68 @@ const ScenariosManagement: React.FC = () => {
         }
     };
 
- /*   const filteredScenarios = scenarios.filter(scenario => {
-        if (statusFilter === 'all') return true;
-        return scenario.status === statusFilter;
-    });
-*/
+    const handleCreateSampleScenario = async () => {
+        if (!confirm('Are you sure you want to create a sample test scenario?')) {
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const uniqueName = `[TEST] Sample Scenario ${Math.floor(Date.now() / 1000)}`;
+
+            const sampleCards: CardData[] = [...Array(15)].map((_, i) => ({
+                id: `temp_card_${i + 1}`,
+                title: `Sample Card ${i + 1}`,
+                content: `Sample content for card ${i + 1}. This clue may or may not be relevant to the case.`,
+                isRelevant: i % 4 !== 0,
+                type: 'clue'
+            }));
+
+            const sampleQuestions: QuestionData[] = [
+                {
+                    id: 'temp_q_1',
+                    question: 'What is the answer to the primary test question?',
+                    options: ['Option A (Correct)', 'Option B', 'Option C', 'Option D'],
+                    correctAnswer: 0,
+                    explanation: 'This is correct because it is the first option in the test data.',
+                    difficulty: 'easy'
+                }
+            ];
+
+            const maxPlayers = 4;
+
+            const scenarioCoreData = {
+                name: uniqueName,
+                description: 'This is an auto-generated scenario used for testing UI functionality and API integration.',
+                initial_clue: 'This is the starting clue for the auto-generated test scenario. Your investigation begins here.',
+                solution: 'The solution is that this scenario is a test. The butler did it. The correct answer to the quiz was "Option A".',
+                difficulty: 'easy',
+                duration_minutes: 30,
+                max_players: maxPlayers,
+                suggested_players: maxPlayers,
+                status: 'pending',
+            } as const;
+
+            const newScenario = await ScenarioApiService.create(scenarioCoreData);
+
+            await ScenarioApiService.createCards(newScenario.id, sampleCards);
+            await ScenarioApiService.createQuestions(newScenario.id, sampleQuestions);
+
+            toast.success(`Successfully created sample scenario: "${uniqueName}"`);
+            await fetchScenarios();
+
+        } catch (error) {
+            console.error('Error creating sample scenario:', error);
+            if (error instanceof Error) {
+                toast.error(`Failed to create sample scenario: ${error.message}`);
+            } else {
+                toast.error('An unknown error occurred while creating the sample scenario.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
     if (viewMode === 'create') {
         return (
             <CreateScenarioPage
@@ -136,13 +193,23 @@ const ScenariosManagement: React.FC = () => {
                     title="Scenario Management"
                     description="Create and manage scenarios for Scandal Shuffle game"
                 />
-                <button
-                    onClick={() => setViewMode('create')}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                >
-                    <Plus className="h-4 w-4"/>
-                    Add Scenario
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleCreateSampleScenario}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                        title="Create a sample scenario with dummy data for testing"
+                    >
+                        <Wand2 className="h-4 w-4"/>
+                        Add Sample
+                    </button>
+                    <button
+                        onClick={() => setViewMode('create')}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                    >
+                        <Plus className="h-4 w-4"/>
+                        Add Scenario
+                    </button>
+                </div>
             </div>
 
             <div className="flex gap-2 mb-4">

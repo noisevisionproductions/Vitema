@@ -7,47 +7,67 @@ export default function ResetPasswordPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [isValidSession, setIsValidSession] = useState(false);
 
     useEffect(() => {
-        // This listener handles the PASSWORD_RECOVERY event.
-        // Supabase automatically detects the access_token in the URL fragment
-        // and verifies it. If successful, this event is fired.
+        // Check if user has a valid recovery session
+        const checkSession = async () => {
+            const {data: {session}} = await supabase.auth.getSession();
+
+            if (session) {
+                setIsValidSession(true);
+            } else {
+                setError('Invalid or expired reset link. Please request a new password reset.');
+            }
+        };
+
+        checkSession().catch(console.error);
+
+        // Listen for auth state changes during password recovery
         const {data: {subscription}} = supabase.auth.onAuthStateChange((event) => {
             if (event === 'PASSWORD_RECOVERY') {
-                // This confirms the user is in the password recovery flow.
-                // You don't need to manually handle the token.
-                console.log('Password recovery mode initiated.');
+                setIsValidSession(true);
+                setError(null);
             }
         });
 
-        // Cleanup the subscription on component unmount
         return () => {
             subscription.unsubscribe();
         };
     }, []);
 
     const tryOpenApp = () => {
-        // Try to open the mobile app with a custom URL scheme
-        const appScheme = 'scandalshufflemobile://';
+        // Try multiple methods to open the app
+        const appScheme = 'scandalshufflemobile://auth/password-reset-success';
 
-        // Create a hidden iframe to attempt opening the app
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = appScheme;
-        document.body.appendChild(iframe);
+        // Method 1: Direct navigation
+        window.location.href = appScheme;
 
-        // Clean up the iframe after a short delay
+        // Method 2: Fallback with iframe (for some browsers)
         setTimeout(() => {
-            document.body.removeChild(iframe);
-        }, 1000);
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = appScheme;
+            document.body.appendChild(iframe);
+
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 500);
     };
 
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!isValidSession) {
+            setError('Invalid session. Please request a new password reset.');
+            return;
+        }
+
         setError(null);
         setSuccess(null);
 
-        // Basic validation
+        // Validation
         if (password.length < 6) {
             setError('Password must be at least 6 characters long.');
             return;
@@ -59,8 +79,9 @@ export default function ResetPasswordPage() {
 
         setLoading(true);
         try {
-            // Update the user's password in Supabase
-            const {error} = await supabase.auth.updateUser({password});
+            const {error} = await supabase.auth.updateUser({
+                password: password
+            });
 
             if (error) {
                 console.error('Password reset error:', error);
@@ -71,12 +92,20 @@ export default function ResetPasswordPage() {
             setSuccess('Password successfully changed! You can now log in to the mobile app with your new password.');
 
         } catch (err: any) {
-            console.error('Password reset error:', err);
-            setError(err.message || 'Failed to reset password. Please try again.');
+            console.error('Unexpected password reset error:', err);
+            setError(err.message || 'An unexpected error occurred. Please try again.');
         } finally {
             setLoading(false);
         }
     };
+
+    if (!isValidSession && !error) {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div style={{
@@ -84,69 +113,86 @@ export default function ResetPasswordPage() {
             margin: '50px auto',
             padding: '20px',
             border: '1px solid #ccc',
-            borderRadius: '8px'
+            borderRadius: '8px',
+            fontFamily: 'Arial, sans-serif'
         }}>
-            <h2>Set New Password</h2>
-            <form onSubmit={handleResetPassword}>
-                <div style={{marginBottom: '15px'}}>
-                    <label>New Password</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        style={{width: '100%', padding: '8px', marginTop: '5px'}}
-                    />
-                </div>
-                <div style={{marginBottom: '15px'}}>
-                    <label>Confirm New Password</label>
-                    <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        style={{width: '100%', padding: '8px', marginTop: '5px'}}
-                    />
-                </div>
+            <h2 style={{textAlign: 'center', marginBottom: '20px'}}>Set New Password</h2>
 
-                {error && <p style={{color: 'red'}}>{error}</p>}
-                {success && (
-                    <div style={{marginBottom: '20px'}}>
-                        <p style={{color: 'green', marginBottom: '15px'}}>{success}</p>
+            {!isValidSession ? (
+                <div style={{textAlign: 'center'}}>
+                    <p style={{color: 'red', marginBottom: '20px'}}>{error}</p>
+                    <p style={{color: '#666', fontSize: '14px'}}>
+                        Please return to the app and request a new password reset.
+                    </p>
+                </div>
+            ) : (
+                <form onSubmit={handleResetPassword}>
+                    <div style={{marginBottom: '15px'}}>
+                        <label>New Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            style={{width: '100%', padding: '8px', marginTop: '5px'}}
+                        />
+                    </div>
+                    <div style={{marginBottom: '15px'}}>
+                        <label>Confirm New Password</label>
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            style={{width: '100%', padding: '8px', marginTop: '5px'}}
+                        />
+                    </div>
+
+                    {error && <p style={{color: 'red'}}>{error}</p>}
+
+                    {success && (
+                        <div style={{marginBottom: '20px'}}>
+                            <p style={{color: 'green', marginBottom: '15px'}}>{success}</p>
+                            <button
+                                type="button"
+                                onClick={tryOpenApp}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px',
+                                    background: '#28a745',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    marginBottom: '10px'
+                                }}
+                            >
+                                Open Mobile App
+                            </button>
+                            <p style={{fontSize: '12px', color: '#666', textAlign: 'center'}}>
+                                If the app doesn't open automatically, please open it manually from your device.
+                            </p>
+                        </div>
+                    )}
+
+                    {!success && (
                         <button
-                            type="button"
-                            onClick={tryOpenApp}
+                            type="submit"
+                            disabled={loading}
                             style={{
                                 width: '100%',
                                 padding: '10px',
-                                background: '#28a745',
+                                background: loading ? '#ccc' : '#007bff',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
-                                marginBottom: '10px'
+                                cursor: loading ? 'not-allowed' : 'pointer'
                             }}
                         >
-                            Open Mobile App
+                            {loading ? 'Saving...' : 'Save New Password'}
                         </button>
-                        <p style={{fontSize: '12px', color: '#666', textAlign: 'center'}}>
-                            If the app doesn't open automatically, please open it manually from your device.
-                        </p>
-                    </div>
-                )}
-
-                {!success && (
-                    <button type="submit" disabled={loading} style={{
-                        width: '100%',
-                        padding: '10px',
-                        background: '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px'
-                    }}>
-                        {loading ? 'Saving...' : 'Save New Password'}
-                    </button>
-                )}
-            </form>
+                    )}
+                </form>
+            )}
         </div>
     );
 }

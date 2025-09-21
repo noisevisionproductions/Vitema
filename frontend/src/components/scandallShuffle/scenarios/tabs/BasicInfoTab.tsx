@@ -3,6 +3,7 @@ import FormInput from '../../../shared/ui/FormInput';
 import {BasicInfoTabProps} from '../../../../types/scandallShuffle/scenario-creation';
 import ImageUploader from "./ImageUploader";
 import {CheckCircle, Loader, Users, XCircle} from "lucide-react";
+import LanguageSelector from "../ui/LanguageSelector";
 
 /**
  * Basic information tab for scenario creation.
@@ -102,6 +103,14 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                         </div>
 
                         <div>
+                            <LanguageSelector
+                                value={formData.language}
+                                onChange={(language) => updateField('language', language)}
+                                error={errors.language}
+                            />
+                        </div>
+
+                        <div>
                             <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
                                 Difficulty Level
                             </label>
@@ -151,7 +160,8 @@ const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
                     </div>
                     <p className="font-medium text-blue-900">Maximum Players</p>
                     <p className="text-xs text-blue-700 mt-2">
-                        Based on your <strong>{cardCount}</strong> cards, this scenario supports up to {maxPlayers} players.
+                        Based on your <strong>{cardCount}</strong> cards, this scenario supports up
+                        to {maxPlayers} players.
                     </p>
                     <p className="text-xs text-blue-700 mt-1">
                         (Formula: 1 starting card + 3 cards per player)

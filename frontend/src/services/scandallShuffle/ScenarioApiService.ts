@@ -55,7 +55,12 @@ export class ScenarioApiService {
     }
 
     static async create(scenario: Database['public']['Tables']['scenarios']['Insert']): Promise<Scenario> {
-        const {data, error} = await supabase.from('scenarios').insert(scenario).select().single();
+        const scenarioData = {
+            ...scenario,
+            language: scenario.language || 'en'
+        };
+
+        const {data, error} = await supabase.from('scenarios').insert(scenarioData).select().single();
         if (error) throw new Error(error.message);
         return data;
     }

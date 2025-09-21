@@ -1,3 +1,5 @@
+import {SupportedLanguage} from "./language";
+
 export interface Database {
     public: {
         Tables: {
@@ -39,6 +41,7 @@ export interface Database {
                     suggested_players: number
                     max_players: number
                     difficulty: string
+                    language: SupportedLanguage;
                     duration_minutes: number
                     image_url: string | null
                     solution: string | null
@@ -55,6 +58,7 @@ export interface Database {
                     suggested_players?: number
                     max_players?: number
                     difficulty?: string
+                    language?: SupportedLanguage;
                     duration_minutes?: number
                     image_url?: string | null
                     solution?: string | null
@@ -67,6 +71,7 @@ export interface Database {
                     suggested_players?: number
                     max_players?: number
                     difficulty?: string
+                    language?: SupportedLanguage;
                     duration_minutes?: number
                     image_url?: string | null
                     solution?: string | null

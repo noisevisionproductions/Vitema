@@ -16,6 +16,7 @@ import {ScenarioApiService} from "../../../services/scandallShuffle/ScenarioApiS
 import SectionHeader from "../../shared/common/SectionHeader";
 import {useScenarioNameValidation} from "../../../hooks/scandallShuffle/useScenarioNameValidation";
 import {useScenarioDraft} from "../../../hooks/scandallShuffle/useScenarioDraft";
+import {DEFAULT_LANGUAGE} from "../../../types/scandallShuffle/language";
 
 interface ExtendedCreateScenarioPageProps extends CreateScenarioPageProps {
     initialCards?: CardData[];
@@ -28,6 +29,7 @@ const getInitialFormData = (): ScenarioFormData => ({
     firstClue: '',
     solution: '',
     difficulty: 'medium',
+    language: DEFAULT_LANGUAGE,
     duration: undefined,
     imageUri: undefined
 });
@@ -53,6 +55,7 @@ const CreateScenarioPage: React.FC<ExtendedCreateScenarioPageProps> = ({
                 firstClue: scenario.initial_clue || '',
                 solution: scenario.solution || '',
                 difficulty: (scenario.difficulty as 'easy' | 'medium' | 'hard') || 'medium',
+                language: scenario.language || DEFAULT_LANGUAGE,
                 duration: scenario.duration_minutes || undefined,
                 imageUri: scenario.image_url || undefined
             };
@@ -152,6 +155,7 @@ const CreateScenarioPage: React.FC<ExtendedCreateScenarioPageProps> = ({
                 initial_clue: formData.firstClue.trim(),
                 solution: formData.solution?.trim(),
                 difficulty: formData.difficulty,
+                language: formData.language,
                 duration_minutes: formData.duration,
                 max_players: maxPlayers > 0 ? maxPlayers : 1,
                 suggested_players: maxPlayers > 0 ? maxPlayers : 1,
@@ -180,7 +184,7 @@ const CreateScenarioPage: React.FC<ExtendedCreateScenarioPageProps> = ({
     };
 
     const handleClearDraft = useCallback(() => {
-        if (window.confirm("Czy na pewno chcesz wyczyścić cały formularz? Niezapisane postępy zostaną utracone.")) {
+        if (window.confirm("Are you sure you want to clear the entire form? Any unsaved progress will be lost.")) {
             clearDraft();
             setFormData(getInitialFormData());
             setCards([]);

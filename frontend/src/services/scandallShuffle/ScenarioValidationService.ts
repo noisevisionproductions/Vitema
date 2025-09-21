@@ -77,6 +77,12 @@ export class ScenarioValidationService {
             newErrors.solution = 'Solution must be less than 1000 characters';
         }
 
+        if (!formData.language) {
+            newErrors.language = 'Language selection is required';
+        } else if (!['en', 'pl', 'uk'].includes(formData.language)) {
+            newErrors.language = 'Invalid language selection';
+        }
+
         if (!formData.duration) {
             newErrors.duration = 'Duration is required';
         } else if (formData.duration < 15 || formData.duration > 300) {
