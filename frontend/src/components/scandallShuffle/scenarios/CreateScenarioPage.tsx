@@ -6,9 +6,9 @@ import BasicInfoTab from "./tabs/BasicInfoTab";
 import CardsTab from "./tabs/CardsTab";
 import QuizTab from "./tabs/QuizTab";
 import {
+    CardData,
     CreateScenarioPageProps,
     FormErrors,
-    CardData,
     QuestionData,
     ScenarioFormData
 } from "../../../types/scandallShuffle/scenario-creation";
@@ -17,6 +17,7 @@ import SectionHeader from "../../shared/common/SectionHeader";
 import {useScenarioNameValidation} from "../../../hooks/scandallShuffle/useScenarioNameValidation";
 import {useScenarioDraft} from "../../../hooks/scandallShuffle/useScenarioDraft";
 import {DEFAULT_LANGUAGE} from "../../../types/scandallShuffle/language";
+import Database from "../../../types/scandallShuffle/database";
 
 interface ExtendedCreateScenarioPageProps extends CreateScenarioPageProps {
     initialCards?: CardData[];
@@ -149,7 +150,7 @@ const CreateScenarioPage: React.FC<ExtendedCreateScenarioPageProps> = ({
         try {
             const maxPlayers = Math.floor((cards.length - 1) / 3);
 
-            const scenarioCoreData = {
+            const scenarioCoreData: Database['public']['Tables']['scenarios']['Insert'] = {
                 name: formData.name.trim(),
                 description: formData.description.trim(),
                 initial_clue: formData.firstClue.trim(),
@@ -159,6 +160,7 @@ const CreateScenarioPage: React.FC<ExtendedCreateScenarioPageProps> = ({
                 duration_minutes: formData.duration,
                 max_players: maxPlayers > 0 ? maxPlayers : 1,
                 suggested_players: maxPlayers > 0 ? maxPlayers : 1,
+                status: 'approved',
             };
 
             if (scenario) {

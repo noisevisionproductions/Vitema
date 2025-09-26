@@ -1,6 +1,7 @@
 import {supabase} from '../../config/supabase';
 import {Database, Scenario} from "../../types/scandallShuffle/database";
 import {CardData, QuestionData} from "../../types/scandallShuffle/scenario-creation";
+import {ScenarioStatus} from "../../components/scandallShuffle/scenarios/types";
 
 export class ScenarioApiService {
     // --- Core Scenario Management ---
@@ -126,5 +127,20 @@ export class ScenarioApiService {
             .getPublicUrl(data.path);
 
         return publicUrl;
+    }
+
+    static async updateStatus(id: string, status: ScenarioStatus): Promise<Scenario> {
+        const {data, error} = await supabase
+            .from('scenarios')
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('API Error updating status:', error);
+            throw new Error(error.message);
+        }
+        return data;
     }
 }

@@ -83,20 +83,11 @@ export class SupabaseAuthService {
     /**
      * Listen for auth state changes
      */
-    static onAuthStateChange(callback: (user: SupabaseUser | null, session: Session | null) => void) {
-        return supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (session?.user) {
-                try {
-                    const user = await this.getCurrentUser();
-                    callback(user, session);
-                } catch (error) {
-                    console.error('Error getting current user:', error);
-                    callback(null, null);
-                }
-            } else {
-                callback(null, null);
-            }
+    static onAuthStateChange(callback: (event: string, session: Session | null) => void) {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            callback(event, session);
         });
+        return subscription;
     }
 
     static async getSession() {

@@ -8,6 +8,7 @@ import {useRouteRestoration} from "./RouteRestorationContext";
 import {ApplicationType} from "../types/application";
 import {SupabaseAuthService, SupabaseUser} from "../services/scandallShuffle/SupabaseAuthService";
 import {useApplication} from "./ApplicationContext";
+import {supabase} from "../config/supabase";
 
 interface AuthContextType {
     currentUser: FirebaseUser | null;
@@ -49,49 +50,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
 
     useEffect(() => {
         let firebaseUnsubscribe: (() => void) | undefined;
-        let supabaseUnsubscribe: { unsubscribe: () => void } | undefined;
+        let supabaseSubscription: any;
 
-        const initializeAuth = async () => {
-            try {
-                if (currentApplication === null) {
-                    setLoading(false);
-                    return;
-                }
+        setLoading(true);
 
-                if (currentApplication === ApplicationType.NUTRILOG) {
-                } else if (currentApplication === ApplicationType.SCANDAL_SHUFFLE) {
-                    const initialData = await SupabaseAuthService.initializeSession();
-                    if (initialData) {
-                        setSupabaseUser(initialData.user);
-                        setUserData(mapSupabaseUserToUser(initialData.user));
-                        localStorage.setItem(SUPABASE_TOKEN_KEY, initialData.session.access_token);
-                    }
+        if (currentApplication === ApplicationType.SCANDAL_SHUFFLE) {
 
-                    const {data: {subscription}} = SupabaseAuthService.onAuthStateChange((user, session) => {
-                        setSupabaseUser(user);
-                        if (user && session) {
-                            setUserData(mapSupabaseUserToUser(user));
+            supabaseSubscription = SupabaseAuthService.onAuthStateChange(async (event, session) => {
+                if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                    const user = session?.user;
+                    if (user) {
+                        const {data: profile} = await supabase
+                            .from('profiles')
+                            .select('role, display_name')
+                            .eq('user_id', user.id)
+                            .single();
+
+                        const appUser: SupabaseUser = {
+                            id: user.id,
+                            email: user.email!,
+                            role: profile?.role || 'user',
+                            displayName: profile?.display_name || user.email,
+                        };
+
+                        setSupabaseUser(appUser);
+                        setUserData(mapSupabaseUserToUser(appUser));
+                        if (session?.access_token) {
                             localStorage.setItem(SUPABASE_TOKEN_KEY, session.access_token);
-                        } else {
-                            setUserData(null);
-                            localStorage.removeItem(SUPABASE_TOKEN_KEY);
                         }
-                    });
-
-                    supabaseUnsubscribe = subscription;
-                    setLoading(false);
+                    }
+                } else if (event === 'SIGNED_OUT') {
+                    setSupabaseUser(null);
+                    setUserData(null);
+                    localStorage.removeItem(SUPABASE_TOKEN_KEY);
                 }
-            } catch (error) {
-                console.error("Error initializing auth:", error);
-                setLoading(false);
-            }
-        };
 
-        initializeAuth().catch(console.error);
+                setLoading(false);
+            });
+
+        } else if (currentApplication === ApplicationType.NUTRILOG) {
+            setLoading(false);
+        } else {
+            setLoading(false);
+        }
 
         return () => {
             if (firebaseUnsubscribe) firebaseUnsubscribe();
-            if (supabaseUnsubscribe) supabaseUnsubscribe.unsubscribe();
+            if (supabaseSubscription) {
+                console.log('[AuthContext] Cleanup: Unsubscribing from Supabase auth state changes.');
+                supabaseSubscription.unsubscribe();
+            }
         };
     }, [currentApplication]);
 
@@ -312,7 +320,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {children}
         </AuthContext.Provider>
     );
 };

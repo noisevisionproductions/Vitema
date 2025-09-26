@@ -5,6 +5,7 @@ import UsersManagement from "../users/UsersManagement";
 import ScenariosManagement from "../scenarios/ScenariosManagement";
 import usePageTitle from "../../../hooks/nutrilog/usePageTitle";
 import GamesManagement from "../games/GamesManagement";
+import StatisticsPage from "../stats/StatisticsPage";
 
 const ScandalShufflePanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<ScandalShuffleNav>('dashboard');
@@ -30,12 +31,7 @@ const ScandalShufflePanel: React.FC = () => {
             case 'games':
                 return <GamesManagement/>;
             case 'stats':
-                return (
-                    <div className="text-center py-12">
-                        <h2 className="text-xl font-semibold text-gray-900">Statistics</h2>
-                        <p className="text-gray-600 mt-2">Coming soon...</p>
-                    </div>
-                );
+                return <StatisticsPage/>;
             default:
                 return <ScandalShuffleDashboard/>;
         }

@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useState, useCallback, ReactNode, useEffect} from 'react';
 import Toast, {ToastType} from "../components/shared/common/Toast";
-import { setToastAPI } from '../utils/toast';
+import {setToastAPI} from '../utils/toast';
 
 interface ToastItem {
     id: string;
@@ -20,6 +20,8 @@ interface ToastProviderProps {
     children: ReactNode;
 }
 
+const MAX_TOASTS = 5;
+
 export const ToastProvider: React.FC<ToastProviderProps> = ({children}) => {
     const [toasts, setToasts] = useState<ToastItem[]>([]);
     const lastToasts = React.useRef<Record<string, number>>({});
@@ -34,15 +36,21 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({children}) => {
         }
 
         lastToasts.current[toastKey] = now;
-        const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
-        setToasts(prev => [...prev, {
-            id,
-            visible: true,
-            message,
-            type,
-            duration,
-        }]);
+        setToasts(prev => {
+            const newToast = {
+                id,
+                visible: true,
+                message,
+                type,
+                duration,
+            };
+
+            const updatedToasts = [...prev, newToast];
+
+            return updatedToasts.slice(-MAX_TOASTS);
+        });
 
         setTimeout(() => {
             if (lastToasts.current[toastKey] === now) {
