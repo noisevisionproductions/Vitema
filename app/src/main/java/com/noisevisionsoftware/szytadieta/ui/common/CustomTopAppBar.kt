@@ -3,6 +3,7 @@ package com.noisevisionsoftware.szytadieta.ui.common
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -110,6 +111,7 @@ fun CustomTopAppBar(
                 titleContentColor = MaterialTheme.colorScheme.onSurface,
                 actionIconContentColor = MaterialTheme.colorScheme.primary
             ),
+            windowInsets = WindowInsets(0),
             modifier = modifier.topShadow(
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             )

@@ -3,11 +3,8 @@ package com.noisevisionsoftware.szytadieta.domain.repository
 import android.content.Context
 import android.net.Uri
 import com.noisevisionsoftware.szytadieta.domain.model.file.FileStatus
-import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.ShoppingListRepository
-import com.noisevisionsoftware.szytadieta.domain.service.dietService.DietService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.FileMetadataService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.StorageService
-import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelParserService
 import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelValidationService
 import com.noisevisionsoftware.szytadieta.domain.state.file.UploadProgress
 import com.noisevisionsoftware.szytadieta.domain.state.file.UploadStage
@@ -20,18 +17,13 @@ import javax.inject.Inject
 class FileRepository @Inject constructor(
     private val storageService: StorageService,
     private val fileMetadataService: FileMetadataService,
-    private val dietService: DietService,
     private val excelValidationService: ExcelValidationService,
-    private val excelParserService: ExcelParserService,
-    private val shoppingListRepository: ShoppingListRepository,
     @ApplicationContext private val context: Context
 ) {
     fun uploadFile(
         uri: Uri,
         userId: String,
-        fileName: String,
-        startDate: Long,
-        endDate: Long
+        fileName: String
     ): Flow<UploadProgress> = callbackFlow {
         try {
             val fileExtension = fileName.substringAfterLast(".", "")
@@ -46,16 +38,16 @@ class FileRepository @Inject constructor(
             val fileMetadata =
                 fileMetadataService.createAndSaveMetadata(userId, fileName, downloadUrl)
 
-         /*   parseAndSaveDiet(
-                uri = uri,
-                userId = userId,
-                downloadUrl = downloadUrl,
-                startDate = startDate,
-                endDate = endDate
-            ) { stage, progress ->
-                trySend(UploadProgress.Progress(progress, stage))
-            }
-*/
+            /*   parseAndSaveDiet(
+                   uri = uri,
+                   userId = userId,
+                   downloadUrl = downloadUrl,
+                   startDate = startDate,
+                   endDate = endDate
+               ) { stage, progress ->
+                   trySend(UploadProgress.Progress(progress, stage))
+               }
+   */
             fileMetadataService.updateStatus(fileMetadata.id, FileStatus.PROCESSED)
             trySend(UploadProgress.Success(downloadUrl))
 
@@ -73,29 +65,29 @@ class FileRepository @Inject constructor(
                 .getOrThrow()
         } ?: throw IOException("Nie można otworzyć pliku do walidacji")
     }
-/*
-    private suspend fun parseAndSaveDiet(
-        uri: Uri,
-        userId: String,
-        downloadUrl: String,
-        startDate: Long,
-        endDate: Long,
-        onProgress: (UploadStage, Int) -> Unit
-    ) {
-        context.contentResolver.openInputStream(uri)?.use { parsingStream ->
-            val parseResult = excelParserService.parseFile(
-                inputStream = parsingStream,
-                userId = userId,
-                fileUrl = downloadUrl,
-                startDate = startDate,
-                endDate = endDate
-            ).getOrThrow()
+    /*
+        private suspend fun parseAndSaveDiet(
+            uri: Uri,
+            userId: String,
+            downloadUrl: String,
+            startDate: Long,
+            endDate: Long,
+            onProgress: (UploadStage, Int) -> Unit
+        ) {
+            context.contentResolver.openInputStream(uri)?.use { parsingStream ->
+                val parseResult = excelParserService.parseFile(
+                    inputStream = parsingStream,
+                    userId = userId,
+                    fileUrl = downloadUrl,
+                    startDate = startDate,
+                    endDate = endDate
+                ).getOrThrow()
 
-            onProgress(UploadStage.PARSING, 85)
-            onProgress(UploadStage.SAVING, 90)
+                onProgress(UploadStage.PARSING, 85)
+                onProgress(UploadStage.SAVING, 90)
 
-            dietService.saveDiet(parseResult.diet)
-*//*
+                dietService.saveDiet(parseResult.diet)
+    *//*
             shoppingListRepository.saveShoppingList(parseResult.shoppingList)
 *//*
         } ?: throw IOException("Nie można otworzyć pliku do parsowania")

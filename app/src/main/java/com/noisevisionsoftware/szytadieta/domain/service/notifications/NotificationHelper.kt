@@ -25,7 +25,7 @@ class NotificationHelper @Inject constructor(
         private const val CHANNEL_NAME = "Szyta Dieta"
         private const val CHANNEL_DESCRIPTION = "Powiadomienia z aplikacji Szyta Dieta"
         private const val WATER_REMINDER_NOTIFICATION_ID = 1001
-        private const val SURVEY_REMINDER_NOTIFICATION_ID = 1002
+        const val SURVEY_REMINDER_NOTIFICATION_ID = 1002
         const val EXTRA_DESTINATION = "destination"
     }
 
@@ -167,9 +167,11 @@ class NotificationHelper @Inject constructor(
             .setContentText("Wypełnij naszą ankietę, aby otrzymać indywidualną dietę")
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText("Wypełnij naszą ankietę, aby otrzymać indywidualną dietę. " +
-                            "To zajmie tylko kilka minut, a pozwoli nam lepiej dopasować plan żywieniowy do Twoich potrzeb. " +
-                            "Dane będą zweryfikowane w ciągu godziny od wypełnienia.")
+                    .bigText(
+                        "Wypełnij naszą ankietę, aby otrzymać indywidualną dietę. " +
+                                "To zajmie tylko kilka minut, a pozwoli nam lepiej dopasować plan żywieniowy do Twoich potrzeb. " +
+                                "Dane będą zweryfikowane w ciągu godziny od wypełnienia."
+                    )
             )
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)

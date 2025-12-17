@@ -47,6 +47,9 @@ class AuthViewModel @Inject constructor(
     private val _showVerificationDialog = MutableStateFlow(false)
     val showVerificationDialog = _showVerificationDialog.asStateFlow()
 
+    private val _isEmailVerified = MutableStateFlow(false)
+    val isEmailVerified = _isEmailVerified.asStateFlow()
+
     val userSession = sessionManager.userSessionFlow
 
     init {
@@ -61,14 +64,13 @@ class AuthViewModel @Inject constructor(
                     user?.let {
                         safeApiCall { authRepository.isEmailVerified() }
                             .onSuccess { isVerified ->
-                                if (isVerified) {
-                                    sessionManager.saveUserSession(it)
-                                    checkProfileCompletion(it)
-                                    _authState.value = AuthState.Success(it)
-                                } else {
-                                    logout(showMessage = false)
-                                    _authState.value =
-                                        AuthState.Error("Email nie został zweryfikowany. Sprawdź swoją skrzynkę pocztową i kliknij w link aktywacyjny.")
+                                _isEmailVerified.value = isVerified
+                                sessionManager.saveUserSession(it)
+                                checkProfileCompletion(it)
+                                _authState.value = AuthState.Success(it)
+
+                                if (!isVerified) {
+                                    _showVerificationDialog.value = true
                                 }
                             }
                             .onFailure { throwable ->
@@ -130,14 +132,15 @@ class AuthViewModel @Inject constructor(
                 _authState.value = AuthState.Loading
 
                 val result = authRepository.login(email, password)
-                result.onSuccess { user ->
-                    handleSuccessfulAuth(user)
-                }.onFailure { throwable ->
-                    if (throwable is AppException.AuthException &&
-                        throwable.message.contains("nie został zweryfikowany")
-                    ) {
+                result.onSuccess { (user, isVerified) ->
+                    _isEmailVerified.value = isVerified
+
+                    if (!isVerified) {
                         _showVerificationDialog.value = true
                     }
+
+                    handleSuccessfulAuth(user)
+                }.onFailure { throwable ->
                     handleAuthError(throwable)
                 }
             } catch (e: Exception) {

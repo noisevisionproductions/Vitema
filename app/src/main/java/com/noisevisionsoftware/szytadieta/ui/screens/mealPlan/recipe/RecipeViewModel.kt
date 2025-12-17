@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.ui.screens.recipe
+package com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.recipe
 
 import android.net.Uri
 import com.noisevisionsoftware.szytadieta.domain.alert.AlertManager

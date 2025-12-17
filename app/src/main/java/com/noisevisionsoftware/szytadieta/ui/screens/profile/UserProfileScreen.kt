@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.szytadieta.domain.model.user.User
@@ -47,6 +48,9 @@ import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
 import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.screens.admin.ErrorMessage
+import com.noisevisionsoftware.szytadieta.ui.screens.profile.components.SurveyReminderCard
+import com.noisevisionsoftware.szytadieta.utils.AppConfig
+import com.noisevisionsoftware.szytadieta.utils.UrlHandler
 import com.noisevisionsoftware.szytadieta.utils.formatDate
 
 @Composable
@@ -92,6 +96,7 @@ private fun ProfileScreenPage(
     onLogoutClick: () -> Unit
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -137,6 +142,13 @@ private fun ProfileScreenPage(
                 }
             }
         }
+
+        SurveyReminderCard(
+            isSurveyCompleted = state.data.surveyCompleted,
+            onFillSurveyClick = {
+                UrlHandler.openUrl(context, AppConfig.Urls.SURVEY_URL)
+            }
+        )
 
         ProfileSection(
             title = "Dane osobowe",

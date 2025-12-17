@@ -27,7 +27,8 @@ class SettingsManager @Inject constructor(
         private val IS_DARK_MODE_KEY = booleanPreferencesKey("is_dark_mode")
         private val CARD_ORDER_KEY = stringPreferencesKey("dashboard_card_order")
         private val HIDDEN_CARDS_KEY = stringPreferencesKey("dashboard_hidden_cards")
-        private val WATER_NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("water_notifications_enabled")
+        private val WATER_NOTIFICATIONS_ENABLED_KEY =
+            booleanPreferencesKey("water_notifications_enabled")
     }
 
     val isDarkMode: Flow<Boolean> = dataStore.data.map { preferences ->

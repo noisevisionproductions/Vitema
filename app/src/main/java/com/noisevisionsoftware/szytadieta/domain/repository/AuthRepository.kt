@@ -107,13 +107,11 @@ class AuthRepository @Inject constructor(
         Result.failure(e)
     }
 
-    suspend fun login(email: String, password: String): Result<User> = try {
+    suspend fun login(email: String, password: String): Result<Pair<User, Boolean>> = try {
         val authResult = auth.signInWithEmailAndPassword(email, password).await()
 
         authResult.user?.let { firebaseUser ->
-            if (!firebaseUser.isEmailVerified) {
-                return Result.failure(AppException.AuthException("Email nie został zweryfikowany. Sprawdź swoją skrzynkę pocztową i kliknij w link aktywacyjny."))
-            }
+            val isEmailVerified = firebaseUser.isEmailVerified
 
             val documentSnapshot = firestore.collection("users")
                 .document(firebaseUser.uid)
@@ -127,7 +125,7 @@ class AuthRepository @Inject constructor(
                         Log.e("AuthRepository", "Błąd podczas aktualizacji tokenu FCM", throwable)
                     }
 
-                Result.success(it)
+                Result.success(Pair(it, isEmailVerified))
             } ?: Result.failure(Exception("Nie znaleziono danych użytkownika"))
         } ?: Result.failure(Exception("Błąd podczas logowania"))
     } catch (e: Exception) {

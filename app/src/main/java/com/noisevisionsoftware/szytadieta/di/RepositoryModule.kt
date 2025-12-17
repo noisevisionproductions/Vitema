@@ -22,10 +22,8 @@ import com.noisevisionsoftware.szytadieta.domain.repository.dietRepository.Shopp
 import com.noisevisionsoftware.szytadieta.domain.repository.health.WaterRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.meals.EatenMealsRepository
 import com.noisevisionsoftware.szytadieta.domain.repository.meals.EatenMealsRepositoryImpl
-import com.noisevisionsoftware.szytadieta.domain.service.dietService.DietService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.FileMetadataService
 import com.noisevisionsoftware.szytadieta.domain.service.dietService.StorageService
-import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelParserService
 import com.noisevisionsoftware.szytadieta.domain.service.excelParser.ExcelValidationService
 import dagger.Module
 import dagger.Provides
@@ -80,19 +78,13 @@ object RepositoryModule {
     fun provideFileRepository(
         storageService: StorageService,
         fileMetadataService: FileMetadataService,
-        dietService: DietService,
         excelValidationService: ExcelValidationService,
-        excelParserService: ExcelParserService,
-        shoppingListRepository: ShoppingListRepository,
         @ApplicationContext appContext: Context
     ): FileRepository {
         return FileRepository(
             storageService,
             fileMetadataService,
-            dietService,
             excelValidationService,
-            excelParserService,
-            shoppingListRepository,
             appContext
         )
     }

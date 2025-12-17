@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.ui.screens.recipe.components
+package com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.recipe.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween

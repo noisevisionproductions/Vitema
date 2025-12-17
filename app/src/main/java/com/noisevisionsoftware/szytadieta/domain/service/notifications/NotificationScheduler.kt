@@ -59,7 +59,8 @@ class NotificationScheduler @Inject constructor(
     suspend fun scheduleSurveyReminder() {
         val userData = userRepository.getCurrentUserData().getOrNull() ?: return
 
-        if (userData.surveyCompleted) {
+        val surveyCompleted = userData.surveyCompleted
+        if (surveyCompleted) {
             return
         }
 

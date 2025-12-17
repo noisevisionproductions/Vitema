@@ -1,6 +1,7 @@
 package com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -57,6 +58,7 @@ fun MealCard(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val hasPhotos = recipe?.photos?.isNotEmpty() == true
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -154,46 +156,40 @@ fun MealCard(
                 }
 
                 // Right section - Calories and meal status
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                FilledTonalButton(
+                    onClick = onMealToggle,
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = if (isEaten)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
+                            MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                 ) {
-
-                    FilledTonalButton(
-                        onClick = onMealToggle,
-                        colors = ButtonDefaults.filledTonalButtonColors(
-                            containerColor = if (isEaten)
-                                MaterialTheme.colorScheme.primaryContainer
-                            else
-                                MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (isEaten)
-                                    Icons.Default.CheckCircle
-                                else
-                                    Icons.Default.LocalDining,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = if (isEaten)
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = if (isEaten) "Zjedzone" else "Do zjedzenia",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (isEaten)
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Icon(
+                            imageVector = if (isEaten)
+                                Icons.Default.CheckCircle
+                            else
+                                Icons.Default.LocalDining,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = if (isEaten)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = if (isEaten) "Zjedzone" else "Do zjedzenia",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isEaten)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -267,21 +263,32 @@ fun MealCard(
 
             AnimatedVisibility(
                 visible = expanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+                enter = expandVertically(animationSpec = spring()) + fadeIn(),
+                exit = shrinkVertically(animationSpec = spring()) + fadeOut()
             ) {
                 Column(
                     modifier = Modifier.padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     recipe?.let { recipeData ->
+                        if (hasPhotos) {
+                            CompactImagesCarousel(
+                                photos = recipeData.photos,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
                         Text(
-                            text = recipeData.instructions,
+                            text = recipeData.instructions.takeIf { it.isNotEmpty() }
+                                ?: "Brak instrukcji przygotowania posiłku.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
                             onClick = { onRecipeClick(recipe.id) },

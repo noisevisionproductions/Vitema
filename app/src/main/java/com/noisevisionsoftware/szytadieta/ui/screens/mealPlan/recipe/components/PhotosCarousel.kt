@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.ui.screens.recipe.components
+package com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.recipe.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

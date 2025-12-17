@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -37,15 +38,17 @@ import com.noisevisionsoftware.szytadieta.ui.screens.documents.PrivacyPolicyScre
 import com.noisevisionsoftware.szytadieta.ui.screens.documents.RegulationsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.guide.DietGuideScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.AuthViewModel
+import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.EmailVerificationBanner
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.EmailVerifiedScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.ForgotPassword
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.LoginScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.RegisterScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.loginAndRegister.VerificationNeededDialog
 import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.MealPlanScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.UserProfileScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.completeProfile.CompleteProfileScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.profile.profileEdit.ProfileEditScreen
-import com.noisevisionsoftware.szytadieta.ui.screens.recipe.RecipeScreen
+import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.recipe.RecipeScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.settings.SettingsScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.shoppingList.ShoppingListScreen
 import com.noisevisionsoftware.szytadieta.ui.screens.splash.SplashScreen
@@ -62,8 +65,11 @@ fun MainScreen(
     val authState by authViewModel.authState.collectAsState()
     val userSession by authViewModel.userSession.collectAsState(initial = null)
     val profileCompleted by authViewModel.profileCompleted.collectAsState()
+    val isEmailVerified by authViewModel.isEmailVerified.collectAsState()
     var isInitialLoading by remember { mutableStateOf(true) }
     val currentScreen by mainViewModel.currentScreen.collectAsState()
+    val showVerificationDialog by authViewModel.showVerificationDialog.collectAsState()
+    val emailVerificationState by authViewModel.emailVerificationState.collectAsState()
 
     LaunchedEffect(Unit) {
         delay(1500)
@@ -101,6 +107,17 @@ fun MainScreen(
         }
     }
 
+    if (showVerificationDialog && authState is AuthState.Success) {
+        VerificationNeededDialog(
+            email = (authState as AuthState.Success<User>).data.email,
+            emailVerificationState = emailVerificationState,
+            onDismiss = { authViewModel.setShowVerificationDialog(false) },
+            onResendEmail = {
+                authViewModel.resendVerificationEmail()
+            }
+        )
+    }
+
     when {
         isInitialLoading -> SplashScreen()
 
@@ -112,11 +129,23 @@ fun MainScreen(
         }
 
         currentScreen is NavigationDestination.AuthenticatedDestination -> {
-            AuthenticatedContent(
-                currentScreen = currentScreen as NavigationDestination.AuthenticatedDestination,
-                authViewModel = authViewModel,
-                onNavigate = mainViewModel::updateScreen
-            )
+            Column {
+                if (authState is AuthState.Success && !isEmailVerified) {
+                    EmailVerificationBanner(
+                        visible = true,
+                        onVerifyEmailClick = {
+                            authViewModel.resendVerificationEmail()
+                            authViewModel.setShowVerificationDialog(true)
+                        }
+                    )
+                }
+
+                AuthenticatedContent(
+                    currentScreen = currentScreen as NavigationDestination.AuthenticatedDestination,
+                    authViewModel = authViewModel,
+                    onNavigate = mainViewModel::updateScreen
+                )
+            }
         }
     }
 

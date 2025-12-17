@@ -2,7 +2,6 @@ package com.noisevisionsoftware.szytadieta.domain.service.excelParser
 
 import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.DayPlan
 import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.Meal
-import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.MealType
 import com.noisevisionsoftware.szytadieta.domain.model.health.dietPlan.WeekDay
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
@@ -30,11 +29,11 @@ class DietSheetParser @Inject constructor() {
 
             val meals = mutableListOf<Meal>()
 
-            addMealIfExists(meals, row, BREAKFAST_COLUMN, MealType.BREAKFAST)
-            addMealIfExists(meals, row, SECOND_BREAKFAST_COLUMN, MealType.SECOND_BREAKFAST)
-            addMealIfExists(meals, row, LUNCH_COLUMN, MealType.LUNCH)
-            addMealIfExists(meals, row, SNACK_COLUMN, MealType.SNACK)
-            addMealIfExists(meals, row, DINNER_COLUMN, MealType.DINNER)
+            addMealIfExists(row, BREAKFAST_COLUMN)
+            addMealIfExists(row, SECOND_BREAKFAST_COLUMN)
+            addMealIfExists(row, LUNCH_COLUMN)
+            addMealIfExists(row, SNACK_COLUMN)
+            addMealIfExists(row, DINNER_COLUMN)
 
             if (meals.isNotEmpty()) {
                 weeklyPlan.add(DayPlan(weekDay, meals))
@@ -45,10 +44,8 @@ class DietSheetParser @Inject constructor() {
     }
 
     private fun addMealIfExists(
-        meals: MutableList<Meal>,
         row: Row,
-        columnIndex: Int,
-        mealType: MealType
+        columnIndex: Int
     ) {
         val cell = row.getCell(columnIndex, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL)
         val description = cell?.stringCellValue?.trim()

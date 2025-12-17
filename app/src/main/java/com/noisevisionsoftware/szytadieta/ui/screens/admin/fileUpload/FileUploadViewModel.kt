@@ -138,7 +138,7 @@ class FileUploadViewModel @Inject constructor(
     }
 
     private suspend fun checkExistingDiets(): List<String> {
-        val startDate = selectedStartDate.value!!
+        selectedStartDate.value!!
 
         return selectedUsers.value.mapNotNull { userId ->
             val exists = dietRepository.hasAnyDiets()
@@ -177,14 +177,12 @@ class FileUploadViewModel @Inject constructor(
 
                 selectedUsers.value.forEach { userId ->
                     val startDate = selectedStartDate.value!!
-                    val endDate = DateUtils.addDaysToDate(startDate, 6)
+                    DateUtils.addDaysToDate(startDate, 6)
 
                     fileRepository.uploadFile(
                         uri = uri,
                         userId = userId,
-                        fileName = fileName,
-                        startDate = startDate,
-                        endDate = endDate
+                        fileName = fileName
                     ).collect { progress ->
                         when (progress) {
                             is UploadProgress.Progress -> {

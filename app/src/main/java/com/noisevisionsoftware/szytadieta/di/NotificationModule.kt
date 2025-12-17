@@ -2,9 +2,9 @@ package com.noisevisionsoftware.szytadieta.di
 
 import android.app.NotificationManager
 import android.content.Context
-import androidx.work.WorkManager
 import com.noisevisionsoftware.szytadieta.data.localPreferences.SettingsManager
 import com.noisevisionsoftware.szytadieta.domain.navigation.NavigationManager
+import com.noisevisionsoftware.szytadieta.domain.repository.UserRepository
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationHelper
 import com.noisevisionsoftware.szytadieta.domain.service.notifications.NotificationScheduler
 import com.noisevisionsoftware.szytadieta.ui.base.EventBus
@@ -40,9 +40,10 @@ object NotificationModule {
     @Singleton
     fun provideNotificationScheduler(
         @ApplicationContext context: Context,
-        settingsManager: SettingsManager
+        settingsManager: SettingsManager,
+        userRepository: UserRepository
     ): NotificationScheduler {
-        return NotificationScheduler(context, settingsManager)
+        return NotificationScheduler(context, settingsManager, userRepository)
     }
 
     @Provides

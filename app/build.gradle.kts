@@ -34,12 +34,12 @@ android {
         version = Version(
             major = 1,
             minor = 4,
-            patch = 3
+            patch = 6
         )
 
         applicationId = "com.noisevisionsoftware.szytadieta"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = (version as Version).toVersionCode()
         versionName = (version as Version).toVersionName()
 
@@ -189,6 +189,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    runtimeOnly(libs.androidx.foundation)
 
     // Confetti
     implementation(libs.dionsegijn.konfetti.compose)

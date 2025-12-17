@@ -49,6 +49,7 @@
         <receiver
             android:name=".domain.service.notifications.water.WaterReminderReceiver"
             android:exported="false" />
+
         <service
             android:name=".domain.service.notifications.NotificationService"
             android:exported="false">

@@ -76,9 +76,12 @@ class MainActivity : ComponentActivity() {
 
         if (savedInstanceState == null) {
             appVersionViewModel.checkAppVersion()
+/*
             checkNotificationPermission()
+*/
 
             handleEmailVerificationLink(intent)
+            handleNotificationNavigation(intent)
         }
 
         setContent {

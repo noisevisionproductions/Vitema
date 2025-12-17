@@ -1,4 +1,4 @@
-package com.noisevisionsoftware.szytadieta.ui.screens.recipe
+package com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.recipe
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -49,9 +49,10 @@ import com.noisevisionsoftware.szytadieta.ui.common.CustomTopAppBar
 import com.noisevisionsoftware.szytadieta.ui.common.LoadingOverlay
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.szytadieta.ui.navigation.NavigationViewModel
-import com.noisevisionsoftware.szytadieta.ui.screens.recipe.components.InstructionsCard
-import com.noisevisionsoftware.szytadieta.ui.screens.recipe.components.NutritionalValuesCard
-import com.noisevisionsoftware.szytadieta.ui.screens.recipe.components.PhotosCarousel
+import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.components.RecipeImagesCarousel
+import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.recipe.components.InstructionsCard
+import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.recipe.components.NutritionalValuesCard
+import com.noisevisionsoftware.szytadieta.ui.screens.mealPlan.recipe.components.PhotosCarousel
 
 @Composable
 fun RecipeScreen(
@@ -61,7 +62,6 @@ fun RecipeScreen(
     onNavigate: (NavigationDestination) -> Unit
 ) {
     val recipeState by viewModel.recipeState.collectAsState()
-    val photosState by viewModel.recipePhotosState.collectAsState()
 
     DisposableEffect(Unit) {
         onDispose {
@@ -118,7 +118,11 @@ private fun RecipeContent(
 
         if (recipe.photos.isNotEmpty()) {
             item {
-                PhotosCarousel(photos = recipe.photos)
+                RecipeImagesCarousel(
+                    photos = recipe.photos,
+                    modifier = Modifier.fillMaxWidth(),
+                    initialDelayMillis = 300
+                )
             }
         }
 
@@ -137,6 +141,7 @@ private fun RecipeContent(
         }
     }
 }
+/*
 
 @Composable
 private fun IngredientsCard(
@@ -261,4 +266,4 @@ private fun IngredientItem(
             )
         }
     }
-}
+}*/
