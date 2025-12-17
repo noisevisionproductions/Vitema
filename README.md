@@ -1,20 +1,13 @@
 # Nutrilog
 
-System zarządzania dietami dla dietetyków i pacjentów
-
-## Opis
-
 Nutrilog to kompleksowe rozwiązanie dla specjalistów żywienia i ich pacjentów. Aplikacja umożliwia tworzenie spersonalizowanych planów żywieniowych, monitorowanie postępów i zarządzanie dietami.
 
 ## Funkcje
 
 - ✅ Tworzenie i zarządzanie planami diet dla pacjentów
-- ✅ Import diet z plików Excel
 - ✅ Automatyczna kategoryzacja produktów spożywczych
-- ✅ Generowanie list zakupów
+- ✅ Generowanie list zakupów i wyświetlanie ich w aplikacji mobilnej
 - ✅ Śledzenie wartości odżywczych posiłków
-- ✅ Panel administracyjny dla dietetyków
-- ✅ Dostęp mobilny dla pacjentów
 
 ## Technologie
 
@@ -43,7 +36,7 @@ Nutrilog to kompleksowe rozwiązanie dla specjalistów żywienia i ich pacjentó
 
 1. Klonowanie repozytorium:
 ```bash
-git clone https://github.com/TWOJA-NAZWA-UŻYTKOWNIKA/Nutrilog.git
+git clone https://github.com/noisemonsterproductions/nutrilog
 cd Nutrilog
 ```
 
@@ -58,7 +51,3 @@ cd frontend
 npm install
 npm start
 ```
-
-## Licencja
-
-[MIT](LICENSE)
