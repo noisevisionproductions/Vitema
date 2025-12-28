@@ -6,11 +6,11 @@ The app is available on [Google Play](https://play.google.com/store/apps/details
 
 ## Key Features
 
-* **⚡ Real-time Synchronization:** Instant updates of diet plans assigned by the nutritionist (powered by Firebase Firestore).
-* **🛒 Smart Shopping List:** Automatic generation of shopping lists based on the active meal plan.
-* **📊 Progress Tracking:** Monitoring of body weight, measurements, and water intake with visual charts (Vico/MPAndroidChart).
-* **🔔 Notification System:** Reminders for meals and hydration (WorkManager + FCM).
-* **📄 Document Handling:** Native support for reading and processing diet-related documents directly on the device (Apache POI).
+* **🛒 Smart Shopping Lists:** Automatically generates a comprehensive shopping list based on the ingredients required for the assigned diet plan, grouped for convenience.
+* **⚡ Real-time Synchronization:** Instant updates of diet plans and recommendations assigned by the nutritionist (powered by Firebase Firestore).
+* **📊 Progress Tracking:** Monitoring of body weight, measurements, and water intake with interactive visual charts (Vico/MPAndroidChart).
+* **🔔 Smart Notifications:** Automated reminders for meals, hydration, and periodic surveys (WorkManager + FCM).
+* **🛡️ Enhanced Security:** Implementation of Firebase App Check (Play Integrity) to ensure API request authenticity and data safety.
 
 ## Architecture & Tech Stack
 
@@ -27,30 +27,19 @@ The project adheres to **Modern Android Development (MAD)** standards, focusing 
 ### Libraries & Tools
 
 * **Backend & Cloud (Firebase):**
-    * Authentication
+    * Authentication (Email & Link verification)
     * Firestore (NoSQL Database)
     * Storage (Media & Documents)
+    * App Check (Security & Anti-abuse)
     * Crashlytics & Analytics
     * Cloud Functions
 * **Networking:** Retrofit + OkHttp
 * **Local Persistence:** DataStore Preferences
 * **Visualization:** MPAndroidChart / Vico
 * **Utilities:**
-    * Apache POI (Excel/Office document support)
+    * Compose Markdown (Document rendering)
     * Coil (Image loading)
-    * Konfetti (UI animations)
-
-## Project Structure
-
-The codebase is organized by layers, following Clean Architecture principles:
-
-* `data/` - Repository implementations, Data Sources (API, Firebase, Cache), and Mappers.
-* `domain/` - Pure business logic, Domain Models, Repository Interfaces, and Use Cases.
-* `ui/` - Presentation layer built with Jetpack Compose:
-    * `screens/` - Feature-based screen composables.
-    * `navigation/` - Navigation graph and route definitions.
-    * `theme/` - Styling, typography, and color palette.
-* `di/` - Hilt modules for Dependency Injection.
+    * Konfetti (UI gamification & animations)
 
 ## Prerequisites & Setup
 
@@ -63,12 +52,12 @@ The codebase is organized by layers, following Clean Architecture principles:
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/noisevisionproductions/szyta-dieta-android](https://github.com/noisevisionproductions/szyta-dieta-android)
+    git clone [https://github.com/noisevisionproductions/szytadieta](https://github.com/noisevisionproductions/szytadieta)
     ```
 
 2.  **Environment Configuration:**
     The project requires a `key.properties` file in the root directory and `google-services.json` in the `app/` folder.
-    *(Please contact the repository owner to request access to the testing environment credentials).*
+    * *Note:* To run on a physical device, ensure your SHA-1 fingerprint is added to the Firebase Console and Google Cloud Console.
 
 3.  **Build the project:**
     ```bash

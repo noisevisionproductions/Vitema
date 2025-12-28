@@ -122,6 +122,8 @@ converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref
 core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtx" }
 dionsegijn-konfetti-compose = { module = "nl.dionsegijn:konfetti-compose", version.ref = "konfettiComposeVersion" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-appcheck-debug = { module = "com.google.firebase:firebase-appcheck-debug" }
+firebase-appcheck-playintegrity = { module = "com.google.firebase:firebase-appcheck-playintegrity" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version = "23.1.0" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }

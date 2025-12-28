@@ -175,6 +175,10 @@ dependencies {
     // Documents reader
     implementation(libs.compose.markdown)
 
+    // App Check
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.firebase.appcheck.debug)
+
     implementation(libs.androidx.material)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
