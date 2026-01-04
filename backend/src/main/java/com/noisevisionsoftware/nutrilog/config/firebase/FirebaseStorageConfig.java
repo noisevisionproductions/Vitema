@@ -8,8 +8,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 @Configuration
 @Slf4j
@@ -24,8 +28,9 @@ public class FirebaseStorageConfig {
     @Bean
     public Storage storage() throws IOException {
         try {
-            GoogleCredentials credentials = GoogleCredentials
-                    .fromStream(new ClassPathResource(serviceAccountPath).getInputStream());
+            InputStream serviceAccount = getInputStream();
+
+            GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
 
             return StorageOptions.newBuilder()
                     .setCredentials(credentials)
@@ -36,6 +41,23 @@ public class FirebaseStorageConfig {
             log.error("Failed to initialize Firebase Storage", e);
             throw e;
         }
+    }
+
+    private InputStream getInputStream() throws IOException {
+        InputStream serviceAccount;
+        Resource resource = new ClassPathResource(serviceAccountPath);
+
+        if (resource.exists()) {
+            serviceAccount = resource.getInputStream();
+        } else {
+            File file = new File(serviceAccountPath);
+            if (file.exists()) {
+                serviceAccount = new FileInputStream(file);
+            } else {
+                throw new IOException("Firebase config file not found at: " + serviceAccountPath);
+            }
+        }
+        return serviceAccount;
     }
 
     private String extractProjectId(String bucketName) {
