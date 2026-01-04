@@ -28,7 +28,21 @@ public class FirebaseStorageConfig {
     @Bean
     public Storage storage() throws IOException {
         try {
-            InputStream serviceAccount = getInputStream();
+            InputStream serviceAccount;
+            Resource resource = new ClassPathResource(serviceAccountPath);
+
+            if (resource.exists()) {
+                log.info("Loading Firebase Storage credentials from classpath: {}", serviceAccountPath);
+                serviceAccount = resource.getInputStream();
+            } else {
+                File file = new File(serviceAccountPath);
+                if (file.exists()) {
+                    log.info("Loading Firebase Storage credentials from filesystem: {}", file.getAbsolutePath());
+                    serviceAccount = new FileInputStream(file);
+                } else {
+                    throw new IOException("Firebase config file not found at: " + serviceAccountPath);
+                }
+            }
 
             GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
 
@@ -43,24 +57,8 @@ public class FirebaseStorageConfig {
         }
     }
 
-    private InputStream getInputStream() throws IOException {
-        InputStream serviceAccount;
-        Resource resource = new ClassPathResource(serviceAccountPath);
-
-        if (resource.exists()) {
-            serviceAccount = resource.getInputStream();
-        } else {
-            File file = new File(serviceAccountPath);
-            if (file.exists()) {
-                serviceAccount = new FileInputStream(file);
-            } else {
-                throw new IOException("Firebase config file not found at: " + serviceAccountPath);
-            }
-        }
-        return serviceAccount;
-    }
-
     private String extractProjectId(String bucketName) {
+        if (bucketName == null) return "unknown-project";
         return bucketName.replace(".appspot.com", "");
     }
 }

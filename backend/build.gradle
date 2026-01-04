@@ -41,11 +41,12 @@ dependencies {
     // PostgreSQL
     implementation 'org.postgresql:postgresql:42.7.7'
 
-    // Flyway z obsługą PostgreSQL 16
+    // Flyway
     implementation 'org.flywaydb:flyway-core:11.4.0'
     implementation 'org.flywaydb:flyway-database-postgresql:11.4.0'
 
     implementation 'com.google.firebase:firebase-admin:9.4.3'
+    implementation 'com.google.cloud:google-cloud-storage:2.30.1'
 
     // Cache
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
