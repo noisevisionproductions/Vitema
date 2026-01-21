@@ -1,7 +1,7 @@
 const Logo = ({asLink = true, variant = 'full'}) => {
     const logoImage = (
         <img
-            src="/images/logo-n.png"
+            src="/images/logo-vitema_512x512_nobg.png"
             alt="Vitema Logo"
             className="h-8 w-auto"
         />

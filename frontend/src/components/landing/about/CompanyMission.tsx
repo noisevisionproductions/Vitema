@@ -17,7 +17,7 @@ const CompanyMission = () => {
                     <div className="flex flex-col items-center mb-8">
                         <div className="p-6">
                             <img
-                                src="/images/logo-n.png"
+                                src="/images/logo-vitema_512x512_nobg.png"
                                 alt={t('mission.logoAlt')}
                                 className="h-28 w-auto mx-auto"
                             />
