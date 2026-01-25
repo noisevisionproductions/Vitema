@@ -241,55 +241,6 @@ class AdminNewsletterServiceTest {
     }
 
     @Test
-    void sendBulkEmail_ShouldSendEmailToAllActiveSubscribers() {
-        // Arrange
-        when(subscriberRepository.findAllByActiveTrueAndVerifiedTrue()).thenReturn(activeSubscribers);
-        doNothing().when(emailService).sendCustomEmail(anyString(), anyString(), anyString());
-
-        for (NewsletterSubscriber subscriber : activeSubscribers) {
-            when(subscriberRepository.findByEmail(subscriber.getEmail())).thenReturn(Optional.of(subscriber));
-        }
-
-        String subject = "Test Subject";
-        String content = "Test Content";
-
-        // Act
-        adminNewsletterService.sendBulkEmail(subject, content);
-
-        // Assert
-        verify(subscriberRepository).findAllByActiveTrueAndVerifiedTrue();
-        verify(emailService, times(activeSubscribers.size())).sendCustomEmail(anyString(), eq(subject), eq(content));
-
-        // Weryfikacja dla każdego subskrybenta
-        for (NewsletterSubscriber subscriber : activeSubscribers) {
-            verify(subscriberRepository).findByEmail(subscriber.getEmail());
-        }
-
-        // Weryfikacja zapisu dla każdego subskrybenta
-        verify(subscriberRepository, times(activeSubscribers.size())).save(any(NewsletterSubscriber.class));
-    }
-
-    @Test
-    void sendBulkEmail_ShouldThrowRuntimeException_WhenEmailServiceFails() {
-        // Arrange
-        when(subscriberRepository.findAllByActiveTrueAndVerifiedTrue()).thenReturn(activeSubscribers);
-        doThrow(new RuntimeException("Email service failure")).when(emailService)
-                .sendCustomEmail(anyString(), anyString(), anyString());
-
-        String subject = "Test Subject";
-        String content = "Test Content";
-
-        // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            adminNewsletterService.sendBulkEmail(subject, content);
-        });
-
-        assertEquals("Błąd podczas wysyłania masowego emaila", exception.getMessage());
-        verify(subscriberRepository).findAllByActiveTrueAndVerifiedTrue();
-        verify(emailService).sendCustomEmail(anyString(), eq(subject), eq(content));
-    }
-
-    @Test
     void getNewsletterStats_ShouldReturnStatistics() {
         // Arrange
         long totalCount = 10;

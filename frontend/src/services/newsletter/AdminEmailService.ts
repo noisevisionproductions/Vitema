@@ -1,4 +1,4 @@
-import {SendgridEmailParams, SingleEmailRequest, TargetedEmailParams} from "../../types/email";
+import {EmailParams, SingleEmailRequest, TargetedEmailParams} from "../../types/email";
 import api from "../../config/axios";
 
 /**
@@ -16,7 +16,7 @@ export const AdminEmailService = {
     /**
      * Wysyła masowy email do wszystkich subskrybentów newslettera
      */
-    sendBulkEmail: async (params: SendgridEmailParams) => {
+    sendBulkEmail: async (params: EmailParams) => {
         return api.post('/admin/email/bulk', params);
     },
 
@@ -30,7 +30,7 @@ export const AdminEmailService = {
     /**
      * Wysyła pojedynczy email do konkretnego odbiorcy
      */
-    sendEmail: async (email: string, params: SendgridEmailParams) => {
+    sendEmail: async (email: string, params: EmailParams) => {
         return api.post(`/admin/email/send/${email}`, params);
     },
 
@@ -44,7 +44,7 @@ export const AdminEmailService = {
     /**
      * Generuje podgląd emaila z wybranym szablonem systemowym
      */
-    previewTemplate: async (params: SendgridEmailParams) => {
+    previewEmail: async (params: EmailParams) => {
         return api.post('/admin/email/preview', params);
     }
 };

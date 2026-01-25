@@ -38,12 +38,12 @@ export interface TargetedEmailParams {
     newStatus?: string;
 }
 
-export interface SendgridEmailParams {
+export interface EmailParams {
     subject: string;
     content: string;
-    useTemplate?: boolean;
-    templateType?: EmailTemplateType;
-    recipients?: string[];
+    useTemplate: boolean;
+    templateType?: string;
+    savedTemplateId?: string;
     categories?: string[];
 }
 
