@@ -27,7 +27,7 @@ public class EmailService {
     @Value("${app.frontend-url}")
     private String frontendUrl;
 
-    @Value("${spring.mail.username}")
+    @Value("${app.email.from:kontakt@vitema.pl}")
     private String fromEmail;
 
     @Async

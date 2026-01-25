@@ -56,12 +56,10 @@ api.interceptors.response.use(
         });
 
         if (error.response?.status === 429) {
-            toast.error('Za dużo żądań. Spróbuj ponownie za chwilę.');
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(api.request(error.config));
-                }, 2000);
-            });
+            const msg = error.response?.data?.message || 'Zbyt wiele prób. Spróbuj ponownie później.';
+            toast.error(msg);
+
+            return Promise.reject(error);
         } else if (error.response?.status === 401) {
             toast.error('Sesja wygasła. Zaloguj się ponownie.');
         } else if (error.response?.status === 403) {
@@ -69,7 +67,8 @@ api.interceptors.response.use(
         } else if (error.response?.status >= 500) {
             toast.error('Błąd serwera. Spróbuj ponownie później.');
         } else {
-            toast.error(error.response?.data?.message || `Wystąpił błąd: ${error.message}`);
+            const msg = error.response?.data?.message || `Wystąpił błąd: ${error.message}`;
+            toast.error(msg);
         }
 
         return Promise.reject(error);
