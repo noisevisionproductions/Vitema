@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +28,9 @@ public class EmailService {
     @Value("${app.frontend-url}")
     private String frontendUrl;
 
+    @Value("${app.email.sender-name:Vitema}")
+    private String senderName;
+
     @Value("${app.email.from:kontakt@vitema.pl}")
     private String fromEmail;
 
@@ -36,27 +40,23 @@ public class EmailService {
             String verificationUrl = frontendUrl + "/verify-email?token=" + subscriber.getVerificationToken();
             String privacyPolicyUrl = frontendUrl + "/privacy-policy";
 
-            // Przygotuj zmienne dla szablonu treści
             Map<String, Object> contentVars = new HashMap<>();
             contentVars.put("verificationUrl", verificationUrl);
             contentVars.put("subscriber", subscriber);
 
-            // Renderuj treść emaila
             String emailContent = templateEngine.process("email/content/verification-email-content", new Context(null, contentVars));
 
-            // Przygotuj zmienne dla szablonu bazowego
             Map<String, Object> baseVars = new HashMap<>();
             baseVars.put("emailContent", emailContent);
             baseVars.put("privacyPolicyUrl", privacyPolicyUrl);
             baseVars.put("showUnsubscribe", false);
 
-            // Renderuj pełny email z szablonu bazowego
             String htmlContent = templateEngine.process("email/layouts/base-layout", new Context(null, baseVars));
 
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail);
+            helper.setFrom(fromEmail, senderName);
             helper.setTo(subscriber.getEmail());
             helper.setSubject("Potwierdź zapis do newslettera Vitema");
             helper.setText(htmlContent, true);
@@ -74,62 +74,52 @@ public class EmailService {
             String unsubscribeUrl = frontendUrl + "/unsubscribe?email=" + subscriber.getEmail();
             String privacyPolicyUrl = frontendUrl + "/privacy-policy";
 
-            // Przygotuj zmienne dla szablonu treści
             Map<String, Object> contentVars = new HashMap<>();
             contentVars.put("subscriber", subscriber);
 
-            // Renderuj treść emaila
             String emailContent = templateEngine.process("email/content/welcome-email-content", new Context(null, contentVars));
 
-            // Przygotuj zmienne dla szablonu bazowego
             Map<String, Object> baseVars = new HashMap<>();
             baseVars.put("emailContent", emailContent);
             baseVars.put("unsubscribeUrl", unsubscribeUrl);
             baseVars.put("privacyPolicyUrl", privacyPolicyUrl);
             baseVars.put("showUnsubscribe", true);
 
-            // Renderuj pełny email z szablonu bazowego
             String htmlContent = templateEngine.process("email/layouts/base-layout", new Context(null, baseVars));
 
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail);
+            helper.setFrom(fromEmail, senderName);
             helper.setTo(subscriber.getEmail());
             helper.setSubject("Witamy w newsletterze Vitema!");
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
-        } catch (MessagingException e) {
+        } catch (MessagingException | UnsupportedEncodingException e) {
             log.error("Błąd podczas wysyłania emaila powitalnego", e);
             throw new RuntimeException("Błąd podczas wysyłania emaila powitalnego", e);
         }
     }
 
-    /*
-     * Wysyła niestandardowy email
-     * */
     @Async
     public void sendCustomEmail(String to, String subject, String htmlContent) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail);
+            helper.setFrom(fromEmail, senderName);
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
-        } catch (MessagingException e) {
+        } catch (MessagingException | UnsupportedEncodingException e) {
             log.error("Błąd podczas wysyłania niestandardowego emaila", e);
             throw new RuntimeException("Błąd podczas wysyłania emaila", e);
         }
     }
 
-    /*
-     * Wysyła niestandardowy email z szablonu
-     * */
     @Async
     public void sendTemplatedEmail(String to, String subject, String templateName, Map<String, Object> variables) {
         try {
@@ -138,29 +128,26 @@ public class EmailService {
 
             boolean showUnsubscribe = Boolean.TRUE.equals(variables.getOrDefault("showUnsubscribe", true));
 
-            // Renderuj treść z oryginalnego szablonu
             String emailContent = templateEngine.process("email/content/" + templateName + "-content", new Context(null, variables));
 
-            // Przygotuj dane dla szablonu bazowego
             Map<String, Object> baseVars = new HashMap<>();
             baseVars.put("emailContent", emailContent);
             baseVars.put("unsubscribeUrl", unsubscribeUrl);
             baseVars.put("privacyPolicyUrl", privacyPolicyUrl);
             baseVars.put("showUnsubscribe", showUnsubscribe);
 
-            // Renderuj pełny email z szablonu bazowego
             String htmlContent = templateEngine.process("email/layouts/base-layout", new Context(null, baseVars));
 
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail);
+            helper.setFrom(fromEmail, senderName);
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
-        } catch (MessagingException e) {
+        } catch (MessagingException | UnsupportedEncodingException e) {
             log.error("Błąd podczas wysyłania templatedowego emaila", e);
             throw new RuntimeException("Błąd podczas wysyłania emaila z szablonu", e);
         }
