@@ -4,8 +4,8 @@ server:
 spring:
   # PostgreSQL Development Configuration
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:vitema}
-    username: ${POSTGRES_USER:postgres}
+    url: jdbc:postgresql://localhost:5432/vitema
+    username: postgres
     password: ${POSTGRES_PASSWORD_DEV}
     driver-class-name: org.postgresql.Driver
     hikari:

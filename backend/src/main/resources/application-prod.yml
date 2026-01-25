@@ -22,9 +22,9 @@ spring:
     show-sql: false
 
   mail:
-    host: ${SMTP_HOST:serwer2561711.home.pl}
+    host: ${SMTP_HOST:smtp-relay.brevo.com}
     port: ${SMTP_PORT:587}
-    username: ${SMTP_USERNAME:kontakt@vitema.pl}
+    username: ${SMTP_USERNAME}
     password: ${SMTP_PASSWORD}
     properties:
       mail:
@@ -32,6 +32,9 @@ spring:
           auth: true
           starttls:
             enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 firebase:
   storage:
@@ -45,6 +48,10 @@ cors:
 app:
   frontend-url: https://vitema.pl
   admin-email: ${ADMIN_EMAIL}
+
+  email:
+    from: ${APP_EMAIL_FROM:kontakt@vitema.pl}
+    sender-name: ${APP_EMAIL_SENDER_NAME:Vitema Newsletter}
 
 logging:
   level:
