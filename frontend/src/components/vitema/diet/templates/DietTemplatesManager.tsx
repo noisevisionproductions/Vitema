@@ -45,19 +45,13 @@ const DietTemplatesManager: React.FC = () => {
 
     const handleUseTemplate = async (templateId: string) => {
         try {
-            // Najpierw zwiększ licznik użyć
             await incrementUsage(templateId);
 
-            // Sprawdź czy endpoint istnieje
             const currentPath = window.location.pathname;
             if (currentPath.includes('/diet/templates')) {
-                // Jeśli jesteśmy w szablonach, przekieruj do kreatora
                 navigate(`/diet/manual/create?templateId=${templateId}`);
             } else {
-                // Alternatywnie, pokaż toast z informacją
                 toast.success('Szablon został zaznaczony do użycia');
-                // Tutaj możesz dodać logikę do przekazania szablonu do rodzica
-                // onTemplateSelected?.(templateId);
             }
 
         } catch (error) {

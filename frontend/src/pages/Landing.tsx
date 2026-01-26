@@ -8,6 +8,7 @@ import Contact from "../components/landing/contact/Contact";
 import CTA from "../components/landing/cta/CTA";
 import MarketStats from "../components/landing/marketStats/MarketStats";
 import DownloadAppSection from "../components/landing/appStore/DownloadAppSection";
+import {Helmet} from "react-helmet-async";
 
 const Landing = () => {
     const location = useLocation();
@@ -38,6 +39,19 @@ const Landing = () => {
 
     return (
         <>
+            <Helmet>
+                <title>Vitema - Aplikacja dla dietetyków i trenerów personalnych</title>
+                <meta name="description"
+                      content="Vitema to kompleksowe narzędzie do układania diet, zarządzania pacjentami i automatyzacji pracy dietetyka. Sprawdź nasze funkcje!"/>
+                <meta name="keywords"
+                      content="Vitema, program dla dietetyka, układanie diet, aplikacja dietetyczna, trener personalny"/>
+
+                <meta property="og:title" content="Vitema - Twój asystent żywienia"/>
+                <meta property="og:description" content="Przyspiesz swoją pracę z pacjentami dzięki Vitema."/>
+                <meta property="og:type" content="website"/>
+                <meta property="og:url" content="https://vitema.pl/"/>
+            </Helmet>
+
             <Hero/>
             <MarketStats/>
             <Features/>

@@ -1,9 +1,10 @@
 import React, {useState} from 'react';
-import {Search, Sparkles, Plus, Clock, Calendar} from 'lucide-react';
+import {Search, Sparkles, Plus, Clock, Calendar, Trash2} from 'lucide-react';
 import {DietTemplate} from "../../../../../../../types/DietTemplate";
 import {useDietTemplates} from "../../../../../../../hooks/diet/templates/useDietTemplates";
 import LoadingSpinner from '../../../../../../shared/common/LoadingSpinner';
 import {User} from '../../../../../../../types/user';
+import {toast} from "../../../../../../../utils/toast";
 
 interface TemplateSelectionStepProps {
     onTemplateSelect: (template: DietTemplate | null) => void;
@@ -18,9 +19,10 @@ const TemplateSelectionStep: React.FC<TemplateSelectionStepProps> = ({
                                                                          selectedUser,
                                                                          isLoading
                                                                      }) => {
-    const {templates, loading, searchTemplates} = useDietTemplates();
+    const {templates, loading, searchTemplates, deleteTemplate} = useDietTemplates();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTemplate, setSelectedTemplate] = useState<DietTemplate | null>(null);
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
@@ -29,6 +31,28 @@ const TemplateSelectionStep: React.FC<TemplateSelectionStepProps> = ({
 
     const handleTemplateClick = (template: DietTemplate) => {
         setSelectedTemplate(template);
+    };
+
+    const handleDeleteTemplate = async (e: React.MouseEvent, template: DietTemplate) => {
+        e.stopPropagation();
+
+        if (window.confirm(`Czy na pewno chcesz usunąć szablon "${template.name}"? Tej operacji nie można cofnąć.`)) {
+            try {
+                setIsDeleting(template.id);
+
+                if (selectedTemplate?.id === template.id) {
+                    setSelectedTemplate(null);
+                }
+
+                await deleteTemplate(template.id);
+                toast.success('Szablon został usunięty');
+            } catch (error) {
+                console.error('Failed to delete template:', error);
+                toast.error('Nie udało się usunąć szablonu');
+            } finally {
+                setIsDeleting(null);
+            }
+        }
     };
 
     const handleContinue = () => {
@@ -70,7 +94,8 @@ const TemplateSelectionStep: React.FC<TemplateSelectionStepProps> = ({
                 </span>
                         </div>
                         <div>
-                            <p className="font-medium text-gray-900">Dieta dla: {selectedUser.nickname || selectedUser.nickname || selectedUser.email}</p>
+                            <p className="font-medium text-gray-900">Dieta
+                                dla: {selectedUser.nickname || selectedUser.nickname || selectedUser.email}</p>
                             <p className="text-sm text-gray-600">{selectedUser.email}</p>
                         </div>
                     </div>
@@ -168,14 +193,15 @@ const TemplateSelectionStep: React.FC<TemplateSelectionStepProps> = ({
                                 <div
                                     key={template.id}
                                     onClick={() => handleTemplateClick(template)}
-                                    className={`border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                                    className={`relative border-2 rounded-xl p-4 cursor-pointer transition-all duration-200 hover:shadow-md group ${
                                         selectedTemplate?.id === template.id
                                             ? 'border-primary bg-primary-light/10'
                                             : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                                 >
                                     <div className="flex items-start justify-between mb-3">
-                                        <div className="flex-1 min-w-0">
+                                        <div
+                                            className="flex-1 min-w-0 pr-8">
                                             <h4 className="font-semibold text-gray-900 truncate mb-1">
                                                 {template.name}
                                             </h4>
@@ -184,12 +210,35 @@ const TemplateSelectionStep: React.FC<TemplateSelectionStepProps> = ({
                                                 {template.categoryLabel}
                                             </span>
                                         </div>
-                                        {selectedTemplate?.id === template.id && (
-                                            <div
-                                                className="w-6 h-6 bg-primary rounded-full flex items-center justify-center ml-2">
-                                                <div className="w-2 h-2 bg-white rounded-full"></div>
-                                            </div>
-                                        )}
+
+                                        {/* 4. Sekcja przycisków (Usuwanie + Wybór) */}
+                                        <div className="flex items-start gap-2 absolute top-4 right-4">
+                                            <button
+                                                onClick={(e) => handleDeleteTemplate(e, template)}
+                                                disabled={isDeleting === template.id}
+                                                className={`p-1.5 rounded-full transition-all duration-200 
+                                                    ${isDeleting === template.id
+                                                    ? 'bg-red-100 text-red-500'
+                                                    : 'text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100'
+                                                }
+                                                `}
+                                                title="Usuń szablon"
+                                            >
+                                                {isDeleting === template.id ? (
+                                                    <LoadingSpinner size="sm"/>
+                                                ) : (
+                                                    <Trash2 size={18}/>
+                                                )}
+                                            </button>
+
+                                            {/* Wskaźnik wyboru */}
+                                            {selectedTemplate?.id === template.id && (
+                                                <div
+                                                    className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {template.description && (

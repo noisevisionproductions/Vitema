@@ -5,6 +5,7 @@ import {Toaster} from 'sonner'
 import App from './App'
 import './index.css'
 import './i18n'
+import {HelmetProvider} from "react-helmet-async";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -20,9 +21,11 @@ if (!rootElement) throw new Error('Root element not found')
 
 createRoot(rootElement).render(
     <StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <App/>
-            <Toaster position="top-right" richColors/>
-        </QueryClientProvider>
+        <HelmetProvider>
+            <QueryClientProvider client={queryClient}>
+                <App/>
+                <Toaster position="top-right" richColors/>
+            </QueryClientProvider>
+        </HelmetProvider>
     </StrictMode>,
 )

@@ -5,7 +5,7 @@ import {ParsedProduct} from "../../../../../../types/product";
 import {toast} from "../../../../../../utils/toast";
 import SectionHeader from "../../../../../shared/common/SectionHeader";
 import {FloatingActionButton, FloatingActionButtonGroup} from "../../../../../shared/common/FloatingActionButton";
-import {ArrowLeft, ArrowRight, BookAudio} from "lucide-react";
+import {ArrowLeft, ArrowRight, Save} from "lucide-react";
 import {Timestamp} from "firebase/firestore";
 import {DEFAULT_DIET_CONFIG} from "../../../../../../types/dietDefaults";
 import MealPlanningStep from "./steps/MealPlanningStep";
@@ -309,8 +309,13 @@ const ManualDietCreator: React.FC<ManualDietCreatorProps> = ({
 
     const handleContinueWithoutTemplate = useCallback(() => {
         setSelectedTemplate(null);
+
+        if (dietData.days.length === 0) {
+            initializeDays();
+        }
+
         setCurrentStep('planning');
-    }, []);
+    }, [dietData.days.length, initializeDays]);
 
     const handleSave = useCallback(async () => {
         if (isProcessing) return;
@@ -469,17 +474,6 @@ const ManualDietCreator: React.FC<ManualDietCreatorProps> = ({
                             onAddIngredient={addIngredientToMeal}
                             onRemoveIngredient={removeIngredientFromMeal}
                         />
-
-                        {/* Przycisk zapisywania szablonu */}
-                        <div className="mt-6 flex justify-center">
-                            <button
-                                onClick={handleSaveAsTemplate}
-                                className="flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary-dark transition-colors"
-                            >
-                                <BookAudio className="h-4 w-4"/>
-                                Zapisz jako szablon
-                            </button>
-                        </div>
                     </div>
                 )}
 
@@ -509,6 +503,16 @@ const ManualDietCreator: React.FC<ManualDietCreatorProps> = ({
                                 onClick={handlePrevious}
                                 variant="secondary"
                                 icon={<ArrowLeft className="h-5 w-5"/>}
+                            />
+                        )}
+
+                        {currentStep === 'planning' && (
+                            <FloatingActionButton
+                                label="Zapisz jako szablon"
+                                onClick={handleSaveAsTemplate}
+                                variant="secondary"
+                                icon={<Save className="h-5 w-5"/>}
+                                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
                             />
                         )}
 

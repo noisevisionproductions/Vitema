@@ -9,6 +9,7 @@ interface FloatingActionButtonProps {
     isLoading?: boolean;
     loadingLabel?: string;
     loadingIcon?: ReactNode;
+    className?: string;
 }
 
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
@@ -19,7 +20,8 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
                                                                               disabled = false,
                                                                               isLoading = false,
                                                                               loadingLabel,
-                                                                              loadingIcon
+                                                                              loadingIcon,
+                                                                              className = ""
                                                                           }) => {
     const baseClasses = "px-5 py-3 shadow-lg rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2";
     const variantClasses = {
@@ -31,7 +33,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         <button
             onClick={onClick}
             disabled={disabled || isLoading}
-            className={`${baseClasses} ${variantClasses[variant]}`}
+            className={`${baseClasses} ${variantClasses[variant]} ${className}`}
         >
             {isLoading ? (
                 <>
