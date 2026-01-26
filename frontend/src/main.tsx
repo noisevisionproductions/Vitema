@@ -6,6 +6,9 @@ import App from './App'
 import './index.css'
 import './i18n'
 import {HelmetProvider} from "react-helmet-async";
+import ReactGA from "react-ga4";
+
+ReactGA.initialize("G-Q4SWCQ49QM");
 
 const queryClient = new QueryClient({
     defaultOptions: {

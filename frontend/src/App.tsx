@@ -22,6 +22,7 @@ import {RouteRestorationProvider} from "./contexts/RouteRestorationContext";
 import {ApplicationProvider} from "./contexts/ApplicationContext";
 import {lazy, Suspense, useEffect} from "react";
 import LoadingSpinner from "./components/shared/common/LoadingSpinner";
+import ReactGA from "react-ga4";
 
 const DietitianPanel = lazy(() => import('./pages/panel/DietitianPanel'));
 const AdminPanel = lazy(() => import('./pages/panel/AdminPanel'));
@@ -35,6 +36,16 @@ const AuthRedirectHandler = () => {
             navigate('/auth/callback', {replace: true});
         }
     }, [location, navigate]);
+
+    return null;
+};
+
+const AnalyticsHandler = () => {
+    const location = useLocation();
+
+    useEffect(() => {
+        ReactGA.send({hitType: "pageview", page: location.pathname + location.search});
+    }, [location]);
 
     return null;
 };
@@ -55,6 +66,7 @@ function App() {
         >
             <ScrollToTop/>
             <AuthRedirectHandler/>
+            <AnalyticsHandler/>
 
             <ToastProvider>
                 <ApplicationProvider>
