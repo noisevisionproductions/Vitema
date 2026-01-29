@@ -53,6 +53,7 @@ const Landing = () => {
                       content="Koniec z PDF-ami. Daj podopiecznym dietę i listę zakupów w aplikacji na telefon. Sprawdź Vitemę!"/>
                 <meta property="og:type" content="website"/>
                 <meta property="og:url" content="https://vitema.pl/"/>
+                <link rel="canonical" href="https://vitema.pl/"/>
             </Helmet>
 
             <Hero/>

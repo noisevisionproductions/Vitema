@@ -1,4 +1,5 @@
 import React from 'react';
+import {Helmet} from 'react-helmet-async';
 
 interface PrivacyPolicySection {
     id: string;
@@ -566,6 +567,12 @@ const PrivacyPolicy: React.FC = () => {
 
     return (
         <div className="pt-20 pb-16">
+            <Helmet>
+                <title>Polityka Prywatności - Vitema</title>
+                <meta name="description"
+                      content="Dowiedz się, jak Vitema chroni Twoje dane osobowe. Polityka prywatności aplikacji dla dietetyków i ich pacjentów."/>
+                <link rel="canonical" href="https://vitema.pl/privacy-policy"/>
+            </Helmet>
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                 <h1 className="text-3xl font-bold text-text-primary mt-8 mb-6">Polityka Prywatności</h1>
 

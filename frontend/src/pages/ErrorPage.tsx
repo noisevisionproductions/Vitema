@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
+import {Helmet} from 'react-helmet-async';
 
 const ErrorPage: React.FC = () => {
     const [showInstructions, setShowInstructions] = useState(false);
@@ -38,6 +39,10 @@ const ErrorPage: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+            <Helmet>
+                <title>Błąd - Vitema</title>
+                <meta name="robots" content="noindex, nofollow"/>
+            </Helmet>
             <div className="max-w-lg w-full space-y-8 bg-white rounded-lg shadow p-8">
                 <div className="text-center">
                     <h2 className="text-2xl font-bold text-gray-900 mb-4">

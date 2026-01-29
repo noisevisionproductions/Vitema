@@ -1,10 +1,15 @@
 import {useNavigate} from "react-router-dom";
+import {Helmet} from 'react-helmet-async';
 
 const Unauthorized = () => {
     const navigate = useNavigate();
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <Helmet>
+                <title>Błąd - Vitema</title>
+                <meta name="robots" content="noindex, nofollow"/>
+            </Helmet>
             <div className="max-w-md w-full text-center space-y-8 p-8 bg-white rounded-lg shadow">
                 <h1 className="text-4xl font-bold text-red-600">403</h1>
                 <h2 className="text-2xl font-semibold text-gray-900">Brak dostępu</h2>

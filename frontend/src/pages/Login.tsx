@@ -3,12 +3,19 @@ import {Link} from 'react-router-dom';
 import {ArrowLeftIcon} from '@heroicons/react/24/outline';
 import LoginForm from "../components/vitema/auth/LoginForm";
 import {useTranslation} from "react-i18next";
+import {Helmet} from 'react-helmet-async';
 
 const Login = () => {
     const {t} = useTranslation();
 
     return (
         <div className="min-h-screen flex flex-col md:flex-row relative">
+            <Helmet>
+                <title>Zaloguj się - Vitema</title>
+                <meta name="description"
+                      content="Zaloguj się do panelu dietetyka Vitema. Zarządzaj pacjentami i dietami online."/>
+                <link rel="canonical" href="https://vitema.pl/login"/>
+            </Helmet>
             <Link
                 to="/"
                 className="absolute top-6 left-6 flex items-center gap-2 bg-white/90 px-4 py-2 rounded-lg text-primary hover:bg-white transition-colors group z-10"
