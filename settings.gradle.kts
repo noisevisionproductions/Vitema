@@ -15,5 +15,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Szyta Dieta"
+rootProject.name = "VitemaAndroid"
 include(":app")

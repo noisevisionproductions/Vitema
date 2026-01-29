@@ -1,6 +1,6 @@
-# Szyta Dieta (Mobile App)
+# Vitema (Android App)
 
-A mobile companion app for patients, part of the **Nutrilog** ecosystem. It provides users with instant access to personalized nutrition plans, generates automated shopping lists, and allows for real-time progress monitoring.
+A mobile companion app for patients, part of the **Vitema** ecosystem. It provides users with instant access to personalized nutrition plans, generates automated shopping lists, and allows for real-time progress monitoring.
 
 The app is available on [Google Play](https://play.google.com/store/apps/details?id=com.noisevisionsoftware.szytadieta).
 
@@ -52,7 +52,7 @@ The project adheres to **Modern Android Development (MAD)** standards, focusing 
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/noisevisionproductions/szytadieta](https://github.com/noisevisionproductions/szytadieta)
+    git clone [https://github.com/noisevisionproductions/vitemaandroid](https://github.com/noisevisionproductions/vitemaandroid)
     ```
 
 2.  **Environment Configuration:**

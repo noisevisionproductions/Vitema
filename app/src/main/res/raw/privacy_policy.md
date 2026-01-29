@@ -1,16 +1,16 @@
-# Polityka Prywatności aplikacji Szyta Dieta
+# Polityka Prywatności aplikacji Vitema
 
-Data ostatniej aktualizacji: 18.02.2025
+Data ostatniej aktualizacji: 20.01.2026
 
 ## Wprowadzenie
 
-Dziękujemy za korzystanie z aplikacji Szyta Dieta. Niniejsza Polityka Prywatności wyjaśnia, w jaki
+Dziękujemy za korzystanie z aplikacji Vitema. Niniejsza Polityka Prywatności wyjaśnia, w jaki
 sposób gromadzimy, używamy i chronimy Państwa dane osobowe.
 
 ## Administrator Danych
 
-Administratorem Państwa danych osobowych jest Szyta Dieta. W sprawach związanych z przetwarzaniem
-danych osobowych mogą się Państwo kontaktować z nami pod adresem email: szytadieta@gmail.com
+Administratorem Państwa danych osobowych jest Vitema. W sprawach związanych z przetwarzaniem
+danych osobowych mogą się Państwo kontaktować z nami pod adresem email: kontakt@vitema.pl
 
 ## Jakie dane zbieramy
 
@@ -144,7 +144,7 @@ momentu usunięcia konta.
 Mogą Państwo usunąć swoje konto i dane na dwa sposoby:
 
 1. Bezpośrednio w aplikacji poprzez sekcję Ustawienia → Usuń konto
-2. Wysyłając prośbę o usunięcie konta na adres szytadieta@gmail.com
+2. Wysyłając prośbę o usunięcie konta na adres kontakt@vitema.pl
 
 Po otrzymaniu prośby o usunięcie konta:
 
@@ -355,12 +355,12 @@ zmianach będziemy informować poprzez aplikację lub drogą emailową.
 
 W przypadku problemów z realizacją praw użytkownika:
 
-- Email: szytadieta@gmail.com
+- Email: kontakt@vitema.pl
 - Czas odpowiedzi: do 48 godzin
 - Pomoc w języku polskim
 - Dedykowany zespół wsparcia
 
 ## Zgoda na przetwarzanie danych
 
-Korzystanie z aplikacji Szyta Dieta oznacza zgodę na przetwarzanie danych zgodnie z niniejszą
+Korzystanie z aplikacji Vitema oznacza zgodę na przetwarzanie danych zgodnie z niniejszą
 Polityką Prywatności.

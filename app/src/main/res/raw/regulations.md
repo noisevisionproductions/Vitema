@@ -1,16 +1,17 @@
-# Regulamin aplikacji Szyta Dieta
+# Regulamin aplikacji Vitema
 
-Data ostatniej aktualizacji: 10.01.2025
+Data ostatniej aktualizacji: 20.01.2026
 
 ## § 1. Postanowienia ogólne
 
-1. Niniejszy Regulamin określa zasady korzystania z aplikacji mobilnej Szyta Dieta.
-2. Właścicielem i administratorem aplikacji jest Szyta Dieta.
-3. Aplikacja służy do zarządzania planami dietetycznymi, monitorowania pomiarów ciała oraz tworzenia list zakupowych.
+1. Niniejszy Regulamin określa zasady korzystania z aplikacji mobilnej Vitema.
+2. Właścicielem i administratorem aplikacji jest Vitema.
+3. Aplikacja służy do zarządzania planami dietetycznymi, monitorowania pomiarów ciała oraz tworzenia
+   list zakupowych.
 
 ## § 2. Definicje
 
-1. Aplikacja - aplikacja mobilna Szyta Dieta
+1. Aplikacja - aplikacja mobilna Vitema
 2. Użytkownik - osoba fizyczna korzystająca z Aplikacji
 3. Konto - indywidualne konto Użytkownika w Aplikacji
 4. Plan dietetyczny - spersonalizowany plan posiłków
@@ -95,4 +96,5 @@ Data ostatniej aktualizacji: 10.01.2025
 ## § 11. Kontakt
 
 W sprawach związanych z Aplikacją prosimy o kontakt:
-- Email: szytadieta@gmail.com
+
+- Email: kontakt@vitema.pl

@@ -1,11 +1,9 @@
+import com.android.build.api.dsl.ApplicationExtension
 import java.io.FileInputStream
 import java.util.Properties
 
 data class Version(
-    val major: Int,
-    val minor: Int,
-    val patch: Int,
-    val build: Int = 0
+    val major: Int, val minor: Int, val patch: Int, val build: Int = 0
 ) {
     fun toVersionName(): String = "$major.$minor.$patch"
     fun toVersionCode(): Int = major * 10000 + minor * 100 + patch
@@ -13,11 +11,11 @@ data class Version(
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    kotlin("kapt")
+    alias(libs.plugins.ksp)
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    alias(libs.plugins.kotlin.compose)
 }
 
 val keystorePropertiesFile: File = rootProject.file("key.properties")
@@ -26,15 +24,13 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
-android {
-    namespace = "com.noisevisionsoftware.szytadieta"
+configure<ApplicationExtension> {
+    namespace = "com.noisevisionsoftware.vitema"
     compileSdk = 35
 
     defaultConfig {
         version = Version(
-            major = 1,
-            minor = 4,
-            patch = 6
+            major = 1, minor = 5, patch = 0
         )
 
         applicationId = "com.noisevisionsoftware.szytadieta"
@@ -48,12 +44,7 @@ android {
             useSupportLibrary = true
         }
     }
-    kapt {
-        correctErrorTypes = true
-    }
-    hilt {
-        enableAggregatingTask = true
-    }
+
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String
@@ -68,8 +59,7 @@ android {
             isMinifyEnabled = false
             isDebuggable = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
             ndk {
                 debugSymbolLevel = "SYMBOL_TABLE"
@@ -79,8 +69,7 @@ android {
         debug {
             isDebuggable = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
     }
@@ -88,14 +77,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
     }
     packaging {
         resources {
@@ -114,17 +98,27 @@ android {
             )
         }
     }
-    tasks.withType<Test> {
-        jvmArgs(
-            "-XX:+EnableDynamicAgentLoading"
-        )
-    }
+
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
     }
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+hilt {
+    enableAggregatingTask = true
+}
+
+tasks.withType<Test> {
+    jvmArgs(
+        "-XX:+EnableDynamicAgentLoading"
+    )
 }
 
 dependencies {
@@ -150,10 +144,10 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
-    kapt(libs.androidx.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
 
     // Retrofit
     implementation(libs.retrofit)
