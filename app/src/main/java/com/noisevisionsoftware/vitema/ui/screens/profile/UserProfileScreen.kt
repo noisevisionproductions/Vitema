@@ -1,5 +1,6 @@
 package com.noisevisionsoftware.vitema.ui.screens.profile
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,7 +21,9 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -27,6 +31,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.noisevisionsoftware.vitema.domain.model.user.User
@@ -48,27 +52,24 @@ import com.noisevisionsoftware.vitema.ui.common.CustomTopAppBar
 import com.noisevisionsoftware.vitema.ui.common.LoadingOverlay
 import com.noisevisionsoftware.vitema.ui.navigation.NavigationDestination
 import com.noisevisionsoftware.vitema.ui.screens.admin.ErrorMessage
-import com.noisevisionsoftware.vitema.ui.screens.profile.components.SurveyReminderCard
-import com.noisevisionsoftware.vitema.utils.AppConfig
-import com.noisevisionsoftware.vitema.utils.UrlHandler
+import com.noisevisionsoftware.vitema.ui.screens.profile.invitation.InvitationDialog
 import com.noisevisionsoftware.vitema.utils.formatDate
 
 @Composable
 fun UserProfileScreen(
     viewModel: UserProfileViewModel = hiltViewModel(),
     onNavigate: (NavigationDestination) -> Unit,
-    onLogoutClick: () -> Unit = {}
+    onLogoutClick: () -> Unit = {},
 ) {
     val profileState by viewModel.profileState.collectAsState()
+    var showInvitationDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             CustomTopAppBar(
                 title = "Profil użytkownika",
-                onBackClick = { onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard) }
-            )
-        }
-    ) { padding ->
+                onBackClick = { onNavigate(NavigationDestination.AuthenticatedDestination.Dashboard) })
+        }) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -80,10 +81,17 @@ fun UserProfileScreen(
                 is ViewModelState.Success -> ProfileScreenPage(
                     state = state,
                     onNavigate = onNavigate,
-                    onLogoutClick = onLogoutClick
+                    onLogoutClick = onLogoutClick,
+                    onEnterCodeClick = { showInvitationDialog = true },
+                    onDisconnectClick = { viewModel.disconnectTrainer() }
                 )
 
                 is ViewModelState.Error -> ErrorMessage(message = state.message)
+            }
+
+            if (showInvitationDialog) {
+                InvitationDialog(
+                    onDismiss = { showInvitationDialog = false })
             }
         }
     }
@@ -93,10 +101,13 @@ fun UserProfileScreen(
 private fun ProfileScreenPage(
     state: ViewModelState.Success<User>,
     onNavigate: (NavigationDestination) -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onEnterCodeClick: () -> Unit,
+    onDisconnectClick: () -> Unit
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
-    val context = LocalContext.current
+    var showDisconnectDialog by remember { mutableStateOf(false) }
+    val hasTrainer = !state.data.trainerId.isNullOrBlank()
 
     Column(
         modifier = Modifier
@@ -106,15 +117,12 @@ private fun ProfileScreenPage(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
+            modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -142,19 +150,83 @@ private fun ProfileScreenPage(
                 }
             }
         }
-        /*
 
-                SurveyReminderCard(
-                    isSurveyCompleted = state.data.surveyCompleted,
-                    onFillSurveyClick = {
-                        UrlHandler.openUrl(context, AppConfig.Urls.SURVEY_URL)
+        if (!hasTrainer) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Współpraca trenerska",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Otrzymałeś kod od trenera? Wpisz go tutaj, aby połączyć konta.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = onEnterCodeClick, modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            Icons.Default.VpnKey,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Wpisz kod zaproszenia")
                     }
-                )
-        */
+                }
+            }
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Twój Trener",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.FitnessCenter,
+                            null,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Twoje konto jest połączone z trenerem.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedButton(
+                        onClick = { showDisconnectDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Zakończ współpracę")
+                    }
+                }
+            }
+        }
 
         ProfileSection(
-            title = "Dane osobowe",
-            content = {
+            title = "Dane osobowe", content = {
                 if (state.data.birthDate != null) {
                     ProfileItem(
                         icon = Icons.Default.DateRange,
@@ -169,25 +241,20 @@ private fun ProfileScreenPage(
                         value = state.data.gender.displayName
                     )
                 }
-            }
-        )
+            })
 
         ProfileSection(
-            title = "Informacje o koncie",
-            content = {
+            title = "Informacje o koncie", content = {
                 ProfileItem(
                     icon = Icons.Default.CalendarToday,
                     label = "Data dołączenia",
                     value = formatDate(state.data.createdAt)
                 )
-            }
-        )
+            })
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
@@ -197,32 +264,20 @@ private fun ProfileScreenPage(
                 FilledTonalButton(
                     onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.Settings) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.onSurfaceVariant)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.Default.Settings, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text("Ustawienia")
                 }
 
                 FilledTonalButton(
                     onClick = { onNavigate(NavigationDestination.AuthenticatedDestination.EditProfile) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.onSurfaceVariant)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.Default.Edit, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text("Edytuj dane")
                 }
             }
@@ -231,9 +286,7 @@ private fun ProfileScreenPage(
         Button(
             onClick = { showLogoutDialog = true },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer
-            )
+            colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Logout,
@@ -242,13 +295,22 @@ private fun ProfileScreenPage(
                 tint = MaterialTheme.colorScheme.onErrorContainer
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                "Wyloguj się",
-                color = MaterialTheme.colorScheme.onErrorContainer
-            )
+            Text("Wyloguj się", color = MaterialTheme.colorScheme.onErrorContainer)
         }
+    }
 
-
+    if (showDisconnectDialog) {
+        ConfirmAlertDialog(
+            onConfirm = {
+                showDisconnectDialog = false
+                onDisconnectClick()
+            },
+            onDismiss = { showDisconnectDialog = false },
+            title = "Zakończyć współpracę?",
+            message = "Czy na pewno chcesz odłączyć się od obecnego trenera? Stracisz dostęp do planów przypisanych przez niego.",
+            confirmActionText = "Zakończ",
+            dismissActionText = "Anuluj",
+        )
     }
 
     if (showLogoutDialog) {
@@ -268,19 +330,15 @@ private fun ProfileScreenPage(
 
 @Composable
 private fun ProfileSection(
-    title: String,
-    content: @Composable () -> Unit
+    title: String, content: @Composable () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
+        modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
                 text = title,
@@ -295,13 +353,10 @@ private fun ProfileSection(
 
 @Composable
 private fun ProfileItem(
-    icon: ImageVector,
-    label: String,
-    value: String
+    icon: ImageVector, label: String, value: String
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,

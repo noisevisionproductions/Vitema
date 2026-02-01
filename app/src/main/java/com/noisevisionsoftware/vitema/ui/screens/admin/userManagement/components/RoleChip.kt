@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.MoveDown
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialogDefaults
@@ -45,6 +46,7 @@ fun RoleChip(
                     UserRole.ADMIN -> Icons.Default.AdminPanelSettings
                     UserRole.USER -> Icons.Default.Person
                     UserRole.OWNER -> Icons.Default.MoveDown
+                    UserRole.TRAINER -> Icons.Default.FitnessCenter
                 },
                 contentDescription = null,
                 modifier = Modifier.size(18.dp)
@@ -113,6 +115,7 @@ fun RoleSelectionDialog(
                                         UserRole.ADMIN -> "Pełny dostęp do panelu administracyjnego"
                                         UserRole.USER -> "Standardowy dostęp użytkownika"
                                         UserRole.OWNER -> "Testowy"
+                                        UserRole.TRAINER -> "Trenerowy"
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant

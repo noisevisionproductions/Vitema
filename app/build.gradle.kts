@@ -215,4 +215,5 @@ dependencies {
     testImplementation(libs.shadows.framework)
     testImplementation(libs.core.ktx)
     testImplementation(libs.androidx.junit.ktx)
+    implementation(libs.logging.interceptor.v4120)
 }

@@ -45,10 +45,11 @@ import com.noisevisionsoftware.vitema.ui.screens.loginAndRegister.LoginScreen
 import com.noisevisionsoftware.vitema.ui.screens.loginAndRegister.RegisterScreen
 import com.noisevisionsoftware.vitema.ui.screens.loginAndRegister.VerificationNeededDialog
 import com.noisevisionsoftware.vitema.ui.screens.mealPlan.MealPlanScreen
+import com.noisevisionsoftware.vitema.ui.screens.mealPlan.recipe.RecipeScreen
 import com.noisevisionsoftware.vitema.ui.screens.profile.UserProfileScreen
 import com.noisevisionsoftware.vitema.ui.screens.profile.completeProfile.CompleteProfileScreen
+import com.noisevisionsoftware.vitema.ui.screens.profile.invitation.InvitationDialog
 import com.noisevisionsoftware.vitema.ui.screens.profile.profileEdit.ProfileEditScreen
-import com.noisevisionsoftware.vitema.ui.screens.mealPlan.recipe.RecipeScreen
 import com.noisevisionsoftware.vitema.ui.screens.settings.SettingsScreen
 import com.noisevisionsoftware.vitema.ui.screens.shoppingList.ShoppingListScreen
 import com.noisevisionsoftware.vitema.ui.screens.splash.SplashScreen
@@ -70,6 +71,7 @@ fun MainScreen(
     val currentScreen by mainViewModel.currentScreen.collectAsState()
     val showVerificationDialog by authViewModel.showVerificationDialog.collectAsState()
     val emailVerificationState by authViewModel.emailVerificationState.collectAsState()
+    val showOnboardingInvitation by authViewModel.showOnboardingInvitation.collectAsState()
 
     LaunchedEffect(Unit) {
         delay(1500)
@@ -105,6 +107,12 @@ fun MainScreen(
                 mainViewModel.updateScreen(NavigationDestination.UnauthenticatedDestination.Login)
             }
         }
+    }
+
+    if (showOnboardingInvitation && authState is AuthState.Success) {
+        InvitationDialog(
+            onDismiss = { authViewModel.dismissOnboardingInvitation() }
+        )
     }
 
     if (showVerificationDialog && authState is AuthState.Success) {

@@ -57,13 +57,11 @@ import com.noisevisionsoftware.vitema.ui.navigation.NavigationDestination
 
 @Composable
 fun RegisterScreen(
-    viewModel: AuthViewModel = hiltViewModel(),
-    onNavigate: (NavigationDestination) -> Unit
+    viewModel: AuthViewModel = hiltViewModel(), onNavigate: (NavigationDestination) -> Unit
 ) {
     var nickname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     val focusManager = LocalFocusManager.current
     val authState by viewModel.authState.collectAsState()
     val profileCompleted by viewModel.profileCompleted.collectAsState()
@@ -93,8 +91,7 @@ fun RegisterScreen(
             onDismiss = {
                 showVerificationDialog = false
                 onNavigate(NavigationDestination.UnauthenticatedDestination.Login)
-            }
-        )
+            })
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -106,8 +103,7 @@ fun RegisterScreen(
                 .verticalScroll(rememberScrollState())
                 .clickable(
                     indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                ) {
+                    interactionSource = remember { MutableInteractionSource() }) {
                     focusManager.clearFocus()
                 },
             verticalArrangement = Arrangement.Center,
@@ -154,8 +150,7 @@ fun RegisterScreen(
                                 contentDescription = "Pole wprowadzania nazwy użytkownika"
                             },
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
+                            keyboardType = KeyboardType.Text, imeAction = ImeAction.Next
                         ),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -174,8 +169,7 @@ fun RegisterScreen(
                                 contentDescription = "Pole wprowadzania adresu email"
                             },
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
+                            keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
                         ),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -190,54 +184,33 @@ fun RegisterScreen(
                         label = "Hasło",
                         contentDescription = "Pole wprowadzania hasła",
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Next
-                        )
-                    )
-
-                    PasswordTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        label = "Potwierdź hasło",
-                        contentDescription = "Pole potwierdzenia hasła",
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
+                            keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
                         )
                     )
                 }
             }
 
             Button(
-                onClick = { viewModel.register(nickname, email, password, confirmPassword) },
+                onClick = { viewModel.register(nickname, email, password)},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                enabled = nickname.isNotBlank() && email.isNotBlank() &&
-                        password.isNotBlank() && confirmPassword.isNotBlank() &&
-                        authState !is AuthState.Loading
+                enabled = nickname.isNotBlank() && email.isNotBlank() && password.isNotBlank() && authState !is AuthState.Loading
             ) {
                 if (authState is AuthState.Loading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
                     Text(
-                        "Zarejestruj się",
-                        style = MaterialTheme.typography.titleLarge
+                        "Zarejestruj się", style = MaterialTheme.typography.titleLarge
                     )
                 }
             }
 
             AcceptTerms(
                 onRegulationsClick = { onNavigate(NavigationDestination.UnauthenticatedDestination.Regulations) },
-                onPrivacyPolicyClick = { onNavigate(NavigationDestination.UnauthenticatedDestination.PrivacyPolicy) }
-            )
+                onPrivacyPolicyClick = { onNavigate(NavigationDestination.UnauthenticatedDestination.PrivacyPolicy) })
 
             AlreadyHaveAccount(onLoginClick = { onNavigate(NavigationDestination.UnauthenticatedDestination.Login) })
         }
@@ -246,9 +219,7 @@ fun RegisterScreen(
 
 @Composable
 private fun AcceptTerms(
-    onRegulationsClick: () -> Unit,
-    onPrivacyPolicyClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onRegulationsClick: () -> Unit, onPrivacyPolicyClick: () -> Unit, modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
@@ -270,11 +241,9 @@ private fun AcceptTerms(
         ) {
             TextButton(onClick = onRegulationsClick) {
                 Text(
-                    text = "Regulamin",
-                    style = MaterialTheme.typography.bodyMedium.copy(
+                    text = "Regulamin", style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
-                    ),
-                    color = MaterialTheme.colorScheme.primary
+                    ), color = MaterialTheme.colorScheme.primary
                 )
             }
             Text(
@@ -284,11 +253,9 @@ private fun AcceptTerms(
             )
             TextButton(onClick = onPrivacyPolicyClick) {
                 Text(
-                    text = "Politykę prywatności",
-                    style = MaterialTheme.typography.bodyMedium.copy(
+                    text = "Politykę prywatności", style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Medium
-                    ),
-                    color = MaterialTheme.colorScheme.primary
+                    ), color = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -331,8 +298,7 @@ private fun EmailVerificationDialog(
         Card(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
-            ),
-            modifier = Modifier
+            ), modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {

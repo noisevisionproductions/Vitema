@@ -1,9 +1,8 @@
 package com.noisevisionsoftware.vitema.domain.model.user
 
 enum class UserRole {
-    USER,
-    ADMIN,
-    OWNER;
+    USER, ADMIN, OWNER,
+    TRAINER;
 
     companion object {
         fun fromString(value: String?): UserRole {

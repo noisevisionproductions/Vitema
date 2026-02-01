@@ -5,6 +5,7 @@ import com.noisevisionsoftware.vitema.domain.alert.AlertManager
 import com.noisevisionsoftware.vitema.domain.exceptions.AppException
 import com.noisevisionsoftware.vitema.domain.model.user.User
 import com.noisevisionsoftware.vitema.domain.network.NetworkConnectivityManager
+import com.noisevisionsoftware.vitema.domain.repository.InvitationRepository
 import com.noisevisionsoftware.vitema.domain.repository.UserRepository
 import com.noisevisionsoftware.vitema.domain.state.ViewModelState
 import com.noisevisionsoftware.vitema.ui.base.AppEvent
@@ -19,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
+    private val invitationRepository: InvitationRepository,
     networkManager: NetworkConnectivityManager,
     alertManager: AlertManager,
     eventBus: EventBus
@@ -37,6 +39,19 @@ class UserProfileViewModel @Inject constructor(
             userRepository.getCurrentUserData()
                 .getOrThrow()
                 ?: throw AppException.AuthException("Nie można załadować profilu")
+        }
+    }
+
+    fun disconnectTrainer() {
+        viewModelScope.launch {
+            handleOperation(_profileState) {
+                invitationRepository.disconnectFromTrainer().getOrThrow()
+
+                userRepository.getCurrentUserData().getOrThrow()
+                    ?: throw AppException.AuthException("Błąd odświeżania profilu")
+            }
+
+            showSuccess("Współpraca z trenerem została zakończona.")
         }
     }
 

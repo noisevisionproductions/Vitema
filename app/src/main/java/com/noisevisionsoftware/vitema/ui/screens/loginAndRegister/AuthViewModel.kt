@@ -2,6 +2,7 @@ package com.noisevisionsoftware.vitema.ui.screens.loginAndRegister
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.noisevisionsoftware.vitema.data.localPreferences.PreferencesManager
 import com.noisevisionsoftware.vitema.domain.alert.AlertManager
 import com.noisevisionsoftware.vitema.domain.exceptions.AppException
 import com.noisevisionsoftware.vitema.domain.exceptions.FirebaseErrorMapper
@@ -25,6 +26,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
+    private val preferencesManager: PreferencesManager,
     private val authRepository: AuthRepository,
     private val sessionManager: SessionManager,
     private val notificationManager: NotificationManager,
@@ -49,6 +51,9 @@ class AuthViewModel @Inject constructor(
 
     private val _isEmailVerified = MutableStateFlow(false)
     val isEmailVerified = _isEmailVerified.asStateFlow()
+
+    private val _showOnboardingInvitation = MutableStateFlow(false)
+    val showOnboardingInvitation = _showOnboardingInvitation.asStateFlow()
 
     val userSession = sessionManager.userSessionFlow
 
@@ -149,14 +154,12 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun register(nickname: String, email: String, password: String, confirmPassword: String) {
+    fun register(nickname: String, email: String, password: String) {
         viewModelScope.launch {
             try {
                 ValidationManager.validateNickname(nickname).getOrThrow()
                 ValidationManager.validateEmail(email).getOrThrow()
                 ValidationManager.validatePassword(password).getOrThrow()
-                ValidationManager.validatePasswordConfirmation(password, confirmPassword)
-                    .getOrThrow()
 
                 _authState.value = AuthState.Loading
 
@@ -271,6 +274,28 @@ class AuthViewModel @Inject constructor(
         showError(appException.message)
     }
 
+    fun dismissOnboardingInvitation() {
+        val currentState = _authState.value
+        if (currentState is AuthState.Success) {
+            viewModelScope.launch {
+                _showOnboardingInvitation.value = false
+                preferencesManager.setInvitationPromptShown(currentState.data.id, true)
+            }
+        }
+    }
+
+    private fun checkOnboardingStatus(user: User) {
+        viewModelScope.launch {
+            preferencesManager.getInvitationPromptShown(user.id).collect { wasShown ->
+                val shouldShow = user.trainerId.isNullOrBlank() &&
+                        user.profileCompleted &&
+                        !wasShown
+
+                _showOnboardingInvitation.value = shouldShow
+            }
+        }
+    }
+
     private fun checkProfileCompletion(user: User) {
         viewModelScope.launch {
             _profileCompleted.value = user.let {
@@ -284,6 +309,9 @@ class AuthViewModel @Inject constructor(
     private suspend fun handleSuccessfulAuth(user: User) {
         sessionManager.saveUserSession(user)
         checkProfileCompletion(user)
+
+        checkOnboardingStatus(user)
+
         _authState.value = AuthState.Success(user)
     }
 

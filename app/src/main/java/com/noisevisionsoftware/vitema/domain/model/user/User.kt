@@ -17,7 +17,8 @@ data class User(
     val surveyCompleted: Boolean = false,
     val role: UserRole = UserRole.USER,
     val note: String? = null,
-    val fcmToken: String? = null
+    val fcmToken: String? = null,
+    val trainerId: String? = null
 ) {
     fun calculateAge(): Int {
         return birthDate?.let {

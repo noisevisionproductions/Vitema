@@ -28,6 +28,7 @@ class PreferencesManager @Inject constructor(
         private const val CUSTOM_WATER_LABEL = "custom_water_label"
         private const val VERSION_CHECK_ENABLED = "version_check_enabled"
         private const val SEPARATOR = "|"
+        private const val INVITATION_PROMPT_SHOWN_PREFIX = "invitation_prompt_shown_"
     }
 
     // Version Check Preferences
@@ -83,13 +84,27 @@ class PreferencesManager @Inject constructor(
         }
     }
 
+    fun getInvitationPromptShown(userId: String): Flow<Boolean> {
+        val key = getInvitationPromptShownKey(userId)
+        return dataStore.data.map { preferences ->
+            preferences[key] ?: false
+        }
+    }
+
+    suspend fun setInvitationPromptShown(userId: String, shown: Boolean) {
+        val key = getInvitationPromptShownKey(userId)
+        dataStore.edit { preferences ->
+            preferences[key] = shown
+        }
+    }
+
     // Data Management
     suspend fun clearAllUserData(userId: String) {
         dataStore.edit { preferences ->
             preferences.remove(getCheckedProductsKey(userId))
             preferences.remove(getWaterAmountKey(userId))
             preferences.remove(getWaterLabelKey(userId))
-            // Note: We don't clear version check setting as it's not user-specific
+            preferences.remove(getInvitationPromptShownKey(userId))
         }
     }
 
@@ -102,4 +117,7 @@ class PreferencesManager @Inject constructor(
 
     private fun getWaterLabelKey(userId: String): Preferences.Key<String> =
         stringPreferencesKey("${userId}_$CUSTOM_WATER_LABEL")
+
+    private fun getInvitationPromptShownKey(userId: String): Preferences.Key<Boolean> =
+        booleanPreferencesKey("$INVITATION_PROMPT_SHOWN_PREFIX$userId")
 }
